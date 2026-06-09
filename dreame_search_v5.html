@@ -1319,7 +1319,7 @@ function parseCatalogWorkbook(buf){
   const ws = wb.Sheets[wb.SheetNames[0]];
   const aoa = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
   if(!aoa.length) return { error: 'Feuille vide.' };
-  const CATALOG_KW = ['dossier','folder','famille','family','ref','produit','product','bom','nom','name','url','lien','link','type'];
+  const CATALOG_KW = ['dossier','folder','famille','family','ref','produit','product','bom','nom','name','url','lien','link','chemin','type'];
   let hdrRow = 0, bestScore = -1;
   for(let i = 0; i < Math.min(aoa.length, 15); i++){
     const row = aoa[i] || []; let score = 0;
@@ -1334,28 +1334,52 @@ function parseCatalogWorkbook(buf){
     produit: header.findIndex(h => h.includes('produit') || h.includes('product')),
     bom:     header.findIndex(h => h.includes('bom') || h.includes('est bom')),
     nom:     header.findIndex(h => h === 'nom' || h === 'name' || h.includes('nom fichier')),
-    url:     header.findIndex(h => h === 'url' || h.includes('lien') || h.includes('link') || h.includes('sharepoint')),
+    url:     header.findIndex(h => h === 'url' || h.includes('lien') || h.includes('link') || h.includes('sharepoint') || h.includes('chemin')),
     type:    header.findIndex(h => h === 'type' || h.includes('type doc'))
   };
+  // Detect "URL-as-parent" mode (format lien dreame.xlsx) :
+  // pas de colonne dossier explicite \u2192 URL = chemin du dossier parent, Nom = nom de l'item
+  const hasDossierCol = col.dossier >= 0;
   if(col.dossier < 0) col.dossier = 0;
-  if(col.url < 0) return { error: 'Colonne URL introuvable. V\u00e9rifiez que l\'en-t\u00eate contient "URL" ou "Lien".' };
+  if(col.url < 0) return { error: 'Colonne URL introuvable. V\u00e9rifiez que l\'en-t\u00eate contient "URL", "Lien" ou "Chemin d\'acc\u00e8s".' };
+  const urlAsParent = !hasDossierCol && col.nom >= 0 && col.nom !== col.url;
+
   const foldersMap = {}; const docsMap = {}; let totalLinks = 0;
   for(let i = hdrRow + 1; i < aoa.length; i++){
     const row = aoa[i];
-    const dossier = String(row[col.dossier] || '').trim(); if(!dossier) continue;
-    const url = String(col.url >= 0 ? row[col.url] : '').trim(); if(!url) continue;
-    const famille = col.famille >= 0 ? String(row[col.famille] || '').trim() || null : null;
+    let dossier, urlFinal, nom, famille = null;
+
+    if(urlAsParent){
+      // URL = chemin parent se terminant par le dossier produit (ex: \u2026/R2465 - X40 Master)
+      const urlRaw = String(row[col.url] || '').trim(); if(!urlRaw) continue;
+      const nomVal = String(row[col.nom] || '').trim(); if(!nomVal) continue;
+      // Extraire le dossier produit : dernier segment dont la ref commence par [A-Z]\d+
+      const segs = urlRaw.split('/');
+      const prodIdx = segs.reduce((best, s, j) => /^[A-Z]\d+/.test(s) ? j : best, -1);
+      if(prodIdx < 0) continue;
+      dossier  = segs[prodIdx];
+      famille  = prodIdx > 0 ? (segs[prodIdx - 1] || null) : null;
+      nom      = nomVal;
+      urlFinal = urlRaw + '/' + nomVal;
+    } else {
+      dossier  = String(row[col.dossier] || '').trim(); if(!dossier) continue;
+      urlFinal = String(col.url >= 0 ? row[col.url] : '').trim(); if(!urlFinal) continue;
+      famille  = col.famille >= 0 ? String(row[col.famille] || '').trim() || null : null;
+      nom      = col.nom >= 0 ? String(row[col.nom] || '').trim() : urlFinal.split('/').pop().split('?')[0];
+    }
+
     const ref     = col.ref     >= 0 ? String(row[col.ref]     || '').trim() : dossier.split(/[\s\-]/)[0];
     const produit = col.produit >= 0 ? String(row[col.produit] || '').trim() : dossier.replace(/^[A-Z0-9]+\s*[-\u2013]\s*/,'');
-    const isBom   = col.bom     >= 0 ? /^(oui|yes|1|true|x)$/i.test(String(row[col.bom]||'').trim()) : false;
-    const nom     = col.nom     >= 0 ? String(row[col.nom]     || '').trim() : url.split('/').pop().split('?')[0];
+    const isBom   = col.bom     >= 0 ? /^(oui|yes|1|true|x)$/i.test(String(row[col.bom]||'').trim())
+                                     : /\bbom\b|bill.of.mat|nomenclat/i.test(nom);
     const type    = col.type    >= 0 ? String(row[col.type]    || '').trim().toLowerCase() : guessDocType(nom);
+
     if(!foldersMap[dossier]){
       foldersMap[dossier] = { name: dossier, ref: ref, product: produit, family: famille };
       docsMap[dossier] = { bom: null, docs: [] };
     }
-    if(isBom){ docsMap[dossier].bom = { name: nom, url: url }; }
-    else { docsMap[dossier].docs.push({ name: nom, url: url, type: type || 'other' }); }
+    if(isBom){ docsMap[dossier].bom = { name: nom, url: urlFinal }; }
+    else { docsMap[dossier].docs.push({ name: nom, url: urlFinal, type: type || 'other' }); }
     totalLinks++;
   }
   // Chemin de base commun
@@ -1390,6 +1414,39 @@ function parseCatalogWorkbook(buf){
   const families = [...new Set(folders.map(f => f.family).filter(Boolean))];
   return { folders, folderDocs: docsMap, totalLinks, newSpBase, families };
 }
+
+// ════════════════════════════════════════════════════════════
+// CHARGEMENT AUTOMATIQUE DU CATALOGUE DEPUIS GITHUB
+// ════════════════════════════════════════════════════════════
+const GITHUB_CATALOG_URL = 'https://savvyfnacdarty.github.io/dreame-search-sav/lien%20dreame.xlsx';
+
+async function loadCatalogFromGitHub(){
+  const badge = document.getElementById('catalogBadge');
+  if(badge) badge.textContent = '⏳ Chargement…';
+  try {
+    await ensureSheetJS();
+    const resp = await fetch(GITHUB_CATALOG_URL);
+    if(!resp.ok) throw new Error('HTTP ' + resp.status);
+    const buf = await resp.arrayBuffer();
+    const result = parseCatalogWorkbook(buf);
+    if(result.error) throw new Error(result.error);
+    if(result.folders.length){
+      FOLDERS.length = 0;
+      result.folders.forEach(f => FOLDERS.push(f));
+      Object.keys(FOLDER_DOCS).forEach(k => delete FOLDER_DOCS[k]);
+      Object.entries(result.folderDocs).forEach(([k,v]) => FOLDER_DOCS[k] = v);
+      if(result.newSpBase) SP_BASE = result.newSpBase;
+    }
+    FAMILY_FILTER = null;
+    updateFamilyBar();
+    if(badge) badge.textContent = '✅ ' + FOLDERS.length + ' produits';
+  } catch(e){
+    console.error('loadCatalogFromGitHub:', e);
+    if(badge) badge.textContent = '⚠ Catalogue';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => loadCatalogFromGitHub());
 
 function guessDocType(name){
   const ext = (name.split('.').pop() || '').toLowerCase();
