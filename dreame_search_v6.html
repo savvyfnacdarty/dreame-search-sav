@@ -120,19 +120,8 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
 }
 .btn-clear:hover { background: var(--border); color: var(--text); }
 
-/* ── Family bar ── */
-.family-bar {
-  width: 100%; max-width: 640px;
-  display: none; gap: 6px; flex-wrap: wrap;
-  margin-top: 14px;
-}
-.fchip {
-  padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
-  cursor: pointer; border: 1.5px solid var(--border2); background: var(--surface);
-  color: var(--text-2); transition: var(--transition); white-space: nowrap;
-}
-.fchip:hover  { border-color: var(--accent); color: var(--accent-h); }
-.fchip.active { background: var(--accent); color: #1a1a1a; border-color: var(--accent); }
+/* ── Family bar — masquée ── */
+.family-bar { display: none !important; }
 
 /* ═══════════════════════════════
    RESULTS
@@ -196,21 +185,21 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
    DRAWER PRODUIT (right-slide)
 ═══════════════════════════════ */
 .drawer-backdrop {
-  position: fixed; inset: 0; background: rgba(17,24,39,.45);
-  z-index: 400; backdrop-filter: blur(2px);
-  animation: fadeBg .2s ease;
+  position: fixed; inset: 0;
+  z-index: 400; pointer-events: none;
 }
 .drawer-backdrop.hidden { display: none; }
-@keyframes fadeBg { from { opacity:0 } to { opacity:1 } }
 
 .drawer {
-  position: fixed; top: 0; right: 0; bottom: 0;
-  width: 100%; max-width: 520px;
+  position: fixed; top: 56px; right: 0; bottom: 0;
+  width: 100%; max-width: 480px;
   background: var(--surface); z-index: 401;
   display: flex; flex-direction: column;
-  box-shadow: -8px 0 40px rgba(0,0,0,.14);
+  box-shadow: -6px 0 32px rgba(0,0,0,.12);
+  border-left: 1px solid var(--border);
   animation: slideIn .22s ease;
   overflow: hidden;
+  pointer-events: auto;
 }
 .drawer-backdrop.hidden .drawer { display: none; }
 @keyframes slideIn { from { transform: translateX(100%) } to { transform: translateX(0) } }
@@ -626,7 +615,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
 </div>
 
 <!-- ════════════════════ DRAWER PRODUIT ════════════════════ -->
-<div class="drawer-backdrop hidden" id="drawerBackdrop" onclick="if(event.target===this)closeDossier()">
+<div class="drawer-backdrop hidden" id="drawerBackdrop">
   <div class="drawer" id="drawer">
     <div class="dw-header">
       <div class="dw-avatar">📁</div>
@@ -925,12 +914,10 @@ function openDossier(folderName, productName, ref){
 
   document.getElementById('dwBody').innerHTML = html;
   document.getElementById('drawerBackdrop').classList.remove('hidden');
-  document.body.style.overflow = 'hidden';
 }
 
 function closeDossier(){
   document.getElementById('drawerBackdrop').classList.add('hidden');
-  document.body.style.overflow = '';
 }
 
 function downloadBom(url){ window.open(url,'_blank'); }
