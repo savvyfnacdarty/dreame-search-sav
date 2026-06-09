@@ -1321,7 +1321,7 @@ function guessDocType(nom){
 }
 
 // ── Chargement automatique depuis GitHub Pages (CSV) ────────────────────────
-const GITHUB_CATALOG_URL = 'https://savvyfnacdarty.github.io/dreame-search-sav/lien_dreame.csv';
+const GITHUB_CATALOG_URL = 'https://savvyfnacdarty.github.io/dreame-search-sav/lien_dreame.xlsx';
 
 /** Parseur CSV minimal (RFC 4180) — délimiteur auto-détecté ; ou , */
 function parseCSVRow(line, delim){
@@ -1442,8 +1442,9 @@ async function loadCatalogFromGitHub(){
     const resp = await fetch(GITHUB_CATALOG_URL, { signal: controller.signal });
     clearTimeout(timeoutId);
     if(!resp.ok) throw new Error('HTTP ' + resp.status);
-    const text = await resp.text();
-    const result = parseCatalogCSV(text);
+    const buf = await resp.arrayBuffer();
+    await ensureSheetJS();
+    const result = parseCatalogWorkbook(buf);
     if(result.error) throw new Error(result.error);
     if(result.folders.length){
       FOLDERS.length = 0;
@@ -1454,14 +1455,14 @@ async function loadCatalogFromGitHub(){
     }
     FAMILY_FILTER = null;
     updateFamilyBar();
-    if(badge) badge.textContent = '\u2705 ' + FOLDERS.length + ' produits';
+    if(badge) badge.textContent = '✅ ' + FOLDERS.length + ' produits';
   } catch(e){
     console.error('loadCatalogFromGitHub:', e);
     if(badge){
       badge.style.background = 'rgba(239,68,68,0.15)';
       badge.style.color = '#ef4444';
       badge.style.border = '1px solid rgba(239,68,68,0.3)';
-      const msg = (e.name === 'AbortError') ? 'Timeout \u2014 utilise Importer' : ('\u26a0 ' + (e.message || 'Erreur chargement'));
+      const msg = (e.name === 'AbortError') ? 'Timeout — utilise Importer' : ('⚠ ' + (e.message || 'Erreur chargement'));
       badge.textContent = msg;
     }
   }
