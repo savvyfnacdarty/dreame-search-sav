@@ -1379,6 +1379,16 @@ function parseCatalogWorkbook(buf){
     else docsMap[dossier].docs.push({name:nom,url:urlFinal,type:type||'other'});
     totalLinks++;
   }
+  // Fallback : si aucun BOM détecté via la colonne explicite,
+  // promouvoir le premier doc dont le nom ou le type évoque "BOM"
+  Object.keys(docsMap).forEach(dossier => {
+    if(!docsMap[dossier].bom){
+      const idx = docsMap[dossier].docs.findIndex(d =>
+        /\bbom\b|bill.of.mat|nomenclat/i.test(d.name) || d.type === 'bom'
+      );
+      if(idx >= 0) docsMap[dossier].bom = docsMap[dossier].docs.splice(idx, 1)[0];
+    }
+  });
   const allUrls=[]; Object.values(docsMap).forEach(d=>{ if(d.bom)allUrls.push(d.bom.url); d.docs.forEach(doc=>allUrls.push(doc.url)); });
   let newSpBase=null;
   if(allUrls.length){
