@@ -689,6 +689,22 @@ function loadBomFromUrl(fileUrl, folderName, productName){
   _initViewerOverlay(productName, folderName);
 
   const fileName  = decodeURIComponent(fileUrl.split('/').pop().split('?')[0]);
+
+  // Si l'URL ne pointe pas vers un fichier (pas d'extension), c'est un dossier SharePoint
+  if(!/\.[a-zA-Z0-9]{2,5}(\?|$)/.test(fileName)){
+    const safeFolderUrl = fileUrl.replace(/'/g, "\\'");
+    document.getElementById('bomContent').innerHTML =
+      '<div style="text-align:center;padding:40px 20px">' +
+        '<div style="font-size:48px;margin-bottom:16px">📂</div>' +
+        '<div style="font-size:15px;font-weight:700;color:white;margin-bottom:8px">' + esc(folderName) + '</div>' +
+        '<div style="font-size:13px;color:#aaa;margin-bottom:24px">Les fichiers BOM sont dans le dossier SharePoint ci-dessous.</div>' +
+        '<a href="' + fileUrl + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;background:#F7A600;color:#1a1a1a;font-weight:700;font-size:14px;border-radius:9px;text-decoration:none">' +
+          '🔗 Ouvrir le dossier BOM sur SharePoint' +
+        '</a>' +
+      '</div>';
+    return;
+  }
+
   // URL du dossier BOM sur SharePoint (retire le nom de fichier)
   const folderUrl = fileUrl.substring(0, fileUrl.lastIndexOf('/'));
 
@@ -1421,7 +1437,10 @@ async function loadCatalogFromGitHub(){
   }
   if(badge) badge.textContent = '\u23f3 Chargement\u2026';
   try {
-    const resp = await fetch(GITHUB_CATALOG_URL);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    const resp = await fetch(GITHUB_CATALOG_URL, { signal: controller.signal });
+    clearTimeout(timeoutId);
     if(!resp.ok) throw new Error('HTTP ' + resp.status);
     const text = await resp.text();
     const result = parseCatalogCSV(text);
@@ -1442,7 +1461,8 @@ async function loadCatalogFromGitHub(){
       badge.style.background = 'rgba(239,68,68,0.15)';
       badge.style.color = '#ef4444';
       badge.style.border = '1px solid rgba(239,68,68,0.3)';
-      badge.textContent = '\u26a0 ' + (e.message || 'Erreur chargement');
+      const msg = (e.name === 'AbortError') ? 'Timeout \u2014 utilise Importer' : ('\u26a0 ' + (e.message || 'Erreur chargement'));
+      badge.textContent = msg;
     }
   }
 }
