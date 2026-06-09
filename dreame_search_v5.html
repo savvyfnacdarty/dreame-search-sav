@@ -87,10 +87,15 @@ header{background:#1a1a1a;padding:0 28px;height:52px;display:flex;align-items:ce
 .bom-hero-file{font-size:12px;color:#78350f;font-family:monospace;background:rgba(0,0,0,0.06);padding:8px 12px;border-radius:7px;margin-bottom:16px;display:flex;align-items:flex-start;gap:7px;word-break:break-all;line-height:1.5}
 .bom-hero-file-icon{font-size:16px;flex-shrink:0;margin-top:1px}
 .bom-hero-btns{display:flex;gap:10px;flex-wrap:wrap}
-.btn-dl-bom{padding:11px 22px;background:#F7A600;color:#1a1a1a;font-weight:700;font-size:14px;border:none;border-radius:9px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:all .15s;box-shadow:0 2px 8px rgba(247,166,0,0.35)}
-.btn-dl-bom:hover{background:#e69500;transform:translateY(-1px);box-shadow:0 4px 14px rgba(247,166,0,0.45)}
-.btn-open-viewer{padding:10px 18px;background:white;color:#92400e;font-weight:600;font-size:13px;border:1.5px solid #F7A600;border-radius:9px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:all .15s}
-.btn-open-viewer:hover{background:#fffbeb}
+/* Bouton principal — ouvre directement dans la visionneuse */
+.btn-open-viewer{padding:11px 22px;background:#F7A600;color:#1a1a1a;font-weight:700;font-size:14px;border:none;border-radius:9px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:all .15s;box-shadow:0 2px 8px rgba(247,166,0,0.35)}
+.btn-open-viewer:hover{background:#e69500;transform:translateY(-1px);box-shadow:0 4px 14px rgba(247,166,0,0.45)}
+/* Bouton secondaire — téléchargement de secours */
+.btn-dl-bom{padding:10px 16px;background:white;color:#92400e;font-weight:600;font-size:13px;border:1.5px solid #F7A600;border-radius:9px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:all .15s}
+.btn-dl-bom:hover{background:#fffbeb}
+/* État chargement sur btn-open-viewer */
+.btn-open-viewer.loading{background:#f0c040;cursor:wait;pointer-events:none}
+.btn-open-viewer .btn-spinner{width:14px;height:14px;border:2px solid rgba(0,0,0,0.2);border-top-color:#1a1a1a;border-radius:50%;animation:spin .6s linear infinite;flex-shrink:0}
 
 /* BOM absent */
 .bom-absent{background:#fafafa;border:2px dashed #d1d5db;border-radius:14px;padding:28px;text-align:center}
@@ -163,6 +168,33 @@ header{background:#1a1a1a;padding:0 28px;height:52px;display:flex;align-items:ce
 .dropzone p{color:#666;font-size:13px;line-height:1.6;margin-bottom:20px}
 .btn-pick{padding:10px 22px;background:#F7A600;color:#1a1a1a;font-weight:700;font-size:13px;border:none;border-radius:8px;cursor:pointer}
 .btn-pick:hover{background:#e69500}
+/* ── Wizard BOM ── */
+.bom-wizard{display:flex;flex-direction:column;align-items:center;padding:36px 40px;gap:0;max-width:560px;margin:0 auto}
+.wizard-steps{display:flex;align-items:center;gap:0;margin-bottom:36px;width:100%}
+.wstep{display:flex;flex-direction:column;align-items:center;gap:6px;flex:1}
+.wstep-num{width:32px;height:32px;border-radius:50%;border:2px solid #2a2d3a;color:#555;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;transition:all .3s}
+.wstep-label{font-size:11px;color:#555;text-align:center;line-height:1.3;max-width:80px}
+.wstep.active .wstep-num{background:#F7A600;border-color:#F7A600;color:#1a1a1a}
+.wstep.active .wstep-label{color:#F7A600;font-weight:600}
+.wstep.done .wstep-num{background:#22c55e;border-color:#22c55e;color:white}
+.wstep.done .wstep-label{color:#22c55e}
+.wstep-line{flex:1;height:2px;background:#2a2d3a;margin-bottom:20px;transition:background .3s}
+.wstep-line.done{background:#22c55e}
+.wizard-body{width:100%;display:flex;flex-direction:column;align-items:center;gap:20px}
+.wfile-card{width:100%;background:#1a1d26;border:1.5px solid #2a2d3a;border-radius:12px;padding:18px 20px;display:flex;align-items:flex-start;gap:16px}
+.wfile-card .wfc-icon{font-size:32px;flex-shrink:0;margin-top:2px}
+.wfile-card .wfc-info{flex:1;min-width:0}
+.wfile-card .wfc-name{color:white;font-size:14px;font-weight:600;word-break:break-word;line-height:1.4;margin-bottom:6px}
+.wfile-card .wfc-meta{color:#666;font-size:12px;line-height:1.5}
+.wfile-card .wfc-meta a{color:#F7A600;text-decoration:none}
+.wfile-card .wfc-meta a:hover{text-decoration:underline}
+.wizard-actions{display:flex;flex-direction:column;align-items:center;gap:10px;width:100%}
+.wizard-note{color:#666;font-size:12px;text-align:center;line-height:1.6}
+.wizard-success{color:#22c55e;font-size:13px;font-weight:600}
+.btn-wizard-primary{padding:13px 32px;background:#F7A600;color:#1a1a1a;font-weight:700;font-size:14px;border:none;border-radius:10px;cursor:pointer;width:100%;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-wizard-primary:hover{background:#e69500;transform:translateY(-1px)}
+.btn-wizard-secondary{padding:10px 20px;background:none;color:#aaa;font-size:13px;border:1.5px solid #2a2d3a;border-radius:8px;cursor:pointer;width:100%;transition:all .15s}
+.btn-wizard-secondary:hover{border-color:#555;color:white}
 .bom-loader{display:flex;flex-direction:column;align-items:center;justify-content:center;height:300px;gap:16px;color:#666}
 .spinner{width:36px;height:36px;border:3px solid #2a2d3a;border-top-color:#F7A600;border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -213,6 +245,33 @@ header{background:#1a1a1a;padding:0 28px;height:52px;display:flex;align-items:ce
   .btn-dl-bom,.btn-open-viewer{width:100%;justify-content:center}
   .ag-steps{flex-direction:column}
 }
+
+/* ── IMPORT CATALOGUE ── */
+.btn-import{padding:5px 13px;background:rgba(255,255,255,0.08);color:#ccc;font-size:12px;font-weight:600;border:1px solid rgba(255,255,255,0.18);border-radius:6px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn-import:hover{background:rgba(247,166,0,0.2);color:#F7A600;border-color:#F7A600}
+.import-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:600;display:flex;align-items:center;justify-content:center;animation:fadeInBg .2s ease;padding:16px}
+.import-overlay.hidden{display:none}
+.import-panel{background:white;border-radius:14px;padding:28px 32px;width:100%;max-width:500px;box-shadow:0 20px 60px rgba(0,0,0,0.35);position:relative}
+.import-panel h3{font-size:16px;font-weight:700;color:#1a1a1a;margin-bottom:6px}
+.import-panel .import-sub{font-size:13px;color:#777;margin-bottom:18px;line-height:1.55}
+.import-panel .import-sub code{background:#f3f4f6;padding:1px 5px;border-radius:3px;font-size:12px;color:#374151}
+.import-drop{border:2px dashed #d1d5db;border-radius:10px;padding:28px 20px;text-align:center;cursor:pointer;transition:all .2s;background:#fafafa;margin-bottom:14px}
+.import-drop:hover,.import-drop.over{border-color:#F7A600;background:#fffbeb}
+.import-drop-icon{font-size:36px;margin-bottom:8px}
+.import-drop-text{font-size:13px;color:#888;margin-bottom:12px;line-height:1.5}
+.btn-import-pick{padding:9px 20px;background:#F7A600;color:#1a1a1a;font-weight:700;font-size:13px;border:none;border-radius:8px;cursor:pointer;transition:background .15s}
+.btn-import-pick:hover{background:#e69500}
+.import-result{font-size:13px;border-radius:8px;padding:12px 16px;line-height:1.6}
+.import-result.ok{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0}
+.import-result.err{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}
+.import-close{position:absolute;top:14px;right:16px;background:none;border:none;color:#bbb;font-size:18px;cursor:pointer;padding:6px;border-radius:6px;line-height:1}
+.import-close:hover{background:#f0f0f0;color:#333}
+.import-format{background:#f8f9fa;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;font-size:11.5px;color:#555;line-height:1.7;margin-bottom:14px}
+.import-format strong{color:#1a1a1a;font-size:12px}
+.family-bar{max-width:680px;width:100%;display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.family-chip{padding:6px 15px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid #e0e0e0;background:white;color:#666;transition:all .15s;white-space:nowrap}
+.family-chip:hover{border-color:#F7A600;color:#F7A600}
+.family-chip.active{background:#F7A600;color:#1a1a1a;border-color:#F7A600}
 </style>
 </head>
 <body>
@@ -222,8 +281,42 @@ header{background:#1a1a1a;padding:0 28px;height:52px;display:flex;align-items:ce
     <div class="logos"><div class="logo-fnac">fnac</div><div class="logo-darty">darty</div></div>
     <div class="htitle">SAV Atelier — <b>Dreame Référent</b></div>
   </div>
-  <div class="badge">✅ 94 produits</div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <button class="btn-import" onclick="openImportModal()" title="Charger un nouveau catalogue Excel">📥 Importer</button>
+    <div class="badge" id="catalogBadge">✅ 94 produits</div>
+  </div>
 </header>
+
+<!-- ══ MODALE IMPORT CATALOGUE ══ -->
+<div class="import-overlay hidden" id="importOverlay" onclick="if(event.target===this)closeImportModal()">
+  <div class="import-panel">
+    <button class="import-close" onclick="closeImportModal()">✕</button>
+    <h3>📥 Importer un catalogue de liens</h3>
+    <p class="import-sub">
+      Charge un fichier Excel (.xlsx) contenant tous les liens SharePoint pour mettre à jour le catalogue sans modifier le code.<br><br>
+      <strong>Format attendu — une ligne par fichier :</strong>
+    </p>
+    <div class="import-format">
+      <strong>Colonnes (noms flexibles) :</strong><br>
+      <code>Dossier</code> — nom complet du dossier (ex : <em>R2527 - Aqua10 Pro Track</em>)<br>
+      <code>Ref</code> — référence produit (ex : <em>R2527</em>)<br>
+      <code>Produit</code> — nom court du produit<br>
+      <code>Est_BOM</code> — <em>oui / 1 / true</em> si c'est la BOM principale<br>
+      <code>Nom</code> — nom du fichier<br>
+      <code>URL</code> — lien SharePoint complet<br>
+      <code>Type</code> — type du doc (pdf, pptx, excel, video…)
+    </div>
+    <div class="import-drop" id="importDrop"
+         ondragover="importDzOver(event)" ondragleave="importDzLeave()" ondrop="importDzDrop(event)"
+         onclick="pickCatalogFile()">
+      <div class="import-drop-icon">📂</div>
+      <div class="import-drop-text">Glisse le fichier ici<br>ou clique pour le sélectionner</div>
+      <button class="btn-import-pick" onclick="pickCatalogFile();event.stopPropagation()">Choisir un fichier .xlsx</button>
+    </div>
+    <div id="importResult" style="display:none"></div>
+  </div>
+</div>
+<input type="file" id="catalogFileInput" accept=".xlsx,.xls,.xlsm" style="display:none">
 
 <div class="main">
   <div class="card">
@@ -234,6 +327,7 @@ header{background:#1a1a1a;padding:0 28px;height:52px;display:flex;align-items:ce
       <button class="btn-clear" onclick="clearSearch()" title="Effacer">✕</button>
     </div>
   </div>
+  <div id="familyBar" class="family-bar" style="display:none;padding:0 0 4px 4px"></div>
   <div class="results" id="results"></div>
 </div>
 
@@ -381,7 +475,8 @@ const FOLDERS = [
   {name:"R9547 - Aqua10 Ultra Roller Complete",ref:"R9547",product:"Aqua10 Ultra Roller Complete"},
 ];
 
-const SP_BASE = "https://groupefnac.sharepoint.com/sites/SAVVY_FNACDARTY/Documents%20partages/DREAME%20R%C3%A9f%C3%A9rent/DREAME/";
+let SP_BASE = "https://groupefnac.sharepoint.com/sites/SAVVY_FNACDARTY/Documents%20partages/DREAME%20R%C3%A9f%C3%A9rent/DREAME/";
+let FAMILY_FILTER = null;
 
 // ════════════════════════════════════════════════════════════
 // DONNÉES DOSSIERS — extraites du fichier Excel SharePoint
@@ -442,19 +537,33 @@ function clearSearch(){
   document.getElementById('q').focus();
 }
 
-function doSearch(){
-  const q   = document.getElementById('q').value.trim().toLowerCase();
-  const wrap = document.getElementById('results');
-  if(!q){ wrap.innerHTML = ''; return; }
+function setFamilyFilter(family){
+  FAMILY_FILTER = family;
+  document.querySelectorAll('.family-chip').forEach(c => {
+    c.classList.toggle('active', c.dataset.family === (family || ''));
+  });
+  doSearch();
+}
 
-  const hits = FOLDERS.filter(f =>
-    f.name.toLowerCase().includes(q) ||
-    f.ref.toLowerCase().includes(q)  ||
-    f.product.toLowerCase().includes(q)
-  );
+function doSearch(){
+  const q    = document.getElementById('q').value.trim().toLowerCase();
+  const wrap = document.getElementById('results');
+  // Si ni recherche ni filtre famille → vider
+  if(!q && !FAMILY_FILTER){ wrap.innerHTML = ''; return; }
+
+  let hits = q
+    ? FOLDERS.filter(f =>
+        f.name.toLowerCase().includes(q) ||
+        f.ref.toLowerCase().includes(q)  ||
+        f.product.toLowerCase().includes(q)
+      )
+    : FOLDERS.slice(); // famille seule → tous les produits
+
+  if(FAMILY_FILTER) hits = hits.filter(f => (f.family || null) === FAMILY_FILTER);
 
   if(!hits.length){
-    wrap.innerHTML = '<div class="empty">Aucun dossier trouvé pour "' + esc(q) + '"</div>';
+    const msg = q ? 'Aucun dossier trouvé pour "' + esc(q) + '"' : 'Aucun produit dans cette famille.';
+    wrap.innerHTML = '<div class="empty">' + msg + '</div>';
     return;
   }
 
@@ -465,15 +574,21 @@ function doSearch(){
       const data   = FOLDER_DOCS[f.name];
       const hasBom = data && data.bom;
       const docCnt = data ? data.docs.length : 0;
-      const spUrl  = SP_BASE + encodeURIComponent(f.name);
+      const spUrl  = f.family
+        ? SP_BASE + encodeURIComponent(f.family) + '/' + encodeURIComponent(f.name)
+        : SP_BASE + encodeURIComponent(f.name);
+      const famBadge = f.family
+        ? '<span class="ri-badge" style="background:#f0f5ff;color:#1a4dc4;border-color:#c8d9ff">' + esc(f.family) + '</span>'
+        : '';
       return '<div class="ri" onclick="openDossier(' +
-          "'" + f.name.replace(/'/g,"\\'") + "','" + f.product.replace(/'/g,"\\'") + "','" + f.ref + "'" +
-        ')">' +
+          "'" + f.name.replace(/'/g,"\\'") + "','" + f.product.replace(/'/g,"\\'") + "','" + f.ref +
+        "')" + '">' +
         '<div class="ri-icon">📁</div>' +
         '<div class="ri-info">' +
           '<div class="ri-name">' + hl(f.product, q) + '</div>' +
           '<div class="ri-ref">' + hl(f.ref, q) + '</div>' +
           '<div class="ri-meta">' +
+            famBadge +
             (hasBom
               ? '<span class="ri-badge bom-ok">📋 BOM disponible</span>'
               : '<span class="ri-badge bom-none">⚠ BOM manquante</span>') +
@@ -495,7 +610,11 @@ function doSearch(){
 // ════════════════════════════════════════════════════════════
 function openDossier(folderName, productName, ref){
   const data   = FOLDER_DOCS[folderName] || { bom: null, docs: [] };
-  const spUrl  = SP_BASE + encodeURIComponent(folderName);
+  const _fEntry = FOLDERS.find(f => f.name === folderName);
+  const _fam    = _fEntry && _fEntry.family;
+  const spUrl   = _fam
+    ? SP_BASE + encodeURIComponent(_fam) + '/' + encodeURIComponent(folderName)
+    : SP_BASE + encodeURIComponent(folderName);
 
   // Header
   document.getElementById('dpProduct').textContent = productName;
@@ -518,12 +637,12 @@ function openDossier(folderName, productName, ref){
           '<span>' + esc(b.name) + '</span>' +
         '</div>' +
         '<div class="bom-hero-btns">' +
-          '<button class="btn-dl-bom" onclick="downloadBom(\'' + dlUrl.replace(/'/g,"\\'") + '\')">' +
-            '⬇️ Télécharger la BOM' +
+          '<button class="btn-open-viewer" id="btnOpenViewer" onclick="loadBomFromUrl(\'' +
+              b.url.replace(/'/g,"\\'") + '\',\'' + folderName.replace(/'/g,"\\'") + '\',\'' + productName.replace(/'/g,"\\'") + '\')">' +
+            '📂 Ouvrir dans la visionneuse' +
           '</button>' +
-          '<button class="btn-open-viewer" onclick="openBomViewer(\'' +
-              folderName.replace(/'/g,"\\'") + '\',\'' + productName.replace(/'/g,"\\'") + '\')">' +
-            '📂 Ouvrir la visionneuse' +
+          '<button class="btn-dl-bom" onclick="downloadBom(\'' + dlUrl.replace(/'/g,"\\'") + '\')" title="Télécharger le fichier BOM sur votre ordinateur">' +
+            '⬇️ Télécharger' +
           '</button>' +
         '</div>' +
       '</div>';
@@ -537,30 +656,38 @@ function openDossier(folderName, productName, ref){
   }
 
   // ─ 2. GUIDE D'ACTION ───────────────────────────────────
+  const hasBomUrl = !!(data.bom);
   html +=
     '<div class="action-guide">' +
-      '<div class="ag-head">ℹ️ Comment utiliser la BOM ?</div>' +
+      '<div class="ag-head">ℹ️ Comment fonctionne la visionneuse ?</div>' +
       '<div class="ag-steps">' +
         '<div class="ag-step">' +
           '<div class="ag-num">1</div>' +
-          '<div class="ag-txt"><strong>Télécharger la BOM</strong>' +
-            'Clique sur "⬇️ Télécharger la BOM" ci-dessus. Le fichier Excel se télécharge sur ton ordinateur.' +
+          '<div class="ag-txt"><strong>En un clic (recommandé — Chrome/Edge)</strong>' +
+            'Clique sur "📂 Ouvrir dans la visionneuse" : le fichier s\'enregistre dans ton dossier Téléchargements et s\'ouvre automatiquement.' +
+            ' La première fois, une fenêtre te demande de sélectionner le dossier Téléchargements.' +
           '</div>' +
         '</div>' +
         '<div class="ag-step">' +
           '<div class="ag-num">2</div>' +
-          '<div class="ag-txt"><strong>Uploader dans la visionneuse</strong>' +
-            'Clique sur "📂 Ouvrir la visionneuse", puis glisse le fichier téléchargé dans la zone prévue.' +
+          '<div class="ag-txt"><strong>Si le chargement automatique échoue</strong>' +
+            'Utilise "⬇️ Télécharger" pour récupérer le fichier, puis glisse-le dans la zone d\'upload qui apparaît dans la visionneuse.' +
           '</div>' +
         '</div>' +
       '</div>' +
       '<div class="ag-sep"></div>' +
       '<div class="ag-footer">' +
         '<div class="ag-footer-txt">La visionneuse permet de rechercher par référence, filtrer par catégorie et consulter chaque pièce en détail.</div>' +
-        '<button class="btn-ag-viewer" onclick="openBomViewer(\'' +
-            folderName.replace(/'/g,"\\'") + '\',\'' + productName.replace(/'/g,"\\'") + '\')">' +
-          '📂 Ouvrir la visionneuse BOM' +
-        '</button>' +
+        (hasBomUrl
+          ? '<button class="btn-ag-viewer" onclick="loadBomFromUrl(\'' +
+                data.bom.url.replace(/'/g,"\\'") + '\',\'' +
+                folderName.replace(/'/g,"\\'") + '\',\'' + productName.replace(/'/g,"\\'") + '\')">' +
+              '📂 Ouvrir la visionneuse BOM' +
+            '</button>'
+          : '<button class="btn-ag-viewer" onclick="openBomViewer(\'' +
+                folderName.replace(/'/g,"\\'") + '\',\'' + productName.replace(/'/g,"\\'") + '\')">' +
+              '📂 Uploader une BOM manuellement' +
+            '</button>') +
       '</div>' +
     '</div>';
 
@@ -606,10 +733,185 @@ document.getElementById('dossierOverlay').addEventListener('click', function(e){
   if(e.target === this) closeDossier();
 });
 
-// Déclenche le téléchargement de la BOM via SharePoint (?download=1)
+// Téléchargement de secours via SharePoint (?download=1)
 function downloadBom(url){
   window.open(url, '_blank');
 }
+
+// ════════════════════════════════════════════════════════════
+// WIZARD BOM — 3 ÉTAPES
+//
+//  Étape 1 : Affiche le fichier BOM disponible + lien dossier SharePoint
+//             → bouton "Télécharger ce fichier"
+//  Étape 2 : Déclenche le téléchargement (/_layouts/15/download.aspx)
+//             → bouton "Ouvrir dans la visionneuse"
+//  Étape 3 : showOpenFilePicker() sur Téléchargements
+//             → viewer s'ouvre avec le fichier sélectionné
+// ════════════════════════════════════════════════════════════
+
+/** Helper : construit les indicateurs d'étapes */
+function _wizardSteps(active){
+  const steps = ['Choisir le fichier','Télécharger','Ouvrir'];
+  let s = '<div class="wizard-steps">';
+  steps.forEach((label, i) => {
+    const n = i + 1;
+    const cls = n < active ? 'done' : n === active ? 'active' : '';
+    const icon = n < active ? '✓' : n;
+    s += '<div class="wstep ' + cls + '">'
+      +    '<div class="wstep-num">' + icon + '</div>'
+      +    '<div class="wstep-label">' + label + '</div>'
+      +  '</div>';
+    if(i < steps.length - 1)
+      s += '<div class="wstep-line' + (n < active ? ' done' : '') + '"></div>';
+  });
+  return s + '</div>';
+}
+
+/** Helper : ouvre la visionneuse et cache la toolbar */
+function _initViewerOverlay(productName, folderName){
+  BOM.rows = []; BOM.filtered = []; BOM.detail = null;
+  BOM.filterText = ''; BOM.filterCat = '__all__'; BOM.currentName = productName;
+  document.getElementById('bomOverlay').classList.remove('hidden');
+  document.getElementById('bomTitle').textContent    = productName + ' — Visionneuse BOM';
+  document.getElementById('bomSubtitle').textContent = folderName;
+  document.getElementById('bomToolbar').style.display = 'none';
+  document.getElementById('chipBar').style.display    = 'none';
+  document.getElementById('bomSearch').value = '';
+  document.getElementById('bomFoot').textContent = '';
+}
+
+/** Helper : parse + affiche dans la visionneuse (réutilisé aux étapes 1 et 3) */
+async function _parseBomAndRender(buf, fileName){
+  await ensureSheetJS();
+  const parsed = await parseWorkbook(buf, fileName);
+  if(!parsed.rows.length){ showError('Aucune pièce détectée dans ce fichier.'); return false; }
+  BOM.rows = parsed.rows; BOM.filtered = parsed.rows.slice();
+  document.getElementById('bomToolbar').style.display = 'flex';
+  document.getElementById('chipBar').style.display    = 'flex';
+  renderBomView();
+  const imgInfo = parsed.embeddedCount > 0 ? ' · ' + parsed.embeddedCount + ' image(s)' : '';
+  document.getElementById('bomFoot').textContent =
+    parsed.rows.length + ' pièces' + imgInfo + ' · ' + fileName;
+  return true;
+}
+
+// ── ÉTAPE 1 ──────────────────────────────────────────────────────────────
+// Point d'entrée : affiche le wizard avec les infos du fichier BOM.
+// L'URL du dossier SharePoint est déduite de l'URL du fichier.
+function loadBomFromUrl(fileUrl, folderName, productName){
+  _initViewerOverlay(productName, folderName);
+
+  const fileName  = decodeURIComponent(fileUrl.split('/').pop().split('?')[0]);
+  // URL du dossier BOM sur SharePoint (retire le nom de fichier)
+  const folderUrl = fileUrl.substring(0, fileUrl.lastIndexOf('/'));
+
+  // Échapper pour usage dans onclick inline
+  const safeUrl  = fileUrl.replace(/'/g, "\\'");
+  const safeName = fileName.replace(/'/g, "\\'");
+
+  document.getElementById('bomContent').innerHTML =
+    '<div class="bom-wizard">' +
+      _wizardSteps(1) +
+      '<div class="wizard-body">' +
+        '<div class="wfile-card">' +
+          '<div class="wfc-icon">📊</div>' +
+          '<div class="wfc-info">' +
+            '<div class="wfc-name">' + esc(fileName) + '</div>' +
+            '<div class="wfc-meta">' +
+              'Dossier&nbsp;: <strong style="color:#aaa">' + esc(folderName) + '</strong><br>' +
+              '<a href="' + folderUrl + '" target="_blank">🔗 Ouvrir le dossier BOM sur SharePoint</a>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="wizard-actions">' +
+          '<button class="btn-wizard-primary" onclick="_bomStep2(\'' + safeUrl + '\',\'' + safeName + '\')">' +
+            '⬇️&nbsp; Télécharger ce fichier' +
+          '</button>' +
+          '<button class="btn-wizard-secondary" onclick="showDropzone()">Uploader manuellement un fichier</button>' +
+        '</div>' +
+        '<p class="wizard-note">Le fichier sera téléchargé dans ton dossier <strong style="color:#F7A600">Téléchargements</strong>.</p>' +
+      '</div>' +
+    '</div>';
+}
+
+// ── ÉTAPE 2 ──────────────────────────────────────────────────────────────
+// Déclenche le téléchargement réel (/_layouts/15/download.aspx force le
+// navigateur à sauvegarder sur disque sans ouvrir Excel).
+// Puis affiche le bouton "Ouvrir dans la visionneuse".
+function _bomStep2(fileUrl, fileName){
+  // Construire l'URL de téléchargement forcé SharePoint
+  try{
+    const u   = new URL(fileUrl);
+    const dlUrl = u.origin + '/sites/SAVVY_FNACDARTY/_layouts/15/download.aspx?SourceUrl='
+                  + encodeURIComponent(u.pathname);
+    window.open(dlUrl, '_blank');
+  } catch(e){
+    window.open(fileUrl, '_blank');
+  }
+
+  const safeName = fileName.replace(/'/g, "\\'");
+
+  document.getElementById('bomContent').innerHTML =
+    '<div class="bom-wizard">' +
+      _wizardSteps(2) +
+      '<div class="wizard-body">' +
+        '<div class="wfile-card">' +
+          '<div class="wfc-icon" style="font-size:28px">⬇️</div>' +
+          '<div class="wfc-info">' +
+            '<div class="wfc-name" style="color:#F7A600">Téléchargement en cours…</div>' +
+            '<div class="wfc-meta">' + esc(fileName) + '<br>Le fichier s\'enregistre dans <strong style="color:white">Téléchargements</strong>.</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="wizard-actions">' +
+          '<button class="btn-wizard-primary" onclick="_bomStep3(\'' + safeName + '\')">' +
+            '📂&nbsp; Ouvrir dans la visionneuse' +
+          '</button>' +
+          '<button class="btn-wizard-secondary" onclick="showDropzone()">Glisser-déposer le fichier manuellement</button>' +
+        '</div>' +
+        '<p class="wizard-note">Une fois le téléchargement terminé, clique sur <strong style="color:white">Ouvrir dans la visionneuse</strong>.<br>Un sélecteur s\'ouvrira directement dans ton dossier Téléchargements.</p>' +
+      '</div>' +
+    '</div>';
+}
+
+// ── ÉTAPE 3 ──────────────────────────────────────────────────────────────
+// showOpenFilePicker() s'ouvre dans Téléchargements.
+// L'utilisateur sélectionne le fichier → viewer s'ouvre.
+async function _bomStep3(expectedName){
+  if(!('showOpenFilePicker' in window)){ pickFile(); return; }
+  try{
+    const [fh] = await window.showOpenFilePicker({
+      types:[{ description:'Fichier Excel BOM',
+               accept:{'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':['.xlsx','.xlsm','.xlsb']} }],
+      multiple: false,
+      startIn: 'downloads'
+    });
+    showLoader('Ouverture dans la visionneuse…');
+    const file = await fh.getFile();
+    const buf  = await file.arrayBuffer();
+    await _parseBomAndRender(buf, file.name);
+  } catch(e){
+    if(e.name !== 'AbortError'){
+      // Retour à l'étape 2 avec message d'erreur
+      const safeName = (expectedName || '').replace(/'/g, "\\'");
+      document.getElementById('bomContent').innerHTML =
+        '<div class="bom-wizard">' +
+          _wizardSteps(2) +
+          '<div class="wizard-body">' +
+            '<p style="color:#ef4444;font-size:13px;text-align:center">Sélection annulée ou erreur. Réessaie.</p>' +
+            '<div class="wizard-actions">' +
+              '<button class="btn-wizard-primary" onclick="_bomStep3(\'' + safeName + '\')">' +
+                '📂&nbsp; Réessayer l\'ouverture' +
+              '</button>' +
+              '<button class="btn-wizard-secondary" onclick="showDropzone()">Glisser-déposer à la place</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+    }
+  }
+}
+
+// Alias pour compatibilité ascendante (bouton "Ouvrir dans la visionneuse" hors-wizard)
+function openDownloadedBom(){ _bomStep3(''); }
 
 // ════════════════════════════════════════════════════════════
 // VISIONNEUSE BOM — UPLOAD LOCAL (dark overlay)
@@ -657,7 +959,7 @@ function showDropzone(){
     '<div class="dropzone" id="dz" onclick="pickFile()" ondragover="dzOver(event)" ondragleave="dzLeave()" ondrop="dzDrop(event)">' +
       '<div class="dropzone-icon">📋</div>' +
       '<h3>Uploader le fichier BOM</h3>' +
-      '<p>Télécharge d\'abord le fichier BOM depuis le panneau produit,<br>puis glisse-le ici ou clique pour le sélectionner.</p>' +
+      '<p>Glisse le fichier BOM (.xlsx) ici ou clique pour le sélectionner.<br>Tu peux aussi utiliser "⬇️ Télécharger" dans le panneau produit si besoin.</p>' +
       '<button class="btn-pick" onclick="pickFile();event.stopPropagation()">Choisir un fichier .xlsx</button>' +
     '</div>';
 }
@@ -675,13 +977,13 @@ function dzLeave(){ document.getElementById('dz') && document.getElementById('dz
 function dzDrop(e){ e.preventDefault(); dzLeave(); const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]; if(f) handleFile(f); }
 
 async function handleFile(file){
-  showLoader('Chargement des bibliothèques…');
+  showBomLoader('Chargement des bibliothèques…');
   try{
     await ensureSheetJS();
-    showLoader('Analyse du fichier & extraction des images…');
+    showBomLoader('Analyse du fichier & extraction des images…');
     const buf    = await file.arrayBuffer();
     const parsed = await parseWorkbook(buf, file.name);
-    if(!parsed.rows.length){ showError('Aucune pièce détectée dans ce fichier.'); return; }
+    if(!parsed.rows.length){ showBomError('Aucune pièce détectée dans ce fichier.'); return; }
     BOM.rows = parsed.rows; BOM.filtered = parsed.rows.slice();
     document.getElementById('bomToolbar').style.display = 'flex';
     document.getElementById('chipBar').style.display    = 'flex';
@@ -690,21 +992,20 @@ async function handleFile(file){
       ? ' · ' + parsed.embeddedCount + ' image(s) extraite(s)'
       : parsed.embeddedError ? ' · ⚠ images indisponibles' : ' · aucune image détectée';
     document.getElementById('bomFoot').textContent = parsed.rows.length + ' pièces' + imgInfo + ' · ' + file.name;
-  } catch(e){ showError('Erreur : ' + (e.message || e)); }
+  } catch(e){ showBomError('Erreur : ' + (e.message || e)); }
 }
 
-function showLoader(msg){
+function showBomLoader(msg){
   document.getElementById('bomContent').innerHTML =
     '<div class="bom-loader"><div class="spinner"></div><div class="loader-msg">' + esc(msg) + '</div></div>';
 }
-function showError(msg){
+function showBomError(msg){
   document.getElementById('bomContent').innerHTML =
     '<div class="bom-loader"><div style="font-size:36px;margin-bottom:12px">⚠</div>' +
     '<div class="loader-msg" style="color:#ef4444">' + esc(msg) + '</div>' +
     '<button class="btn-pick" style="margin-top:16px" onclick="showDropzone()">Réessayer</button></div>';
 }
 
-// ─── Détection colonnes & extraction BOM ──────────────────
 const COL_HINTS = {
   ref:   ['ref','reference','sku','code','p/n','pn','part no','part number','numero','no','item code','material','materiel'],
   desig: ['designation','description','libelle','name','nom','product','produit','item','article','spare part'],
@@ -714,7 +1015,7 @@ const COL_HINTS = {
   qty:   ['qty','quantite','quantity','stock','qte'],
   note:  ['note','remarque','remark','comment','commentaire']
 };
-function normH(h){ return String(h==null?'':h).toLowerCase().trim().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^\w]/g,' ').replace(/\s+/g,' ').trim(); }
+function normH(h){ return String(h==null?'':h).toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\w]/g,' ').replace(/\s+/g,' ').trim(); }
 function detectCols(header){
   const map = {ref:-1,desig:-1,image:-1,cat:-1,price:-1,qty:-1,note:-1,raw:[]};
   const norm = header.map(h => normH(h)); map.raw = header.map(h => String(h==null?'':h).trim());
@@ -741,235 +1042,366 @@ function findHeaderRow(aoa){
   }
   return bestIdx;
 }
-function isImgCell(v){
-  if(v == null) return false; const s = String(v).trim(); if(!s) return false;
-  if(/^data:image\//i.test(s)) return true;
-  if(/^https?:\/\/.+\.(png|jpg|jpeg|gif|webp)(\?.*)?$/i.test(s)) return true;
-  return false;
-}
 
-async function extractXlsxImages(buf){
-  await ensureJSZip();
-  let zip; try{ zip = await JSZip.loadAsync(buf); } catch(e){ return {}; }
-  const mediaMap = {};
-  await Promise.all(Object.keys(zip.files).filter(p => /^xl\/media\//i.test(p)).map(p => {
-    const fname = p.split('/').pop();
-    const ext   = (fname.split('.').pop() || '').toLowerCase();
-    const mime  = {png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',gif:'image/gif',bmp:'image/bmp',webp:'image/webp'}[ext] || 'application/octet-stream';
-    const f = zip.file(p); if(!f) return;
-    return f.async('base64').then(b64 => { mediaMap[fname] = 'data:' + mime + ';base64,' + b64; });
-  }));
-  if(!Object.keys(mediaMap).length) return {};
-  const wbXmlF = zip.file('xl/workbook.xml'); if(!wbXmlF) return {};
-  const wbXml  = await wbXmlF.async('text');
-  const sheetsOrdered = []; const sheetRe = /<sheet\b[^>]*>/g; let m;
-  while((m = sheetRe.exec(wbXml)) !== null){
-    const tag = m[0]; const nm = tag.match(/\bname="([^"]*)"/); const rid = tag.match(/\br:id="([^"]+)"/) || tag.match(/\brelationships:id="([^"]+)"/i);
-    if(nm && rid) sheetsOrdered.push({name: nm[1], rId: rid[1]});
-  }
-  if(!sheetsOrdered.length) return {};
-  const wbRelsF = zip.file('xl/_rels/workbook.xml.rels'); if(!wbRelsF) return {};
-  const wbRelsXml = await wbRelsF.async('text');
-  const wbRels = {}; const relRe = /<Relationship\b[^>]*>/g;
-  while((m = relRe.exec(wbRelsXml)) !== null){
-    const tag = m[0]; const idM = tag.match(/\bId="([^"]+)"/); const tgM = tag.match(/\bTarget="([^"]+)"/);
-    if(idM && tgM) wbRels[idM[1]] = tgM[1];
-  }
-  const out = {};
-  for(const s of sheetsOrdered){
-    const target = wbRels[s.rId]; if(!target) continue;
-    const sheetPath     = target.replace(/^\//,'').startsWith('xl/') ? target.replace(/^\//,'') : 'xl/' + target.replace(/^\.\.\//,'');
-    const sheetRelsPath = sheetPath.replace(/([^/]+)$/,'_rels/$1.rels');
-    const sheetRelsF    = zip.file(sheetRelsPath); if(!sheetRelsF) continue;
-    const sheetRelsXml  = await sheetRelsF.async('text');
-    let drawingTarget = null; relRe.lastIndex = 0;
-    while((m = relRe.exec(sheetRelsXml)) !== null){
-      const tag = m[0]; if(!/drawing/i.test(tag)) continue;
-      const tgM = tag.match(/\bTarget="([^"]+)"/); if(tgM){ drawingTarget = tgM[1]; break; }
-    }
-    if(!drawingTarget) continue;
-    const drawingPath  = drawingTarget.replace(/^\//,'').startsWith('xl/') ? drawingTarget.replace(/^\//,'') : 'xl/' + drawingTarget.replace(/^\.\.\//,'');
-    const drawingF     = zip.file(drawingPath); if(!drawingF) continue;
-    const drawingXml   = await drawingF.async('text');
-    const drawRelsPath = drawingPath.replace(/([^/]+)$/,'_rels/$1.rels');
-    const drawRelsF    = zip.file(drawRelsPath); if(!drawRelsF) continue;
-    const drawRelsXml  = await drawRelsF.async('text');
-    const drRels = {}; relRe.lastIndex = 0;
-    while((m = relRe.exec(drawRelsXml)) !== null){
-      const tag = m[0]; const idM = tag.match(/\bId="([^"]+)"/); const tgM = tag.match(/\bTarget="([^"]+)"/);
-      if(idM && tgM) drRels[idM[1]] = tgM[1].split('/').pop();
-    }
-    const rowMap = {}; const anchorRe = /<xdr:(twoCellAnchor|oneCellAnchor|absoluteAnchor)\b[^>]*>([\s\S]*?)<\/xdr:\1>/g; let am;
-    while((am = anchorRe.exec(drawingXml)) !== null){
-      const inner    = am[2];
-      const fromRowM = inner.match(/<xdr:from>[\s\S]*?<xdr:row>(\d+)<\/xdr:row>/);
-      const blipM    = inner.match(/(?:r|relationships):embed="([^"]+)"/);
-      if(!fromRowM || !blipM) continue;
-      const row = parseInt(fromRowM[1], 10); const rId = blipM[1]; const mediaName = drRels[rId];
-      if(!mediaName || !mediaMap[mediaName]) continue;
-      rowMap[row] = mediaMap[mediaName];
-    }
-    if(Object.keys(rowMap).length) out[s.name] = rowMap;
-  }
-  return out;
-}
+async function parseWorkbook(arrayBuffer, fileName) {
+  const wb = XLSX.read(arrayBuffer, { type: 'array', cellStyles: false });
 
-async function parseWorkbook(buf, fileName){
-  const wb = XLSX.read(buf, {type:'array', cellStyles:false});
-  let embeddedImages = {}, embeddedError = null, embeddedCount = 0;
-  try{
-    embeddedImages = await extractXlsxImages(buf);
-    embeddedCount  = Object.values(embeddedImages).reduce((a,m) => a + Object.keys(m).length, 0);
-  } catch(e){ embeddedError = e && (e.message || String(e)); }
+  // Tente l'extraction d'images embarquées (best-effort, n'échoue jamais durement)
+  let embeddedImages = {};
+  let embeddedError = null;
+  try {
+    embeddedImages = await extractXlsxImages(arrayBuffer);
+  } catch (e) {
+    embeddedError = e && (e.message || String(e));
+    console.warn('Extraction images embarquées impossible :', e);
+  }
+  const totalEmbedded = Object.values(embeddedImages).reduce((acc, m) => acc + Object.keys(m).length, 0);
+
   const allRows = [];
-  for(const sheetName of wb.SheetNames){
+  for (const sheetName of wb.SheetNames) {
     const sheet = wb.Sheets[sheetName];
-    const aoa   = XLSX.utils.sheet_to_json(sheet, {header:1, defval:'', raw:false});
-    if(!aoa.length) continue;
-    const hIdx   = findHeaderRow(aoa);
-    const header = aoa[hIdx] || [];
-    const cols   = detectCols(header);
-    const imgs   = embeddedImages[sheetName] || {};
-    for(let r = hIdx + 1; r < aoa.length; r++){
-      const row    = aoa[r] || [];
-      const hasEmb = imgs[r] != null;
-      if(!hasEmb && !row.some(c => String(c==null?'':c).trim())) continue;
-      const get = i => (i >= 0 && i < row.length) ? String(row[i]==null?'':row[i]).trim() : '';
+    const aoa = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: false });
+    if (!aoa.length) continue;
+    const headerIdx = findHeaderRow(aoa);
+    const header = aoa[headerIdx] || [];
+    const cols = detectCols(header);
+    const imgs = embeddedImages[sheetName] || {};
+    for (let r = headerIdx + 1; r < aoa.length; r++) {
+      const row = aoa[r] || [];
+      // Vérifie aussi si une image embarquée existe sur cette ligne (ne pas skipper une ligne avec image mais sans texte)
+      const hasEmbedded = imgs[r] != null;
+      if (!hasEmbedded && !row.some(c => String(c == null ? '' : c).trim())) continue;
+      const get = i => (i >= 0 && i < row.length) ? String(row[i] == null ? '' : row[i]).trim() : '';
+
+      // Image : priorité aux URLs/data: dans les cellules, puis image embarquée à la même ligne
       let imageVal = get(cols.image);
-      if(!imageVal) for(let c = 0; c < row.length; c++){ if(isImgCell(row[c])){ imageVal = String(row[c]).trim(); break; } }
-      if(!imageVal && hasEmb) imageVal = imgs[r];
-      const ref = get(cols.ref), desig = get(cols.desig), cat = get(cols.cat)||sheetName,
-            price = get(cols.price), qty = get(cols.qty), note = get(cols.note);
-      if(!ref && !desig && !imageVal) continue;
-      const extra = {}, usedCols = new Set([cols.ref,cols.desig,cols.image,cols.cat,cols.price,cols.qty,cols.note].filter(x=>x>=0));
-      for(let c = 0; c < row.length; c++){
-        if(usedCols.has(c)) continue;
-        const k = (cols.raw[c] || ('col_'+(c+1))).trim();
-        const v = String(row[c]==null?'':row[c]).trim();
-        if(k && v) extra[k] = v;
+      if (!imageVal) {
+        for (let c = 0; c < row.length; c++) {
+          if (isImageCell(row[c])) { imageVal = String(row[c]).trim(); break; }
+        }
       }
-      allRows.push({sheet:sheetName,ref,desig,image:imageVal,cat,price,qty,note,extra,_hasImage:!!imageVal});
+      if (!imageVal && hasEmbedded) imageVal = imgs[r];
+
+      const ref     = get(cols.ref);
+      const desig   = get(cols.desig);
+      const cat     = get(cols.cat) || sheetName;
+      const price   = get(cols.price);
+      const qty     = get(cols.qty);
+      const note    = get(cols.note);
+      if (!ref && !desig && !imageVal) continue;
+
+      const extra = {};
+      const usedCols = new Set([cols.ref, cols.desig, cols.image, cols.cat, cols.price, cols.qty, cols.note].filter(x => x >= 0));
+      for (let c = 0; c < row.length; c++) {
+        if (usedCols.has(c)) continue;
+        const k = (cols.raw[c] || ('col_' + (c + 1))).trim();
+        const v = String(row[c] == null ? '' : row[c]).trim();
+        if (k && v) extra[k] = v;
+      }
+
+      allRows.push({
+        sheet: sheetName,
+        ref, desig, image: imageVal, cat, price, qty, note, extra,
+        _hasImage: !!imageVal,
+        _embedded: !!hasEmbedded && imageVal === imgs[r]
+      });
     }
   }
-  return {rows:allRows, sheets:wb.SheetNames, file:fileName, embeddedCount, embeddedError};
-}
-
-// ─── Rendu visionneuse BOM ────────────────────────────────
-function normalize(s){ return String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').trim(); }
-
-function setView(v, btn){
-  BOM.view = v; BOM.detail = null;
-  document.querySelectorAll('.bom-view-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  renderBomView();
-}
-function bomFilter(){ BOM.filterText = document.getElementById('bomSearch').value; BOM.detail = null; renderBomView(); }
-function bomClearSearch(){ document.getElementById('bomSearch').value = ''; BOM.filterText = ''; BOM.detail = null; renderBomView(); }
-
-function applyFilters(){
-  const q = normalize(BOM.filterText), cat = BOM.filterCat;
-  BOM.filtered = BOM.rows.filter(r => {
-    if(cat !== '__all__' && (r.cat||r.sheet) !== cat) return false;
-    if(!q) return true;
-    return normalize(r.ref + ' ' + r.desig + ' ' + r.cat + ' ' + r.note + ' ' + Object.values(r.extra||{}).join(' ')).includes(q);
-  });
+  return { rows: allRows, sheets: wb.SheetNames, file: fileName, embeddedCount: totalEmbedded, embeddedError: embeddedError };
 }
 
 function renderBomView(){
-  applyFilters(); renderChips();
-  document.getElementById('bomCount').textContent = BOM.filtered.length + ' / ' + BOM.rows.length + ' pièces';
-  if(BOM.view === 'detail' && BOM.detail !== null){ renderDetail(BOM.detail); return; }
-  if(!BOM.filtered.length){ document.getElementById('bomContent').innerHTML = '<div class="bom-no-results">Aucune pièce ne correspond.</div>'; return; }
-  if(BOM.view === 'table') renderTable(); else renderGrid();
+  if(BOM.detail !== null){ renderBomDetail(BOM.detail); return; }
+  updateChips();
+  const rows = BOM.filtered;
+  const count = rows.length;
+  document.getElementById('bomCount').textContent = count + ' pièce' + (count>1?'s':'');
+  if(!count){
+    document.getElementById('bomContent').innerHTML = '<div class="bom-no-results">Aucun résultat.</div>';
+    return;
+  }
+  document.getElementById('bomContent').innerHTML = BOM.view === 'grid' ? renderBomGrid(rows) : renderBomTable(rows);
 }
 
-function renderChips(){
-  const cats  = [...new Set(BOM.rows.map(r => r.cat||r.sheet))];
-  const total = BOM.rows.length;
-  document.getElementById('chipBar').innerHTML =
-    [['__all__','Toutes',total], ...cats.map(c => [c, c, BOM.rows.filter(r => (r.cat||r.sheet) === c).length])]
-    .map(([id,label,count]) =>
-      '<button class="chip' + (BOM.filterCat === id ? ' active' : '') + '" onclick="setCat(\'' + esc(id) + '\')">' +
-      esc(label) + ' <span class="chip-count">' + count + '</span></button>')
-    .join('');
-}
-function setCat(c){ BOM.filterCat = c; BOM.detail = null; renderBomView(); }
-
-function thumb(row){
-  if(row.image) return '<div class="bom-thumb"><img src="' + esc(row.image) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'"></div>';
-  return '<div class="bom-thumb bom-thumb-empty">📷</div>';
-}
-
-function renderGrid(){
-  document.getElementById('bomContent').innerHTML =
-    '<div class="bom-grid">' +
-    BOM.filtered.map(r => {
-      const idx = BOM.rows.indexOf(r);
-      return '<div class="bom-card" onclick="showDetail(' + idx + ')">' +
-        thumb(r) +
-        '<div class="bom-card-body">' +
-          (r.ref   ? '<div class="bom-ref">'   + esc(r.ref)   + '</div>' : '') +
-          (r.desig ? '<div class="bom-desig">' + esc(r.desig) + '</div>' : '') +
-          '<div class="bom-meta">' +
-            (r.price ? '<span>' + esc(r.price) + '</span>' : '') +
-            (r.qty   ? '<span>Qté: ' + esc(r.qty) + '</span>' : '') +
-          '</div>' +
-        '</div>' +
-      '</div>';
-    }).join('') + '</div>';
+function renderBomGrid(rows){
+  return '<div class="bom-grid">' + rows.map(r => {
+    const thumb = r.image
+      ? '<div class="bom-thumb"><img src="' + r.image + '" loading="lazy"></div>'
+      : '<div class="bom-thumb"><div class="bom-thumb-empty">🔩</div></div>';
+    const meta = [];
+    if(r.cat)   meta.push('<span>' + esc(r.cat)   + '</span>');
+    if(r.price) meta.push('<span>' + esc(r.price) + '</span>');
+    if(r.qty)   meta.push('<span>x' + esc(r.qty)  + '</span>');
+    return '<div class="bom-card" onclick="openBomDetail(' + BOM.rows.indexOf(r) + ')">' +
+      thumb +
+      '<div class="bom-card-body">' +
+        '<div class="bom-ref">' + esc(r.ref || '—') + '</div>' +
+        '<div class="bom-desig">' + esc(r.desig || '') + '</div>' +
+        (meta.length ? '<div class="bom-meta">' + meta.join('') + '</div>' : '') +
+      '</div>' +
+    '</div>';
+  }).join('') + '</div>';
 }
 
-function renderTable(){
-  document.getElementById('bomContent').innerHTML =
-    '<div class="bom-table-wrap"><table class="bom-table">' +
-    '<thead><tr><th></th><th>Référence</th><th>Désignation</th><th>Catégorie</th><th>Prix</th><th>Qté</th></tr></thead>' +
-    '<tbody>' +
-    BOM.filtered.map(r => {
-      const idx = BOM.rows.indexOf(r);
-      return '<tr onclick="showDetail(' + idx + ')">' +
-        '<td class="td-thumb">' + (r.image ? '<img src="' + esc(r.image) + '" loading="lazy" alt="">' : '') + '</td>' +
-        '<td class="td-ref"><code>' + esc(r.ref||'') + '</code></td>' +
-        '<td>' + esc(r.desig||'') + '</td>' +
-        '<td>' + esc(r.cat||r.sheet||'') + '</td>' +
-        '<td>' + esc(r.price||'') + '</td>' +
-        '<td>' + esc(r.qty||'') + '</td>' +
-      '</tr>';
-    }).join('') + '</tbody></table></div>';
+function renderBomTable(rows){
+  const hasImg   = rows.some(r => r.image);
+  const hasPrice = rows.some(r => r.price);
+  const hasQty   = rows.some(r => r.qty);
+  const hasCat   = rows.some(r => r.cat);
+  return '<div class="bom-table-wrap"><table class="bom-table"><thead><tr>' +
+    (hasImg ? '<th></th>' : '') +
+    '<th>Réf.</th><th>Désignation</th>' +
+    (hasCat   ? '<th>Catégorie</th>'  : '') +
+    (hasPrice ? '<th>Prix</th>'       : '') +
+    (hasQty   ? '<th>Qté</th>'        : '') +
+    '</tr></thead><tbody>' +
+    rows.map(r => '<tr onclick="openBomDetail(' + BOM.rows.indexOf(r) + ')">' +
+      (hasImg ? '<td class="td-thumb">' + (r.image ? '<img src="'+r.image+'" loading="lazy">' : '') + '</td>' : '') +
+      '<td class="td-ref"><code>' + esc(r.ref || '—') + '</code></td>' +
+      '<td>' + esc(r.desig || '') + '</td>' +
+      (hasCat   ? '<td>' + esc(r.cat   || '') + '</td>' : '') +
+      (hasPrice ? '<td>' + esc(r.price || '') + '</td>' : '') +
+      (hasQty   ? '<td>' + esc(r.qty   || '') + '</td>' : '') +
+    '</tr>').join('') +
+    '</tbody></table></div>';
 }
 
-function showDetail(idx){ BOM.detail = idx; BOM.view = 'detail'; renderBomView(); }
-
-function renderDetail(idx){
-  const r = BOM.rows[idx]; if(!r){ BOM.view = 'grid'; renderBomView(); return; }
-  const extraHtml = Object.entries(r.extra||{}).map(([k,v]) =>
+function renderBomDetail(idx){
+  const r = BOM.rows[idx];
+  if(!r){ BOM.detail = null; renderBomView(); return; }
+  const extra = r.extra ? Object.entries(r.extra).map(([k,v]) =>
     '<div class="bom-detail-field"><div class="bom-detail-label">' + esc(k) + '</div><div class="bom-detail-value">' + esc(v) + '</div></div>'
-  ).join('');
+  ).join('') : '';
   document.getElementById('bomContent').innerHTML =
     '<div class="bom-detail">' +
-      '<button class="bom-back" onclick="BOM.detail=null;BOM.view=\'grid\';renderBomView()">← Retour à la liste</button>' +
+      '<button class="bom-back" onclick="closeBomDetail()">\u2190 Retour</button>' +
       '<div class="bom-detail-grid">' +
-        '<div class="bom-detail-img">' + (r.image ? '<img src="' + esc(r.image) + '" alt="">' : '<div class="bom-detail-noimg">Aucune image</div>') + '</div>' +
+        '<div>' +
+          (r.image
+            ? '<div class="bom-detail-img"><img src="' + r.image + '"></div>'
+            : '<div class="bom-detail-img"><div class="bom-detail-noimg">\uD83D\uDD27 Pas d\'image</div></div>') +
+        '</div>' +
         '<div class="bom-detail-info">' +
-          (r.ref   ? '<div class="bom-detail-ref">'   + esc(r.ref)   + '</div>' : '') +
-          (r.desig ? '<div class="bom-detail-desig">' + esc(r.desig) + '</div>' : '') +
+          '<div class="bom-detail-ref">' + esc(r.ref || '\u2014') + '</div>' +
+          '<div class="bom-detail-desig">' + esc(r.desig || '') + '</div>' +
           '<div class="bom-detail-fields">' +
-            (r.cat   ? '<div class="bom-detail-field"><div class="bom-detail-label">Catégorie</div><div class="bom-detail-value">'  + esc(r.cat)   + '</div></div>' : '') +
+            (r.cat   ? '<div class="bom-detail-field"><div class="bom-detail-label">Cat\u00e9gorie</div><div class="bom-detail-value">' + esc(r.cat)   + '</div></div>' : '') +
             (r.price ? '<div class="bom-detail-field"><div class="bom-detail-label">Prix</div><div class="bom-detail-value">'       + esc(r.price) + '</div></div>' : '') +
-            (r.qty   ? '<div class="bom-detail-field"><div class="bom-detail-label">Quantité</div><div class="bom-detail-value">'  + esc(r.qty)   + '</div></div>' : '') +
-            (r.note  ? '<div class="bom-detail-field"><div class="bom-detail-label">Note</div><div class="bom-detail-value">'      + esc(r.note)  + '</div></div>' : '') +
-            extraHtml +
+            (r.qty   ? '<div class="bom-detail-field"><div class="bom-detail-label">Quantit\u00e9</div><div class="bom-detail-value">'   + esc(r.qty)   + '</div></div>' : '') +
+            (r.note  ? '<div class="bom-detail-field"><div class="bom-detail-label">Note</div><div class="bom-detail-value">'       + esc(r.note)  + '</div></div>' : '') +
+            extra +
           '</div>' +
         '</div>' +
       '</div>' +
     '</div>';
 }
 
-// Fermer avec Échap
-document.addEventListener('keydown', e => {
-  if(e.key !== 'Escape') return;
-  if(!document.getElementById('bomOverlay').classList.contains('hidden')){ closeBomViewer(); return; }
-  if(!document.getElementById('dossierOverlay').classList.contains('hidden')){ closeDossier(); return; }
+function openBomDetail(idx){ BOM.detail = idx; renderBomDetail(idx); }
+function closeBomDetail(){ BOM.detail = null; renderBomView(); }
+
+function setView(v, btn){
+  BOM.view = v;
+  document.querySelectorAll('.bom-view-btn').forEach(b => b.classList.toggle('active', b === btn));
+  renderBomView();
+}
+
+function updateChips(){
+  const cats = {};
+  BOM.rows.forEach(r => { if(r.cat){ cats[r.cat] = (cats[r.cat]||0) + 1; } });
+  const bar = document.getElementById('chipBar');
+  if(!Object.keys(cats).length){ bar.innerHTML = ''; return; }
+  bar.innerHTML = '<div class="chip' + (BOM.filterCat==='__all__'?' active':'') +
+    '" onclick="setCat(\'__all__\')">Tout <span class="chip-count">(' + BOM.rows.length + ')</span></div>' +
+    Object.entries(cats).sort((a,b)=>b[1]-a[1]).map(([cat,n]) =>
+      '<div class="chip' + (BOM.filterCat===cat?' active':'') +
+      '" onclick="setCat(\'' + cat.replace(/\\/g,'\\\\').replace(/'/g,"\\'") + '\')">'
+      + esc(cat) + ' <span class="chip-count">(' + n + ')</span></div>'
+    ).join('');
+}
+
+function setCat(cat){ BOM.filterCat = cat; BOM.detail = null; applyBomFilter(); }
+
+function bomFilter(){
+  BOM.filterText = document.getElementById('bomSearch').value.trim();
+  BOM.detail = null; applyBomFilter();
+}
+function bomClearSearch(){
+  document.getElementById('bomSearch').value = '';
+  BOM.filterText = ''; BOM.detail = null; applyBomFilter();
+}
+function applyBomFilter(){
+  const q = normH(BOM.filterText); const cat = BOM.filterCat;
+  BOM.filtered = BOM.rows.filter(r => {
+    if(cat !== '__all__' && r.cat !== cat) return false;
+    if(!q) return true;
+    return normH(r.ref||'').includes(q) || normH(r.desig||'').includes(q) || normH(r.cat||'').includes(q);
+  });
+  renderBomView();
+}
+
+// IMPORT CATALOGUE
+function openImportModal(){
+  document.getElementById('importOverlay').classList.remove('hidden');
+  document.getElementById('importResult').style.display = 'none';
+}
+function closeImportModal(){
+  document.getElementById('importOverlay').classList.add('hidden');
+}
+function pickCatalogFile(){ document.getElementById('catalogFileInput').click(); }
+
+document.getElementById('catalogFileInput').addEventListener('change', e => {
+  const f = e.target.files && e.target.files[0];
+  if(f) handleCatalogFile(f);
+  e.target.value = '';
 });
+
+function importDzOver(e){ e.preventDefault(); document.getElementById('importDrop').classList.add('over'); }
+function importDzLeave(){ document.getElementById('importDrop').classList.remove('over'); }
+function importDzDrop(e){ e.preventDefault(); importDzLeave(); const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]; if(f) handleCatalogFile(f); }
+
+async function handleCatalogFile(file){
+  const resultDiv = document.getElementById('importResult');
+  resultDiv.style.display = 'none';
+  const btn = document.querySelector('.btn-import-pick');
+  if(btn){ btn.textContent = 'Chargement\u2026'; btn.disabled = true; }
+  try{
+    await ensureSheetJS();
+    const buf = await file.arrayBuffer();
+    const result = parseCatalogWorkbook(buf);
+    if(result.error){ throw new Error(result.error); }
+    if(result.folders.length){
+      FOLDERS.length = 0;
+      result.folders.forEach(f => FOLDERS.push(f));
+      Object.keys(FOLDER_DOCS).forEach(k => delete FOLDER_DOCS[k]);
+      Object.entries(result.folderDocs).forEach(([k,v]) => FOLDER_DOCS[k] = v);
+      if(result.newSpBase) SP_BASE = result.newSpBase;
+    }
+    FAMILY_FILTER = null;
+    updateFamilyBar();
+    document.getElementById('catalogBadge').textContent = '\u2705 ' + FOLDERS.length + ' produits';
+    document.getElementById('q').value = '';
+    document.getElementById('results').innerHTML = '';
+    const spInfo = result.newSpBase
+      ? '<br><small style="opacity:.7">Dossier commun : ' + esc(decodeURIComponent(result.newSpBase)) + '</small>'
+      : '';
+    const famInfo = result.families && result.families.length
+      ? '<br><small style="opacity:.7">' + result.families.length + ' famille(s) : ' + result.families.map(esc).join(', ') + '</small>'
+      : '';
+    resultDiv.className = 'import-result ok';
+    resultDiv.innerHTML = '\u2705 <strong>' + result.folders.length + ' dossiers</strong> et <strong>' +
+      result.totalLinks + ' liens</strong> import\u00e9s depuis <em>' + esc(file.name) + '</em>.' + spInfo + famInfo;
+    resultDiv.style.display = 'block';
+  } catch(e){
+    resultDiv.className = 'import-result err';
+    resultDiv.innerHTML = '\u26a0\ufe0f Erreur : ' + esc(e.message || String(e));
+    resultDiv.style.display = 'block';
+  } finally {
+    if(btn){ btn.textContent = 'Choisir un fichier .xlsx'; btn.disabled = false; }
+  }
+}
+
+// Met à jour les chips de famille dans la barre de recherche
+function updateFamilyBar(){
+  const bar = document.getElementById('familyBar');
+  const families = [...new Set(FOLDERS.map(f => f.family).filter(Boolean))];
+  if(!families.length){ bar.style.display = 'none'; bar.innerHTML = ''; return; }
+  bar.style.display = 'flex';
+  bar.innerHTML =
+    '<button class="family-chip' + (!FAMILY_FILTER ? ' active' : '') + '" data-family="" onclick="setFamilyFilter(null)">Toutes les familles</button>' +
+    families.map(fam =>
+      '<button class="family-chip' + (FAMILY_FILTER===fam ? ' active' : '') + '" data-family="' + esc(fam) + '" onclick="setFamilyFilter(\'' + fam.replace(/'/g,"\\'") + '\')">'
+      + esc(fam) + '</button>'
+    ).join('');
+}
+
+function parseCatalogWorkbook(buf){
+  const wb = XLSX.read(buf, { type: 'array' });
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const aoa = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+  if(!aoa.length) return { error: 'Feuille vide.' };
+  const CATALOG_KW = ['dossier','folder','famille','family','ref','produit','product','bom','nom','name','url','lien','link','type'];
+  let hdrRow = 0, bestScore = -1;
+  for(let i = 0; i < Math.min(aoa.length, 15); i++){
+    const row = aoa[i] || []; let score = 0;
+    for(const cell of row){ const n = normH(cell); if(CATALOG_KW.some(kw => n.includes(kw))) score++; }
+    if(score > bestScore){ bestScore = score; hdrRow = i; }
+  }
+  const header = (aoa[hdrRow] || []).map(h => normH(h));
+  const col = {
+    dossier: header.findIndex(h => h.includes('dossier') || h.includes('folder')),
+    famille: header.findIndex(h => h === 'famille' || h === 'family' || h.includes('sous dossier') || h.includes('subfolder')),
+    ref:     header.findIndex(h => h === 'ref' || h.includes('reference')),
+    produit: header.findIndex(h => h.includes('produit') || h.includes('product')),
+    bom:     header.findIndex(h => h.includes('bom') || h.includes('est bom')),
+    nom:     header.findIndex(h => h === 'nom' || h === 'name' || h.includes('nom fichier')),
+    url:     header.findIndex(h => h === 'url' || h.includes('lien') || h.includes('link') || h.includes('sharepoint')),
+    type:    header.findIndex(h => h === 'type' || h.includes('type doc'))
+  };
+  if(col.dossier < 0) col.dossier = 0;
+  if(col.url < 0) return { error: 'Colonne URL introuvable. V\u00e9rifiez que l\'en-t\u00eate contient "URL" ou "Lien".' };
+  const foldersMap = {}; const docsMap = {}; let totalLinks = 0;
+  for(let i = hdrRow + 1; i < aoa.length; i++){
+    const row = aoa[i];
+    const dossier = String(row[col.dossier] || '').trim(); if(!dossier) continue;
+    const url = String(col.url >= 0 ? row[col.url] : '').trim(); if(!url) continue;
+    const famille = col.famille >= 0 ? String(row[col.famille] || '').trim() || null : null;
+    const ref     = col.ref     >= 0 ? String(row[col.ref]     || '').trim() : dossier.split(/[\s\-]/)[0];
+    const produit = col.produit >= 0 ? String(row[col.produit] || '').trim() : dossier.replace(/^[A-Z0-9]+\s*[-\u2013]\s*/,'');
+    const isBom   = col.bom     >= 0 ? /^(oui|yes|1|true|x)$/i.test(String(row[col.bom]||'').trim()) : false;
+    const nom     = col.nom     >= 0 ? String(row[col.nom]     || '').trim() : url.split('/').pop().split('?')[0];
+    const type    = col.type    >= 0 ? String(row[col.type]    || '').trim().toLowerCase() : guessDocType(nom);
+    if(!foldersMap[dossier]){
+      foldersMap[dossier] = { name: dossier, ref: ref, product: produit, family: famille };
+      docsMap[dossier] = { bom: null, docs: [] };
+    }
+    if(isBom){ docsMap[dossier].bom = { name: nom, url: url }; }
+    else { docsMap[dossier].docs.push({ name: nom, url: url, type: type || 'other' }); }
+    totalLinks++;
+  }
+  // Chemin de base commun
+  const allUrls = [];
+  Object.values(docsMap).forEach(d => {
+    if(d.bom) allUrls.push(d.bom.url);
+    d.docs.forEach(doc => allUrls.push(doc.url));
+  });
+  let newSpBase = null;
+  if(allUrls.length){
+    let prefix = allUrls[0];
+    for(const u of allUrls){ let j=0; while(j<prefix.length && j<u.length && prefix[j]===u[j]) j++; prefix=prefix.slice(0,j); }
+    const lastSlash = prefix.lastIndexOf('/');
+    if(lastSlash > 8) newSpBase = prefix.slice(0, lastSlash + 1);
+  }
+  // Si pas de colonne famille, extraire la famille depuis l'URL (segment entre SP_BASE et le dossier)
+  if(newSpBase){
+    Object.keys(foldersMap).forEach(dossier => {
+      if(foldersMap[dossier].family) return; // déjà renseigné
+      const d = docsMap[dossier];
+      const sampleUrl = (d.bom && d.bom.url) || (d.docs[0] && d.docs[0].url) || '';
+      if(!sampleUrl.startsWith(newSpBase)) return;
+      const rel = decodeURIComponent(sampleUrl.slice(newSpBase.length));
+      const parts = rel.split('/');
+      // structure attendue: [Famille]/[Dossier produit]/fichier  → parts[0] = Famille
+      if(parts.length >= 3 && parts[0] && parts[0] !== dossier){
+        foldersMap[dossier].family = parts[0];
+      }
+    });
+  }
+  const folders = Object.values(foldersMap);
+  const families = [...new Set(folders.map(f => f.family).filter(Boolean))];
+  return { folders, folderDocs: docsMap, totalLinks, newSpBase, families };
+}
+
+function guessDocType(name){
+  const ext = (name.split('.').pop() || '').toLowerCase();
+  if(['pdf'].includes(ext))                          return 'pdf';
+  if(['xlsx','xls','xlsm'].includes(ext))            return 'excel';
+  if(['docx','doc'].includes(ext))                   return 'word';
+  if(['pptx','ppt'].includes(ext))                   return 'pptx';
+  if(['mp4','avi','mov','mkv','webm'].includes(ext)) return 'video';
+  if(['zip','rar','7z'].includes(ext))               return 'archive';
+  return 'other';
+}
+
 </script>
 </body>
 </html>
