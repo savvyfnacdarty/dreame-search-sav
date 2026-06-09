@@ -1,0 +1,1596 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dreame — Recherche SAV</title>
+<style>
+/* ── TOKENS ── */
+:root {
+  --bg:        #F3F4F6;
+  --surface:   #FFFFFF;
+  --border:    #E5E7EB;
+  --border2:   #D1D5DB;
+  --text:      #111827;
+  --text-2:    #6B7280;
+  --text-3:    #9CA3AF;
+  --accent:    #F59E0B;
+  --accent-h:  #D97706;
+  --accent-bg: #FFFBEB;
+  --accent-bd: #FDE68A;
+  --blue:      #3B82F6;
+  --blue-bg:   #EFF6FF;
+  --blue-bd:   #BFDBFE;
+  --blue-text: #1D4ED8;
+  --red:       #EF4444;
+  --red-bg:    #FEF2F2;
+  --green:     #22C55E;
+  --green-bg:  #F0FDF4;
+  --radius:    12px;
+  --radius-sm: 8px;
+  --shadow:    0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.06);
+  --shadow-lg: 0 4px 24px rgba(0,0,0,.12), 0 16px 48px rgba(0,0,0,.08);
+  --transition: all .18s ease;
+}
+
+/* ── RESET ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+/* ═══════════════════════════════
+   HEADER
+═══════════════════════════════ */
+.header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+}
+.header-brand { display: flex; align-items: center; gap: 10px; }
+.logo-fnac  { background: #F59E0B; color: #1a1a1a; font-weight: 900; font-size: 12px; padding: 3px 8px; border-radius: 4px; letter-spacing: .5px; }
+.logo-darty { background: #E30613; color: white;   font-weight: 900; font-size: 12px; padding: 3px 8px; border-radius: 4px; letter-spacing: .5px; }
+.header-title { font-size: 13px; color: var(--text-2); border-left: 1px solid var(--border2); padding-left: 12px; margin-left: 4px; }
+.header-title b { color: var(--text); font-weight: 600; }
+.header-actions { display: flex; align-items: center; gap: 10px; }
+.btn-import {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px; background: var(--surface); color: var(--text-2);
+  border: 1px solid var(--border2); border-radius: 8px;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  transition: var(--transition);
+}
+.btn-import:hover { border-color: var(--accent); color: var(--accent-h); background: var(--accent-bg); }
+.badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;
+  background: rgba(34,197,94,.1); color: #16A34A; border: 1px solid rgba(34,197,94,.25);
+}
+.badge.loading { background: rgba(107,114,128,.1); color: var(--text-2); border-color: var(--border); }
+.badge.error   { background: rgba(239,68,68,.1);   color: var(--red);    border-color: rgba(239,68,68,.25); }
+
+/* ═══════════════════════════════
+   HERO
+═══════════════════════════════ */
+.hero {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 40px 24px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.hero-eyebrow {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1.5px; color: var(--accent-h); margin-bottom: 10px;
+  display: flex; align-items: center; gap: 6px;
+}
+.hero-eyebrow::before, .hero-eyebrow::after { content: ''; flex: 1; height: 1px; background: var(--accent-bd); max-width: 60px; }
+.hero h1 { font-size: 26px; font-weight: 800; color: var(--text); margin-bottom: 6px; text-align: center; letter-spacing: -.4px; }
+.hero p  { font-size: 14px; color: var(--text-2); margin-bottom: 20px; text-align: center; }
+
+.search-box {
+  width: 100%; max-width: 640px;
+  display: flex; align-items: center; gap: 0;
+  background: var(--bg); border: 2px solid var(--border2);
+  border-radius: 14px; overflow: hidden;
+  transition: border-color .2s, box-shadow .2s;
+}
+.search-box:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(245,158,11,.12);
+}
+.search-icon { padding: 0 14px; color: var(--text-3); font-size: 17px; flex-shrink: 0; }
+.search-input {
+  flex: 1; padding: 13px 0; background: transparent;
+  border: none; outline: none; font-size: 15px; color: var(--text);
+  font-family: inherit;
+}
+.search-input::placeholder { color: var(--text-3); }
+.btn-clear {
+  padding: 8px 14px; margin: 6px; background: var(--surface);
+  color: var(--text-3); border: none; border-radius: 9px;
+  cursor: pointer; font-size: 14px; font-weight: 700; transition: var(--transition);
+}
+.btn-clear:hover { background: var(--border); color: var(--text); }
+
+/* ── Family bar ── */
+.family-bar {
+  width: 100%; max-width: 640px;
+  display: none; gap: 6px; flex-wrap: wrap;
+  margin-top: 14px;
+}
+.fchip {
+  padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
+  cursor: pointer; border: 1.5px solid var(--border2); background: var(--surface);
+  color: var(--text-2); transition: var(--transition); white-space: nowrap;
+}
+.fchip:hover  { border-color: var(--accent); color: var(--accent-h); }
+.fchip.active { background: var(--accent); color: #1a1a1a; border-color: var(--accent); }
+
+/* ═══════════════════════════════
+   RESULTS
+═══════════════════════════════ */
+.results-wrap { max-width: 720px; width: 100%; margin: 0 auto; padding: 20px 16px 60px; }
+.results-header { font-size: 12px; color: var(--text-3); margin-bottom: 10px; padding: 0 2px; }
+.results-header b { color: var(--text-2); }
+
+.ri {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px 16px;
+  margin-bottom: 8px; display: flex; align-items: center; gap: 14px;
+  cursor: pointer; transition: var(--transition);
+  box-shadow: 0 1px 3px rgba(0,0,0,.04);
+}
+.ri:hover {
+  border-color: var(--accent); box-shadow: var(--shadow);
+  transform: translateY(-1px);
+}
+.ri-avatar {
+  width: 40px; height: 40px; background: var(--accent-bg);
+  border: 1px solid var(--accent-bd); border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.ri-info { flex: 1; min-width: 0; }
+.ri-name { font-size: 14px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ri-ref  { font-size: 11px; color: var(--text-3); font-family: monospace; margin-top: 2px; }
+.ri-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 6px; }
+.tag {
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 600;
+  background: var(--bg); color: var(--text-2); border: 1px solid var(--border);
+}
+.tag.bom-ok   { background: #ECFDF5; color: #065F46; border-color: #A7F3D0; }
+.tag.bom-none { background: var(--red-bg); color: #991B1B; border-color: #FECACA; }
+.tag.fam      { background: var(--blue-bg); color: var(--blue-text); border-color: var(--blue-bd); }
+.tag.docs     { background: #F5F3FF; color: #5B21B6; border-color: #DDD6FE; }
+
+.ri-action {
+  flex-shrink: 0;
+  padding: 7px 13px; font-size: 12px; font-weight: 600;
+  border-radius: 8px; border: 1px solid var(--blue-bd);
+  background: var(--blue-bg); color: var(--blue-text);
+  text-decoration: none; display: inline-flex; align-items: center; gap: 5px;
+  transition: var(--transition); white-space: nowrap;
+}
+.ri-action:hover { background: #DBEAFE; }
+
+.empty-state {
+  background: var(--surface); border: 1px dashed var(--border2);
+  border-radius: var(--radius); padding: 40px; text-align: center;
+}
+.empty-state-icon { font-size: 40px; margin-bottom: 12px; }
+.empty-state h3 { font-size: 15px; font-weight: 600; color: var(--text-2); margin-bottom: 4px; }
+.empty-state p  { font-size: 13px; color: var(--text-3); }
+
+.hl { background: rgba(245,158,11,.3); border-radius: 2px; padding: 0 2px; }
+
+/* ═══════════════════════════════
+   DRAWER PRODUIT (right-slide)
+═══════════════════════════════ */
+.drawer-backdrop {
+  position: fixed; inset: 0; background: rgba(17,24,39,.45);
+  z-index: 400; backdrop-filter: blur(2px);
+  animation: fadeBg .2s ease;
+}
+.drawer-backdrop.hidden { display: none; }
+@keyframes fadeBg { from { opacity:0 } to { opacity:1 } }
+
+.drawer {
+  position: fixed; top: 0; right: 0; bottom: 0;
+  width: 100%; max-width: 520px;
+  background: var(--surface); z-index: 401;
+  display: flex; flex-direction: column;
+  box-shadow: -8px 0 40px rgba(0,0,0,.14);
+  animation: slideIn .22s ease;
+  overflow: hidden;
+}
+.drawer-backdrop.hidden .drawer { display: none; }
+@keyframes slideIn { from { transform: translateX(100%) } to { transform: translateX(0) } }
+
+/* Drawer header */
+.dw-header {
+  padding: 18px 20px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: flex-start; gap: 12px;
+  flex-shrink: 0; background: var(--surface);
+}
+.dw-avatar {
+  width: 46px; height: 46px; background: var(--accent-bg);
+  border: 2px solid var(--accent-bd); border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; flex-shrink: 0;
+}
+.dw-title-wrap { flex: 1; min-width: 0; }
+.dw-product { font-size: 16px; font-weight: 700; color: var(--text); line-height: 1.3; }
+.dw-ref     { font-size: 11px; color: var(--text-3); font-family: monospace; margin-top: 3px; }
+.dw-close {
+  width: 32px; height: 32px; background: none; border: none;
+  color: var(--text-3); cursor: pointer; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px; transition: var(--transition); flex-shrink: 0;
+}
+.dw-close:hover { background: var(--bg); color: var(--text); }
+
+/* Drawer body */
+.dw-body { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+.dw-body::-webkit-scrollbar { width: 5px; }
+.dw-body::-webkit-scrollbar-track { background: transparent; }
+.dw-body::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+/* Drawer footer */
+.dw-footer {
+  padding: 14px 20px; border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.btn-sp-full {
+  width: 100%; padding: 11px; background: var(--blue-bg); color: var(--blue-text);
+  border: 1px solid var(--blue-bd); border-radius: 10px; font-size: 13px;
+  font-weight: 600; cursor: pointer; text-decoration: none; display: flex;
+  align-items: center; justify-content: center; gap: 7px; transition: var(--transition);
+}
+.btn-sp-full:hover { background: #DBEAFE; }
+
+/* ── BOM CARD ── */
+.bom-card {
+  background: var(--accent-bg); border: 2px solid var(--accent-bd);
+  border-radius: var(--radius); padding: 18px 20px; position: relative; overflow: hidden;
+}
+.bom-card::after {
+  content: '📋'; position: absolute; right: 12px; top: 50%;
+  transform: translateY(-50%); font-size: 56px; opacity: .07; pointer-events: none;
+}
+.bom-card-label {
+  display: flex; align-items: center; gap: 6px; margin-bottom: 8px;
+}
+.bom-card-label .pill {
+  background: var(--accent); color: #1a1a1a; font-size: 9px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 1px; padding: 2px 7px; border-radius: 4px;
+}
+.bom-card-label span { font-size: 11px; font-weight: 600; color: #92400E; }
+.bom-card-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+.bom-card-file {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(0,0,0,.05); border-radius: 7px;
+  padding: 8px 10px; margin-bottom: 14px;
+  font-size: 12px; color: #78350F; font-family: monospace;
+  word-break: break-all; line-height: 1.5;
+}
+.bom-card-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn-viewer {
+  flex: 1; min-width: 0;
+  padding: 10px 16px; background: var(--accent); color: #1a1a1a;
+  font-weight: 700; font-size: 13px; border: none; border-radius: 9px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  gap: 7px; transition: var(--transition);
+  box-shadow: 0 2px 8px rgba(245,158,11,.3);
+}
+.btn-viewer:hover { background: var(--accent-h); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(245,158,11,.4); }
+.btn-viewer.loading { opacity: .7; cursor: wait; pointer-events: none; }
+.btn-dl {
+  padding: 10px 14px; background: white; color: #92400E;
+  border: 1.5px solid var(--accent-bd); border-radius: 9px;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  display: flex; align-items: center; gap: 6px; transition: var(--transition);
+}
+.btn-dl:hover { background: var(--accent-bg); }
+
+.bom-absent {
+  background: var(--bg); border: 2px dashed var(--border2);
+  border-radius: var(--radius); padding: 24px; text-align: center;
+}
+.bom-absent-icon { font-size: 32px; margin-bottom: 8px; }
+.bom-absent-msg  { font-size: 13px; font-weight: 600; color: var(--text-3); }
+.bom-absent-sub  { font-size: 12px; color: var(--border2); margin-top: 2px; }
+
+/* ── HOW-TO GUIDE ── */
+.guide {
+  background: var(--blue-bg); border: 1px solid var(--blue-bd);
+  border-radius: var(--radius-sm); padding: 14px 16px;
+}
+.guide-head {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .7px; color: var(--blue-text); margin-bottom: 10px;
+  display: flex; align-items: center; gap: 5px;
+}
+.guide-steps { display: flex; flex-direction: column; gap: 8px; }
+.guide-step  { display: flex; align-items: flex-start; gap: 10px; }
+.guide-num {
+  width: 20px; height: 20px; background: var(--blue-text); color: white;
+  font-size: 10px; font-weight: 700; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px;
+}
+.guide-txt { font-size: 12px; color: #1E3A8A; line-height: 1.55; }
+.guide-txt strong { display: block; font-size: 12px; font-weight: 700; margin-bottom: 1px; color: var(--blue-text); }
+
+/* ── OTHER DOCS ── */
+.section-head {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .7px; color: var(--text-2); display: flex; align-items: center; gap: 8px;
+}
+.section-head .count {
+  background: var(--bg); color: var(--text-3); padding: 1px 7px;
+  border-radius: 10px; font-size: 10px; border: 1px solid var(--border);
+}
+.doc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+.doc-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 11px 13px; cursor: pointer;
+  transition: var(--transition); display: flex; align-items: flex-start;
+  gap: 9px; text-decoration: none; color: inherit;
+}
+.doc-card:hover { border-color: #818CF8; box-shadow: 0 2px 10px rgba(99,102,241,.1); transform: translateY(-1px); }
+.doc-icon  { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+.doc-body  { flex: 1; min-width: 0; }
+.doc-type  { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 2px; }
+.doc-name  { font-size: 12px; color: var(--text-2); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word; }
+.doc-ext   { font-size: 10px; color: var(--text-3); margin-top: 2px; font-family: monospace; }
+.no-docs   { text-align: center; padding: 16px; color: var(--text-3); font-size: 13px; background: var(--bg); border-radius: 8px; border: 1px dashed var(--border); margin-top: 8px; }
+
+/* ═══════════════════════════════
+   BOM VIEWER (dark full-screen)
+═══════════════════════════════ */
+.bom-overlay { position: fixed; inset: 0; background: #0C0E14; z-index: 1000; display: flex; flex-direction: column; animation: fadeIn .15s ease; }
+.bom-overlay.hidden { display: none; }
+@keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
+
+.bom-topbar {
+  background: #161821; border-bottom: 1px solid #252836;
+  padding: 0 20px; height: 52px;
+  display: flex; align-items: center; gap: 14px; flex-shrink: 0;
+}
+.bom-close {
+  background: none; border: none; color: #6B7280; font-size: 20px;
+  cursor: pointer; padding: 6px 8px; border-radius: 6px; line-height: 1; transition: color .15s;
+}
+.bom-close:hover { color: white; }
+.bom-title    { flex: 1; font-size: 15px; font-weight: 700; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bom-subtitle { font-size: 12px; color: #4B5563; white-space: nowrap; }
+
+.bom-toolbar {
+  background: #161821; border-bottom: 1px solid #252836;
+  padding: 10px 20px; display: flex; align-items: center; gap: 12px;
+  flex-shrink: 0; flex-wrap: wrap;
+}
+.bom-search-wrap { position: relative; flex: 1; min-width: 160px; }
+.bom-search {
+  width: 100%; padding: 8px 32px 8px 12px; background: #0C0E14;
+  border: 1px solid #252836; border-radius: 8px; color: white;
+  font-size: 13px; outline: none; font-family: inherit; transition: border-color .2s;
+}
+.bom-search:focus { border-color: var(--accent); }
+.bom-search::placeholder { color: #4B5563; }
+.bom-search-clear {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; color: #4B5563; cursor: pointer; font-size: 13px; padding: 2px;
+}
+.bom-search-clear:hover { color: #9CA3AF; }
+.bom-count { font-size: 12px; color: #4B5563; white-space: nowrap; }
+.bom-view-btns { display: flex; gap: 4px; }
+.bom-view-btn {
+  background: #0C0E14; border: 1px solid #252836; color: #6B7280;
+  padding: 6px 10px; border-radius: 7px; cursor: pointer; font-size: 13px; transition: var(--transition);
+}
+.bom-view-btn.active, .bom-view-btn:hover { background: var(--accent); color: #1a1a1a; border-color: var(--accent); }
+
+.chip-bar { display: flex; gap: 6px; flex-wrap: wrap; padding: 8px 20px; background: #161821; border-bottom: 1px solid #252836; }
+.chip { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; cursor: pointer; border: 1px solid #252836; background: #0C0E14; color: #6B7280; transition: var(--transition); }
+.chip:hover { border-color: var(--accent); color: var(--accent); }
+.chip.active { background: var(--accent); color: #1a1a1a; border-color: var(--accent); }
+.chip-count { opacity: .6; font-weight: 400; }
+
+.bom-content { flex: 1; overflow-y: auto; padding: 20px; }
+.bom-content::-webkit-scrollbar { width: 5px; }
+.bom-content::-webkit-scrollbar-track { background: transparent; }
+.bom-content::-webkit-scrollbar-thumb { background: #252836; border-radius: 4px; }
+
+.bom-foot { background: #161821; border-top: 1px solid #252836; padding: 8px 20px; font-size: 11px; color: #4B5563; flex-shrink: 0; }
+
+/* ── BOM Wizard ── */
+.bom-wizard { display: flex; flex-direction: column; align-items: center; padding: 32px 40px; gap: 0; max-width: 540px; margin: 0 auto; }
+.wizard-steps { display: flex; align-items: center; gap: 0; margin-bottom: 28px; width: 100%; }
+.wstep { display: flex; flex-direction: column; align-items: center; gap: 5px; flex: 1; }
+.wstep-num {
+  width: 30px; height: 30px; border-radius: 50%;
+  border: 2px solid #252836; color: #4B5563; font-size: 12px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; transition: all .3s;
+}
+.wstep-label { font-size: 10px; color: #4B5563; text-align: center; line-height: 1.3; max-width: 72px; }
+.wstep.active .wstep-num  { background: var(--accent); border-color: var(--accent); color: #1a1a1a; }
+.wstep.active .wstep-label{ color: var(--accent); font-weight: 600; }
+.wstep.done .wstep-num    { background: var(--green); border-color: var(--green); color: white; }
+.wstep.done .wstep-label  { color: var(--green); }
+.wstep-line { flex: 1; height: 2px; background: #252836; margin-bottom: 18px; transition: background .3s; }
+.wstep-line.done { background: var(--green); }
+.wizard-body { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 18px; }
+.wfile-card {
+  width: 100%; background: #161821; border: 1.5px solid #252836;
+  border-radius: 12px; padding: 16px 18px; display: flex; align-items: flex-start; gap: 14px;
+}
+.wfc-icon { font-size: 28px; flex-shrink: 0; margin-top: 2px; }
+.wfc-info { flex: 1; min-width: 0; }
+.wfc-name { color: white; font-size: 14px; font-weight: 600; word-break: break-word; line-height: 1.4; margin-bottom: 5px; }
+.wfc-meta { color: #6B7280; font-size: 12px; line-height: 1.5; }
+.wfc-meta a { color: var(--accent); text-decoration: none; }
+.wfc-meta a:hover { text-decoration: underline; }
+.wizard-actions { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; }
+.wizard-note { color: #6B7280; font-size: 12px; text-align: center; line-height: 1.6; }
+.btn-wizard-primary {
+  padding: 12px 28px; background: var(--accent); color: #1a1a1a;
+  font-weight: 700; font-size: 14px; border: none; border-radius: 10px;
+  cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center;
+  gap: 7px; transition: var(--transition);
+}
+.btn-wizard-primary:hover { background: var(--accent-h); }
+.btn-wizard-secondary {
+  padding: 9px 18px; background: none; color: #6B7280;
+  font-size: 12px; border: 1.5px solid #252836; border-radius: 8px;
+  cursor: pointer; width: 100%; transition: var(--transition);
+}
+.btn-wizard-secondary:hover { border-color: #4B5563; color: #D1D5DB; }
+
+/* ── Dropzone ── */
+.dropzone {
+  border: 2px dashed #252836; border-radius: 14px; padding: 44px 28px;
+  text-align: center; cursor: pointer; transition: all .2s; margin: 32px auto; max-width: 460px;
+}
+.dropzone:hover, .dropzone.over { border-color: var(--accent); background: rgba(245,158,11,.04); }
+.dropzone-icon { font-size: 44px; margin-bottom: 14px; }
+.dropzone h3   { color: white; font-size: 16px; margin-bottom: 6px; }
+.dropzone p    { color: #6B7280; font-size: 13px; line-height: 1.6; margin-bottom: 18px; }
+.btn-pick {
+  padding: 9px 20px; background: var(--accent); color: #1a1a1a;
+  font-weight: 700; font-size: 13px; border: none; border-radius: 8px; cursor: pointer;
+}
+.btn-pick:hover { background: var(--accent-h); }
+
+/* ── BOM loader / error ── */
+.bom-loader { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 280px; gap: 14px; color: #6B7280; }
+.spinner { width: 34px; height: 34px; border: 3px solid #252836; border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg) } }
+.loader-msg { font-size: 13px; }
+
+/* ── BOM Grid / Table / Detail ── */
+.bom-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
+.bom-card-item {
+  background: #161821; border: 1px solid #252836; border-radius: 10px;
+  overflow: hidden; cursor: pointer; transition: all .15s; text-align: left;
+}
+.bom-card-item:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 4px 20px rgba(245,158,11,.12); }
+.bom-thumb { width: 100%; height: 130px; background: #0C0E14; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.bom-thumb img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.bom-thumb-empty { color: #252836; font-size: 32px; }
+.bom-card-body { padding: 9px 11px; }
+.bom-ref   { font-family: monospace; font-size: 11px; color: var(--accent); margin-bottom: 3px; }
+.bom-desig { font-size: 12px; color: #D1D5DB; font-weight: 500; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.bom-meta  { font-size: 10px; color: #4B5563; margin-top: 4px; display: flex; gap: 5px; flex-wrap: wrap; }
+.bom-meta span { background: #0C0E14; padding: 2px 5px; border-radius: 4px; }
+
+.bom-table-wrap { overflow-x: auto; }
+.bom-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.bom-table thead { background: #161821; position: sticky; top: 0; }
+.bom-table th {
+  padding: 9px 12px; text-align: left; color: #6B7280; font-size: 10px;
+  font-weight: 700; letter-spacing: .5px; text-transform: uppercase;
+  border-bottom: 1px solid #252836; white-space: nowrap;
+}
+.bom-table tbody tr { border-bottom: 1px solid #161821; cursor: pointer; transition: background .1s; }
+.bom-table tbody tr:hover { background: #161821; }
+.bom-table td { padding: 7px 12px; color: #D1D5DB; vertical-align: middle; }
+.bom-table td.td-thumb { width: 56px; }
+.bom-table td.td-thumb img { width: 44px; height: 44px; object-fit: contain; border-radius: 4px; background: #0C0E14; }
+.bom-table td.td-ref code { font-size: 11px; color: var(--accent); background: #0C0E14; padding: 2px 6px; border-radius: 4px; }
+
+.bom-detail { max-width: 680px; margin: 0 auto; }
+.bom-back {
+  background: none; border: none; color: var(--accent); cursor: pointer;
+  font-size: 13px; padding: 0; margin-bottom: 18px; display: flex; align-items: center; gap: 5px;
+}
+.bom-back:hover { text-decoration: underline; }
+.bom-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media(max-width:560px){ .bom-detail-grid { grid-template-columns: 1fr; } }
+.bom-detail-img {
+  background: #161821; border-radius: 12px; border: 1px solid #252836;
+  display: flex; align-items: center; justify-content: center;
+  min-height: 220px; overflow: hidden; padding: 16px;
+}
+.bom-detail-img img { max-width: 100%; max-height: 280px; object-fit: contain; }
+.bom-detail-noimg  { color: #4B5563; font-size: 13px; text-align: center; }
+.bom-detail-info   { display: flex; flex-direction: column; gap: 10px; }
+.bom-detail-ref    { font-family: monospace; font-size: 20px; font-weight: 700; color: var(--accent); }
+.bom-detail-desig  { font-size: 17px; color: white; font-weight: 600; line-height: 1.3; }
+.bom-detail-fields { display: flex; flex-direction: column; gap: 6px; margin-top: 2px; }
+.bom-detail-field  { background: #161821; border-radius: 8px; padding: 9px 13px; border: 1px solid #252836; }
+.bom-detail-label  { font-size: 10px; color: #4B5563; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 3px; }
+.bom-detail-value  { font-size: 13px; color: #D1D5DB; }
+.bom-no-results    { text-align: center; padding: 40px; color: #4B5563; font-size: 14px; }
+.search-hl { background: rgba(245,158,11,.3); border-radius: 2px; padding: 0 1px; }
+
+/* ═══════════════════════════════
+   IMPORT MODAL
+═══════════════════════════════ */
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(17,24,39,.5);
+  z-index: 600; display: flex; align-items: center; justify-content: center;
+  padding: 16px; animation: fadeBg .2s ease;
+}
+.modal-backdrop.hidden { display: none; }
+.modal {
+  background: var(--surface); border-radius: 16px; padding: 28px;
+  width: 100%; max-width: 480px; box-shadow: var(--shadow-lg);
+  position: relative; animation: scaleIn .18s ease;
+}
+@keyframes scaleIn { from { opacity:0; transform:scale(.96) } to { opacity:1; transform:scale(1) } }
+.modal-close {
+  position: absolute; top: 14px; right: 16px; background: none;
+  border: none; color: var(--text-3); font-size: 17px; cursor: pointer;
+  padding: 6px; border-radius: 7px; transition: var(--transition);
+}
+.modal-close:hover { background: var(--bg); color: var(--text); }
+.modal h3 { font-size: 16px; font-weight: 700; margin-bottom: 5px; }
+.modal-sub { font-size: 13px; color: var(--text-2); margin-bottom: 16px; line-height: 1.55; }
+.modal-sub code { background: var(--bg); padding: 1px 5px; border-radius: 4px; font-size: 12px; color: var(--text); }
+.import-format {
+  background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+  padding: 12px 14px; font-size: 11.5px; color: var(--text-2); line-height: 1.7; margin-bottom: 14px;
+}
+.import-format strong { color: var(--text); font-size: 12px; }
+.import-drop {
+  border: 2px dashed var(--border2); border-radius: 10px; padding: 24px 20px;
+  text-align: center; cursor: pointer; transition: all .2s; background: var(--bg); margin-bottom: 12px;
+}
+.import-drop:hover, .import-drop.over { border-color: var(--accent); background: var(--accent-bg); }
+.import-drop-icon { font-size: 32px; margin-bottom: 7px; }
+.import-drop-text { font-size: 13px; color: var(--text-2); margin-bottom: 10px; line-height: 1.5; }
+.btn-import-pick {
+  padding: 8px 18px; background: var(--accent); color: #1a1a1a;
+  font-weight: 700; font-size: 13px; border: none; border-radius: 8px; cursor: pointer;
+}
+.btn-import-pick:hover { background: var(--accent-h); }
+.import-result { font-size: 13px; border-radius: 8px; padding: 11px 14px; line-height: 1.6; }
+.import-result.ok  { background: var(--green-bg); color: #166534; border: 1px solid #BBF7D0; }
+.import-result.err { background: var(--red-bg);   color: #991B1B; border: 1px solid #FECACA; }
+
+/* ═══════════════════════════════
+   RESPONSIVE
+═══════════════════════════════ */
+@media(max-width: 540px){
+  .hero h1 { font-size: 20px; }
+  .bom-card-btns { flex-direction: column; }
+  .btn-dl, .btn-viewer { width: 100%; justify-content: center; }
+  .doc-grid { grid-template-columns: 1fr; }
+  .drawer { max-width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════ HEADER ════════════════════ -->
+<header class="header">
+  <div class="header-brand">
+    <div class="logo-fnac">fnac</div>
+    <div class="logo-darty">darty</div>
+    <div class="header-title">SAV Atelier — <b>Dreame Référent</b></div>
+  </div>
+  <div class="header-actions">
+    <button class="btn-import" onclick="openImportModal()">📥 Importer</button>
+    <div class="badge loading" id="catalogBadge">⏳ Chargement…</div>
+  </div>
+</header>
+
+<!-- ════════════════════ HERO SEARCH ════════════════════ -->
+<section class="hero">
+  <div class="hero-eyebrow">Recherche documentaire</div>
+  <h1>Dossiers produits Dreame</h1>
+  <p>Tape une référence ou un nom de modèle pour accéder à la BOM et aux documents SAV.</p>
+  <div class="search-box">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="q" class="search-input"
+           placeholder="R2228, L10s, X40, Mova, D9…"
+           oninput="doSearch()" autofocus autocomplete="off">
+    <button class="btn-clear" onclick="clearSearch()" title="Effacer">✕</button>
+  </div>
+  <div id="familyBar" class="family-bar"></div>
+</section>
+
+<!-- ════════════════════ RESULTS ════════════════════ -->
+<div class="results-wrap">
+  <div id="results"></div>
+</div>
+
+<!-- ════════════════════ DRAWER PRODUIT ════════════════════ -->
+<div class="drawer-backdrop hidden" id="drawerBackdrop" onclick="if(event.target===this)closeDossier()">
+  <div class="drawer" id="drawer">
+    <div class="dw-header">
+      <div class="dw-avatar">📁</div>
+      <div class="dw-title-wrap">
+        <div class="dw-product" id="dwProduct"></div>
+        <div class="dw-ref" id="dwRef"></div>
+      </div>
+      <button class="dw-close" onclick="closeDossier()" title="Fermer (Échap)">✕</button>
+    </div>
+    <div class="dw-body" id="dwBody"></div>
+    <div class="dw-footer">
+      <a class="btn-sp-full" id="dwSpLink" href="#" target="_blank" rel="noopener">
+        📂 Ouvrir le dossier SharePoint
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════ BOM VIEWER ════════════════════ -->
+<div class="bom-overlay hidden" id="bomOverlay">
+  <div class="bom-topbar">
+    <button class="bom-close" onclick="closeBomViewer()" title="Fermer">✕</button>
+    <div class="bom-title" id="bomTitle">Visionneuse BOM</div>
+    <div class="bom-subtitle" id="bomSubtitle"></div>
+  </div>
+  <div class="bom-toolbar" id="bomToolbar" style="display:none">
+    <div class="bom-search-wrap">
+      <input type="text" class="bom-search" id="bomSearch"
+             placeholder="Rechercher une pièce ou une référence…" oninput="bomFilter()">
+      <button class="bom-search-clear" onclick="bomClearSearch()" title="Effacer">✕</button>
+    </div>
+    <div class="bom-count" id="bomCount"></div>
+    <div class="bom-view-btns">
+      <button class="bom-view-btn active" data-view="grid"  onclick="setView('grid',this)"  title="Grille">⊞</button>
+      <button class="bom-view-btn"        data-view="table" onclick="setView('table',this)" title="Tableau">☰</button>
+    </div>
+  </div>
+  <div class="chip-bar" id="chipBar" style="display:none"></div>
+  <div class="bom-content" id="bomContent"></div>
+  <div class="bom-foot" id="bomFoot"></div>
+</div>
+
+<!-- ════════════════════ IMPORT MODAL ════════════════════ -->
+<div class="modal-backdrop hidden" id="importModal" onclick="if(event.target===this)closeImportModal()">
+  <div class="modal">
+    <button class="modal-close" onclick="closeImportModal()">✕</button>
+    <h3>📥 Importer un catalogue de liens</h3>
+    <p class="modal-sub">
+      Charge un fichier Excel <code>.xlsx</code> contenant les liens SharePoint pour mettre à jour le catalogue.<br>
+      <strong>Format attendu — une ligne par fichier :</strong>
+    </p>
+    <div class="import-format">
+      <strong>Colonnes (noms flexibles) :</strong><br>
+      <code>Dossier</code> · <code>Ref</code> · <code>Produit</code> · <code>Est_BOM</code> · <code>Nom</code> · <code>URL</code> · <code>Type</code>
+    </div>
+    <div class="import-drop" id="importDrop"
+         ondragover="importDzOver(event)" ondragleave="importDzLeave()" ondrop="importDzDrop(event)"
+         onclick="pickCatalogFile()">
+      <div class="import-drop-icon">📂</div>
+      <div class="import-drop-text">Glisse le fichier ici ou clique pour le sélectionner</div>
+      <button class="btn-import-pick" onclick="pickCatalogFile();event.stopPropagation()">Choisir un fichier .xlsx</button>
+    </div>
+    <div id="importResult" style="display:none"></div>
+  </div>
+</div>
+
+<input type="file" id="fileInput"        accept=".xlsx,.xls,.xlsm,.xlsb,.csv" style="display:none">
+<input type="file" id="catalogFileInput" accept=".xlsx,.xls,.xlsm"            style="display:none">
+
+<script>
+// ══════════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════════
+const FOLDERS    = [];
+const FOLDER_DOCS = {};
+let SP_BASE       = "https://groupefnac.sharepoint.com/sites/SAVVY_FNACDARTY/Documents%20partages/DREAME%20R%C3%A9f%C3%A9rent/DREAME/";
+let FAMILY_FILTER = null;
+
+const BOM = {
+  rows:[], filtered:[], view:'grid',
+  detail:null, filterText:'', filterCat:'__all__', currentName:''
+};
+
+const SHEETJS_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+const JSZIP_CDN   = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+const JSZIP_CDN2  = 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';
+const GITHUB_CATALOG_URL = 'https://savvyfnacdarty.github.io/dreame-search-sav/lien_dreame.xlsx';
+
+// ══════════════════════════════════════════════════════
+//  UTILITAIRES
+// ══════════════════════════════════════════════════════
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function hl(text, q){
+  if(!q) return esc(text);
+  const re = new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');
+  return esc(text).replace(re,'<span class="hl">$1</span>');
+}
+function fileExt(name){ return (name.split('.').pop()||'').toLowerCase(); }
+function normH(h){ return String(h==null?'':h).toLowerCase().trim().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^\w]/g,' ').replace(/\s+/g,' ').trim(); }
+
+function loadScript(url, fallback){
+  return new Promise((res, rej) => {
+    const s = document.createElement('script'); s.src = url; s.async = true;
+    s.onload = res;
+    s.onerror = fallback ? () => loadScript(fallback).then(res,rej) : () => rej(new Error('CDN: '+url));
+    document.head.appendChild(s);
+  });
+}
+async function ensureSheetJS(){ if(typeof XLSX==='undefined') await loadScript(SHEETJS_CDN); }
+async function ensureJSZip(){   if(typeof JSZip==='undefined') await loadScript(JSZIP_CDN, JSZIP_CDN2); }
+
+// ── Types de documents ───────────────────────────────
+const DOC_TYPES = {
+  maintenance_manual:{ icon:'🔧', label:'Manuel SAV',     color:'#7C3AED' },
+  exploded_view:     { icon:'💥', label:'Vue éclatée',    color:'#DC2626' },
+  video:             { icon:'🎬', label:'Vidéo',          color:'#2563EB' },
+  user_manual:       { icon:'📖', label:'Notice',         color:'#059669' },
+  pdf:               { icon:'📄', label:'PDF',            color:'#EA580C' },
+  excel:             { icon:'📊', label:'Excel',          color:'#16A34A' },
+  word:              { icon:'📝', label:'Word',           color:'#1D4ED8' },
+  ppt:               { icon:'📑', label:'Présentation',   color:'#9333EA' },
+  image:             { icon:'🖼️', label:'Image',         color:'#0891B2' },
+  archive:           { icon:'🗜️', label:'Archive',       color:'#6B7280' },
+  training:          { icon:'🎓', label:'Formation',      color:'#D97706' },
+  bom:               { icon:'📋', label:'BOM',            color:'#D97706' },
+  other:             { icon:'📎', label:'Document',       color:'#6B7280' },
+};
+
+function guessDocType(nom){
+  const n = (nom||'').toLowerCase();
+  if(/\.pdf$/i.test(n))                     return 'pdf';
+  if(/\.(xlsx?|xlsm|ods|csv)$/i.test(n))    return 'excel';
+  if(/\.(docx?|odt|txt|rtf)$/i.test(n))     return 'word';
+  if(/\.(pptx?|odp)$/i.test(n))             return 'ppt';
+  if(/\.(jpe?g|png|gif|bmp|svg|webp)$/i.test(n)) return 'image';
+  if(/\.(zip|rar|7z|tar)$/i.test(n))        return 'archive';
+  if(/\.(mp4|mov|avi|mkv|webm)$/i.test(n))  return 'video';
+  if(/\bbom\b|nomenclat/i.test(n))          return 'bom';
+  return 'other';
+}
+
+// ══════════════════════════════════════════════════════
+//  RECHERCHE
+// ══════════════════════════════════════════════════════
+function clearSearch(){
+  document.getElementById('q').value = '';
+  document.getElementById('results').innerHTML = '';
+  document.getElementById('q').focus();
+}
+
+function setFamilyFilter(family){
+  FAMILY_FILTER = family;
+  document.querySelectorAll('.fchip').forEach(c =>
+    c.classList.toggle('active', c.dataset.family === (family||''))
+  );
+  doSearch();
+}
+
+function doSearch(){
+  const q    = document.getElementById('q').value.trim().toLowerCase();
+  const wrap = document.getElementById('results');
+  if(!q && !FAMILY_FILTER){ wrap.innerHTML=''; return; }
+
+  let hits = q
+    ? FOLDERS.filter(f =>
+        f.name.toLowerCase().includes(q) ||
+        f.ref.toLowerCase().includes(q)  ||
+        f.product.toLowerCase().includes(q))
+    : FOLDERS.slice();
+
+  if(FAMILY_FILTER) hits = hits.filter(f => (f.family||null)===FAMILY_FILTER);
+
+  if(!hits.length){
+    const msg = q ? 'Aucun dossier pour "'+esc(q)+'"' : 'Aucun produit dans cette famille.';
+    wrap.innerHTML =
+      '<div class="empty-state">' +
+        '<div class="empty-state-icon">🔍</div>' +
+        '<h3>' + msg + '</h3>' +
+        '<p>Essaie une autre référence ou vérifie l\'orthographe.</p>' +
+      '</div>';
+    return;
+  }
+
+  const plural = hits.length > 1;
+  wrap.innerHTML =
+    '<div class="results-header"><b>' + hits.length + '</b> dossier' + (plural?'s':'') +
+    ' trouvé' + (plural?'s':'') + ' — clique pour accéder au contenu</div>' +
+    hits.map(f => {
+      const data   = FOLDER_DOCS[f.name];
+      const hasBom = data && data.bom;
+      const docCnt = data ? data.docs.length : 0;
+      const spUrl  = f.family
+        ? SP_BASE + encodeURIComponent(f.family) + '/' + encodeURIComponent(f.name)
+        : SP_BASE + encodeURIComponent(f.name);
+
+      const tags = [
+        f.family ? '<span class="tag fam">' + esc(f.family) + '</span>' : '',
+        hasBom
+          ? '<span class="tag bom-ok">📋 BOM disponible</span>'
+          : '<span class="tag bom-none">⚠ BOM manquante</span>',
+        docCnt > 0
+          ? '<span class="tag docs">' + docCnt + ' doc' + (docCnt>1?'s':'') + '</span>'
+          : ''
+      ].filter(Boolean).join('');
+
+      return '<div class="ri" onclick="openDossier(\'' + f.name.replace(/'/g,"\\'") + '\',\'' + f.product.replace(/'/g,"\\'") + '\',\'' + f.ref + '\')">' +
+        '<div class="ri-avatar">📁</div>' +
+        '<div class="ri-info">' +
+          '<div class="ri-name">' + hl(f.product, q) + '</div>' +
+          '<div class="ri-ref">' + hl(f.ref, q) + '</div>' +
+          '<div class="ri-tags">' + tags + '</div>' +
+        '</div>' +
+        '<a class="ri-action" href="' + esc(spUrl) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="SharePoint">📂 SP</a>' +
+      '</div>';
+    }).join('');
+}
+
+// ══════════════════════════════════════════════════════
+//  DRAWER PRODUIT
+// ══════════════════════════════════════════════════════
+function openDossier(folderName, productName, ref){
+  const data   = FOLDER_DOCS[folderName] || { bom:null, docs:[] };
+  const entry  = FOLDERS.find(f => f.name===folderName);
+  const fam    = entry && entry.family;
+  const spUrl  = fam
+    ? SP_BASE + encodeURIComponent(fam) + '/' + encodeURIComponent(folderName)
+    : SP_BASE + encodeURIComponent(folderName);
+
+  document.getElementById('dwProduct').textContent = productName;
+  document.getElementById('dwRef').textContent     = folderName;
+  document.getElementById('dwSpLink').href         = spUrl;
+
+  let html = '';
+
+  // — BOM card —
+  if(data.bom){
+    const b   = data.bom;
+    const ext = fileExt(b.name);
+    const dlUrl = b.url + '?download=1';
+    html +=
+      '<div class="bom-card">' +
+        '<div class="bom-card-label"><span class="pill">PRIORITÉ 1</span><span>Document essentiel</span></div>' +
+        '<div class="bom-card-title">📋 BOM — Bill of Materials</div>' +
+        '<div class="bom-card-file"><span>' + (ext==='zip'?'🗜️':'📊') + '</span><span>' + esc(b.name) + '</span></div>' +
+        '<div class="bom-card-btns">' +
+          '<button class="btn-viewer" id="btnOpenViewer" onclick="loadBomFromUrl(\'' + b.url.replace(/'/g,"\\'") + '\',\'' + folderName.replace(/'/g,"\\'") + '\',\'' + productName.replace(/'/g,"\\'") + '\')">' +
+            '📂 Ouvrir la visionneuse' +
+          '</button>' +
+          '<button class="btn-dl" onclick="downloadBom(\'' + dlUrl.replace(/'/g,"\\'") + '\')" title="Télécharger">⬇️ Télécharger</button>' +
+        '</div>' +
+      '</div>';
+  } else {
+    html +=
+      '<div class="bom-absent">' +
+        '<div class="bom-absent-icon">📋</div>' +
+        '<div class="bom-absent-msg">Aucune BOM disponible</div>' +
+        '<div class="bom-absent-sub">Le fichier BOM n\'a pas encore été ajouté au dossier SharePoint.</div>' +
+      '</div>';
+  }
+
+  // — Guide —
+  const hasBomUrl = !!(data.bom);
+  html +=
+    '<div class="guide">' +
+      '<div class="guide-head">ℹ️ Comment utiliser la visionneuse</div>' +
+      '<div class="guide-steps">' +
+        '<div class="guide-step"><div class="guide-num">1</div><div class="guide-txt"><strong>En un clic (Chrome/Edge)</strong>Clique sur "Ouvrir la visionneuse" : le fichier se télécharge et s\'ouvre automatiquement. La première fois, sélectionne le dossier Téléchargements.</div></div>' +
+        '<div class="guide-step"><div class="guide-num">2</div><div class="guide-txt"><strong>Si le chargement échoue</strong>Utilise "⬇️ Télécharger", puis glisse le fichier dans la zone d\'upload de la visionneuse.</div></div>' +
+      '</div>' +
+    '</div>';
+
+  // — Autres docs —
+  const docs = data.docs || [];
+  if(docs.length){
+    html +=
+      '<div>' +
+        '<div class="section-head">📚 Autres documents <span class="count">' + docs.length + '</span></div>' +
+        '<div class="doc-grid">' +
+          docs.map(doc => {
+            const t   = DOC_TYPES[doc.type] || DOC_TYPES.other;
+            const ext = fileExt(doc.name);
+            return '<a class="doc-card" href="' + esc(doc.url) + '" target="_blank" rel="noopener">' +
+              '<div class="doc-icon">' + t.icon + '</div>' +
+              '<div class="doc-body">' +
+                '<div class="doc-type" style="color:' + t.color + '">' + esc(t.label) + '</div>' +
+                '<div class="doc-name">' + esc(doc.name) + '</div>' +
+                (ext ? '<div class="doc-ext">.' + esc(ext) + '</div>' : '') +
+              '</div>' +
+            '</a>';
+          }).join('') +
+        '</div>' +
+      '</div>';
+  } else {
+    html += '<div class="no-docs">Aucun autre document dans ce dossier.</div>';
+  }
+
+  document.getElementById('dwBody').innerHTML = html;
+  document.getElementById('drawerBackdrop').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeDossier(){
+  document.getElementById('drawerBackdrop').classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+function downloadBom(url){ window.open(url,'_blank'); }
+
+// ══════════════════════════════════════════════════════
+//  FAMILY BAR
+// ══════════════════════════════════════════════════════
+function updateFamilyBar(){
+  const bar = document.getElementById('familyBar');
+  const families = [...new Set(FOLDERS.map(f=>f.family).filter(Boolean))];
+  if(!families.length){ bar.style.display='none'; bar.innerHTML=''; return; }
+  bar.style.display = 'flex';
+  bar.innerHTML =
+    '<button class="fchip' + (!FAMILY_FILTER?' active':'') + '" data-family="" onclick="setFamilyFilter(null)">Toutes</button>' +
+    families.map(fam =>
+      '<button class="fchip' + (FAMILY_FILTER===fam?' active':'') + '" data-family="' + esc(fam) + '" onclick="setFamilyFilter(\'' + fam.replace(/'/g,"\\'") + '\')">' + esc(fam) + '</button>'
+    ).join('');
+}
+
+// ══════════════════════════════════════════════════════
+//  WIZARD BOM
+// ══════════════════════════════════════════════════════
+function _wizardSteps(active){
+  const steps = ['Choisir le fichier','Télécharger','Ouvrir'];
+  let s = '<div class="wizard-steps">';
+  steps.forEach((label,i) => {
+    const n = i+1;
+    const cls = n < active ? 'done' : n===active ? 'active' : '';
+    const icon = n < active ? '✓' : n;
+    s += '<div class="wstep '+cls+'"><div class="wstep-num">'+icon+'</div><div class="wstep-label">'+label+'</div></div>';
+    if(i < steps.length-1)
+      s += '<div class="wstep-line'+(n<active?' done':'')+'"></div>';
+  });
+  return s+'</div>';
+}
+
+function _initViewerOverlay(productName, folderName){
+  BOM.rows=[]; BOM.filtered=[]; BOM.detail=null;
+  BOM.filterText=''; BOM.filterCat='__all__'; BOM.currentName=productName;
+  document.getElementById('bomOverlay').classList.remove('hidden');
+  document.getElementById('bomTitle').textContent    = productName+' — Visionneuse BOM';
+  document.getElementById('bomSubtitle').textContent = folderName;
+  document.getElementById('bomToolbar').style.display='none';
+  document.getElementById('chipBar').style.display='none';
+  document.getElementById('bomSearch').value='';
+  document.getElementById('bomFoot').textContent='';
+}
+
+async function _parseBomAndRender(buf, fileName){
+  await ensureSheetJS();
+  const parsed = await parseWorkbook(buf, fileName);
+  if(!parsed.rows.length){ showBomError('Aucune pièce détectée dans ce fichier.'); return false; }
+  BOM.rows=parsed.rows; BOM.filtered=parsed.rows.slice();
+  document.getElementById('bomToolbar').style.display='flex';
+  document.getElementById('chipBar').style.display='flex';
+  renderBomView();
+  const imgInfo = parsed.embeddedCount>0 ? ' · '+parsed.embeddedCount+' image(s)' : '';
+  document.getElementById('bomFoot').textContent = parsed.rows.length+' pièces'+imgInfo+' · '+fileName;
+  return true;
+}
+
+function loadBomFromUrl(fileUrl, folderName, productName){
+  _initViewerOverlay(productName, folderName);
+  const fileName = decodeURIComponent(fileUrl.split('/').pop().split('?')[0]);
+
+  if(!/\.[a-zA-Z0-9]{2,5}(\?|$)/.test(fileName)){
+    document.getElementById('bomContent').innerHTML =
+      '<div style="text-align:center;padding:40px 20px">' +
+        '<div style="font-size:48px;margin-bottom:16px">📂</div>' +
+        '<div style="font-size:15px;font-weight:700;color:white;margin-bottom:8px">'+esc(folderName)+'</div>' +
+        '<div style="font-size:13px;color:#6B7280;margin-bottom:24px">Les fichiers BOM sont dans ce dossier SharePoint.</div>' +
+        '<a href="'+fileUrl+'" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;background:var(--accent);color:#1a1a1a;font-weight:700;font-size:14px;border-radius:9px;text-decoration:none">🔗 Ouvrir le dossier BOM</a>' +
+      '</div>';
+    return;
+  }
+
+  const folderUrl = fileUrl.substring(0, fileUrl.lastIndexOf('/'));
+  const safeUrl   = fileUrl.replace(/'/g,"\\'");
+  const safeName  = fileName.replace(/'/g,"\\'");
+
+  document.getElementById('bomContent').innerHTML =
+    '<div class="bom-wizard">' +
+      _wizardSteps(1) +
+      '<div class="wizard-body">' +
+        '<div class="wfile-card">' +
+          '<div class="wfc-icon">📊</div>' +
+          '<div class="wfc-info">' +
+            '<div class="wfc-name">'+esc(fileName)+'</div>' +
+            '<div class="wfc-meta">Dossier&nbsp;: <strong style="color:#9CA3AF">'+esc(folderName)+'</strong><br>' +
+              '<a href="'+folderUrl+'" target="_blank">🔗 Ouvrir le dossier BOM sur SharePoint</a></div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="wizard-actions">' +
+          '<button class="btn-wizard-primary" onclick="_bomStep2(\''+safeUrl+'\',\''+safeName+'\')">⬇️&nbsp; Télécharger ce fichier</button>' +
+          '<button class="btn-wizard-secondary" onclick="showDropzone()">Uploader manuellement</button>' +
+        '</div>' +
+        '<p class="wizard-note">Le fichier sera téléchargé dans ton dossier <strong style="color:var(--accent)">Téléchargements</strong>.</p>' +
+      '</div>' +
+    '</div>';
+}
+
+function _bomStep2(fileUrl, fileName){
+  try {
+    const u   = new URL(fileUrl);
+    const dlUrl = u.origin+'/sites/SAVVY_FNACDARTY/_layouts/15/download.aspx?SourceUrl='+encodeURIComponent(u.pathname);
+    window.open(dlUrl,'_blank');
+  } catch(e){ window.open(fileUrl,'_blank'); }
+
+  const safeName = fileName.replace(/'/g,"\\'");
+  document.getElementById('bomContent').innerHTML =
+    '<div class="bom-wizard">' +
+      _wizardSteps(2) +
+      '<div class="wizard-body">' +
+        '<div class="wfile-card">' +
+          '<div class="wfc-icon" style="font-size:26px">⬇️</div>' +
+          '<div class="wfc-info">' +
+            '<div class="wfc-name" style="color:var(--accent)">Téléchargement en cours…</div>' +
+            '<div class="wfc-meta">'+esc(fileName)+'<br>Le fichier s\'enregistre dans <strong style="color:white">Téléchargements</strong>.</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="wizard-actions">' +
+          '<button class="btn-wizard-primary" onclick="_bomStep3(\''+safeName+'\')">📂&nbsp; Ouvrir dans la visionneuse</button>' +
+          '<button class="btn-wizard-secondary" onclick="showDropzone()">Glisser-déposer à la place</button>' +
+        '</div>' +
+        '<p class="wizard-note">Une fois le téléchargement terminé, clique sur <strong style="color:white">Ouvrir dans la visionneuse</strong>.</p>' +
+      '</div>' +
+    '</div>';
+}
+
+async function _bomStep3(expectedName){
+  if(!('showOpenFilePicker' in window)){ pickFile(); return; }
+  try {
+    const [fh] = await window.showOpenFilePicker({
+      types:[{ description:'Fichier Excel BOM', accept:{'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':['.xlsx','.xlsm','.xlsb']} }],
+      multiple: false, startIn: 'downloads'
+    });
+    showBomLoader('Ouverture dans la visionneuse…');
+    const file = await fh.getFile();
+    await _parseBomAndRender(await file.arrayBuffer(), file.name);
+  } catch(e){
+    if(e.name !== 'AbortError'){
+      const safeName = (expectedName||'').replace(/'/g,"\\'");
+      document.getElementById('bomContent').innerHTML =
+        '<div class="bom-wizard">'+_wizardSteps(2)+
+          '<div class="wizard-body">' +
+            '<p style="color:#EF4444;font-size:13px;text-align:center">Sélection annulée ou erreur. Réessaie.</p>' +
+            '<div class="wizard-actions">' +
+              '<button class="btn-wizard-primary" onclick="_bomStep3(\''+safeName+'\')">📂&nbsp; Réessayer</button>' +
+              '<button class="btn-wizard-secondary" onclick="showDropzone()">Glisser-déposer</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+    }
+  }
+}
+
+function openDownloadedBom(){ _bomStep3(''); }
+
+// ══════════════════════════════════════════════════════
+//  BOM VIEWER — UPLOAD LOCAL
+// ══════════════════════════════════════════════════════
+function openBomViewer(folderName, productName){
+  BOM.rows=[]; BOM.filtered=[]; BOM.detail=null;
+  BOM.filterText=''; BOM.filterCat='__all__'; BOM.currentName=productName;
+  document.getElementById('bomOverlay').classList.remove('hidden');
+  document.getElementById('bomTitle').textContent    = productName+' — Visionneuse BOM';
+  document.getElementById('bomSubtitle').textContent = folderName;
+  document.getElementById('bomToolbar').style.display='none';
+  document.getElementById('chipBar').style.display='none';
+  document.getElementById('bomSearch').value='';
+  document.getElementById('bomFoot').textContent='';
+  showDropzone();
+}
+
+function closeBomViewer(){
+  document.getElementById('bomOverlay').classList.add('hidden');
+}
+
+function showDropzone(){
+  document.getElementById('bomContent').innerHTML =
+    '<div class="dropzone" id="dz" onclick="pickFile()" ondragover="dzOver(event)" ondragleave="dzLeave()" ondrop="dzDrop(event)">' +
+      '<div class="dropzone-icon">📋</div>' +
+      '<h3>Uploader le fichier BOM</h3>' +
+      '<p>Glisse le fichier BOM (.xlsx) ici ou clique pour le sélectionner.</p>' +
+      '<button class="btn-pick" onclick="pickFile();event.stopPropagation()">Choisir un fichier .xlsx</button>' +
+    '</div>';
+}
+
+function pickFile(){ document.getElementById('fileInput').click(); }
+document.getElementById('fileInput').addEventListener('change', e => {
+  const f = e.target.files && e.target.files[0]; if(f) handleFile(f); e.target.value='';
+});
+
+function dzOver(e){ e.preventDefault(); document.getElementById('dz')&&document.getElementById('dz').classList.add('over'); }
+function dzLeave(){ document.getElementById('dz')&&document.getElementById('dz').classList.remove('over'); }
+function dzDrop(e){ e.preventDefault(); dzLeave(); const f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0]; if(f)handleFile(f); }
+
+async function handleFile(file){
+  showBomLoader('Chargement des bibliothèques…');
+  try {
+    await ensureSheetJS();
+    showBomLoader('Analyse du fichier…');
+    const buf    = await file.arrayBuffer();
+    const parsed = await parseWorkbook(buf, file.name);
+    if(!parsed.rows.length){ showBomError('Aucune pièce détectée dans ce fichier.'); return; }
+    BOM.rows=parsed.rows; BOM.filtered=parsed.rows.slice();
+    document.getElementById('bomToolbar').style.display='flex';
+    document.getElementById('chipBar').style.display='flex';
+    renderBomView();
+    const imgInfo = parsed.embeddedCount>0
+      ? ' · '+parsed.embeddedCount+' image(s)'
+      : parsed.embeddedError ? ' · ⚠ images indisponibles' : '';
+    document.getElementById('bomFoot').textContent = parsed.rows.length+' pièces'+imgInfo+' · '+file.name;
+  } catch(e){ showBomError('Erreur : '+(e.message||e)); }
+}
+
+function showBomLoader(msg){
+  document.getElementById('bomContent').innerHTML =
+    '<div class="bom-loader"><div class="spinner"></div><div class="loader-msg">'+esc(msg)+'</div></div>';
+}
+function showBomError(msg){
+  document.getElementById('bomContent').innerHTML =
+    '<div class="bom-loader"><div style="font-size:34px;margin-bottom:10px">⚠</div>' +
+    '<div class="loader-msg" style="color:#EF4444">'+esc(msg)+'</div>' +
+    '<button class="btn-pick" style="margin-top:14px" onclick="showDropzone()">Réessayer</button></div>';
+}
+
+// ── BOM Rendering ────────────────────────────────────
+function renderBomView(){
+  if(BOM.detail!==null){ renderBomDetail(BOM.detail); return; }
+  updateChips();
+  const rows  = BOM.filtered;
+  const count = rows.length;
+  document.getElementById('bomCount').textContent = count+' pièce'+(count>1?'s':'');
+  if(!count){ document.getElementById('bomContent').innerHTML='<div class="bom-no-results">Aucun résultat.</div>'; return; }
+  document.getElementById('bomContent').innerHTML = BOM.view==='grid' ? renderBomGrid(rows) : renderBomTable(rows);
+}
+
+function renderBomGrid(rows){
+  return '<div class="bom-grid">'+rows.map(r => {
+    const thumb = r.image
+      ? '<div class="bom-thumb"><img src="'+r.image+'" loading="lazy"></div>'
+      : '<div class="bom-thumb"><div class="bom-thumb-empty">🔩</div></div>';
+    const meta = [];
+    if(r.cat)   meta.push('<span>'+esc(r.cat)+'</span>');
+    if(r.price) meta.push('<span>'+esc(r.price)+'</span>');
+    if(r.qty)   meta.push('<span>x'+esc(r.qty)+'</span>');
+    return '<div class="bom-card-item" onclick="openBomDetail('+BOM.rows.indexOf(r)+')">' +
+      thumb +
+      '<div class="bom-card-body">' +
+        '<div class="bom-ref">'+esc(r.ref||'—')+'</div>' +
+        '<div class="bom-desig">'+esc(r.desig||'')+'</div>' +
+        (meta.length ? '<div class="bom-meta">'+meta.join('')+'</div>' : '') +
+      '</div>' +
+    '</div>';
+  }).join('')+'</div>';
+}
+
+function renderBomTable(rows){
+  const hasImg   = rows.some(r=>r.image);
+  const hasPrice = rows.some(r=>r.price);
+  const hasQty   = rows.some(r=>r.qty);
+  const hasCat   = rows.some(r=>r.cat);
+  return '<div class="bom-table-wrap"><table class="bom-table"><thead><tr>' +
+    (hasImg?'<th></th>':'') +
+    '<th>Réf.</th><th>Désignation</th>' +
+    (hasCat?'<th>Catégorie</th>':'') +
+    (hasPrice?'<th>Prix</th>':'') +
+    (hasQty?'<th>Qté</th>':'') +
+    '</tr></thead><tbody>' +
+    rows.map(r=>'<tr onclick="openBomDetail('+BOM.rows.indexOf(r)+')">' +
+      (hasImg?'<td class="td-thumb">'+(r.image?'<img src="'+r.image+'" loading="lazy">':'')+'</td>':'') +
+      '<td class="td-ref"><code>'+esc(r.ref||'—')+'</code></td>' +
+      '<td>'+esc(r.desig||'')+'</td>' +
+      (hasCat?'<td>'+esc(r.cat||'')+'</td>':'') +
+      (hasPrice?'<td>'+esc(r.price||'')+'</td>':'') +
+      (hasQty?'<td>'+esc(r.qty||'')+'</td>':'') +
+    '</tr>').join('') +
+    '</tbody></table></div>';
+}
+
+function renderBomDetail(idx){
+  const r = BOM.rows[idx];
+  if(!r){ BOM.detail=null; renderBomView(); return; }
+  const extra = r.extra ? Object.entries(r.extra).map(([k,v]) =>
+    '<div class="bom-detail-field"><div class="bom-detail-label">'+esc(k)+'</div><div class="bom-detail-value">'+esc(v)+'</div></div>'
+  ).join('') : '';
+  document.getElementById('bomContent').innerHTML =
+    '<div class="bom-detail">' +
+      '<button class="bom-back" onclick="closeBomDetail()">← Retour</button>' +
+      '<div class="bom-detail-grid">' +
+        '<div>' +
+          (r.image ? '<div class="bom-detail-img"><img src="'+r.image+'"></div>' : '<div class="bom-detail-img"><div class="bom-detail-noimg">🔧 Pas d\'image</div></div>') +
+        '</div>' +
+        '<div class="bom-detail-info">' +
+          '<div class="bom-detail-ref">'+esc(r.ref||'—')+'</div>' +
+          '<div class="bom-detail-desig">'+esc(r.desig||'')+'</div>' +
+          '<div class="bom-detail-fields">' +
+            (r.cat  ?'<div class="bom-detail-field"><div class="bom-detail-label">Catégorie</div><div class="bom-detail-value">'+esc(r.cat)+'</div></div>':'') +
+            (r.price?'<div class="bom-detail-field"><div class="bom-detail-label">Prix</div><div class="bom-detail-value">'+esc(r.price)+'</div></div>':'') +
+            (r.qty  ?'<div class="bom-detail-field"><div class="bom-detail-label">Quantité</div><div class="bom-detail-value">'+esc(r.qty)+'</div></div>':'') +
+            (r.note ?'<div class="bom-detail-field"><div class="bom-detail-label">Note</div><div class="bom-detail-value">'+esc(r.note)+'</div></div>':'') +
+            extra +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+}
+
+function openBomDetail(idx){ BOM.detail=idx; renderBomDetail(idx); }
+function closeBomDetail()  { BOM.detail=null; renderBomView(); }
+
+function setView(v, btn){
+  BOM.view=v;
+  document.querySelectorAll('.bom-view-btn').forEach(b=>b.classList.toggle('active',b===btn));
+  renderBomView();
+}
+
+function updateChips(){
+  const cats = {};
+  BOM.rows.forEach(r=>{ if(r.cat){ cats[r.cat]=(cats[r.cat]||0)+1; } });
+  const bar = document.getElementById('chipBar');
+  if(!Object.keys(cats).length){ bar.innerHTML=''; return; }
+  bar.innerHTML = '<div class="chip'+(BOM.filterCat==='__all__'?' active':'')+ '" onclick="setCat(\'__all__\')">Tout <span class="chip-count">('+BOM.rows.length+')</span></div>' +
+    Object.entries(cats).sort((a,b)=>b[1]-a[1]).map(([cat,n]) =>
+      '<div class="chip'+(BOM.filterCat===cat?' active':'')+ '" onclick="setCat(\''+cat.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\')">'+esc(cat)+' <span class="chip-count">('+n+')</span></div>'
+    ).join('');
+}
+
+function setCat(cat){ BOM.filterCat=cat; BOM.detail=null; applyBomFilter(); }
+function bomFilter(){ BOM.filterText=document.getElementById('bomSearch').value.trim(); BOM.detail=null; applyBomFilter(); }
+function bomClearSearch(){ document.getElementById('bomSearch').value=''; BOM.filterText=''; BOM.detail=null; applyBomFilter(); }
+function applyBomFilter(){
+  const q=normH(BOM.filterText); const cat=BOM.filterCat;
+  BOM.filtered=BOM.rows.filter(r=>{
+    if(cat!=='__all__' && r.cat!==cat) return false;
+    if(!q) return true;
+    return normH(r.ref||'').includes(q)||normH(r.desig||'').includes(q)||normH(r.cat||'').includes(q);
+  });
+  renderBomView();
+}
+
+// ══════════════════════════════════════════════════════
+//  IMPORT CATALOGUE
+// ══════════════════════════════════════════════════════
+function openImportModal(){
+  document.getElementById('importModal').classList.remove('hidden');
+  document.getElementById('importResult').style.display='none';
+}
+function closeImportModal(){ document.getElementById('importModal').classList.add('hidden'); }
+function pickCatalogFile(){ document.getElementById('catalogFileInput').click(); }
+document.getElementById('catalogFileInput').addEventListener('change', e => {
+  const f=e.target.files&&e.target.files[0]; if(f)handleCatalogFile(f); e.target.value='';
+});
+function importDzOver(e){ e.preventDefault(); document.getElementById('importDrop').classList.add('over'); }
+function importDzLeave(){ document.getElementById('importDrop').classList.remove('over'); }
+function importDzDrop(e){ e.preventDefault(); importDzLeave(); const f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0]; if(f)handleCatalogFile(f); }
+
+async function handleCatalogFile(file){
+  const resultDiv=document.getElementById('importResult'); resultDiv.style.display='none';
+  const btn=document.querySelector('.btn-import-pick');
+  if(btn){ btn.textContent='Chargement…'; btn.disabled=true; }
+  try {
+    await ensureSheetJS();
+    const result = parseCatalogWorkbook(await file.arrayBuffer());
+    if(result.error) throw new Error(result.error);
+    if(result.folders.length){
+      FOLDERS.length=0; result.folders.forEach(f=>FOLDERS.push(f));
+      Object.keys(FOLDER_DOCS).forEach(k=>delete FOLDER_DOCS[k]);
+      Object.entries(result.folderDocs).forEach(([k,v])=>FOLDER_DOCS[k]=v);
+      if(result.newSpBase) SP_BASE=result.newSpBase;
+    }
+    FAMILY_FILTER=null; updateFamilyBar();
+    const badge=document.getElementById('catalogBadge');
+    badge.className='badge'; badge.textContent='✅ '+FOLDERS.length+' produits';
+    document.getElementById('q').value=''; document.getElementById('results').innerHTML='';
+    const spInfo  = result.newSpBase ? '<br><small style="opacity:.7">Base : '+esc(decodeURIComponent(result.newSpBase))+'</small>' : '';
+    const famInfo = result.families&&result.families.length ? '<br><small style="opacity:.7">'+result.families.length+' famille(s) : '+result.families.map(esc).join(', ')+'</small>' : '';
+    resultDiv.className='import-result ok';
+    resultDiv.innerHTML='✅ <strong>'+result.folders.length+' dossiers</strong> et <strong>'+result.totalLinks+' liens</strong> importés depuis <em>'+esc(file.name)+'</em>.'+spInfo+famInfo;
+    resultDiv.style.display='block';
+  } catch(e){
+    resultDiv.className='import-result err';
+    resultDiv.innerHTML='⚠️ Erreur : '+esc(e.message||String(e));
+    resultDiv.style.display='block';
+  } finally { if(btn){ btn.textContent='Choisir un fichier .xlsx'; btn.disabled=false; } }
+}
+
+// ══════════════════════════════════════════════════════
+//  PARSEUR CATALOGUE
+// ══════════════════════════════════════════════════════
+function parseCatalogWorkbook(buf){
+  const wb=XLSX.read(buf,{type:'array'});
+  const ws=wb.Sheets[wb.SheetNames[0]];
+  const aoa=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+  if(!aoa.length) return {error:'Feuille vide.'};
+  const CATALOG_KW=['dossier','folder','famille','family','ref','produit','product','bom','nom','name','url','lien','link','chemin','type'];
+  let hdrRow=0, bestScore=-1;
+  for(let i=0;i<Math.min(aoa.length,15);i++){
+    const row=aoa[i]||[]; let score=0;
+    for(const cell of row){ const n=normH(cell); if(CATALOG_KW.some(kw=>n.includes(kw))) score++; }
+    if(score>bestScore){ bestScore=score; hdrRow=i; }
+  }
+  const header=(aoa[hdrRow]||[]).map(h=>normH(h));
+  const col={
+    dossier: header.findIndex(h=>h.includes('dossier')||h.includes('folder')),
+    famille: header.findIndex(h=>h==='famille'||h==='family'||h.includes('sous dossier')||h.includes('subfolder')),
+    ref:     header.findIndex(h=>h==='ref'||h.includes('reference')),
+    produit: header.findIndex(h=>h.includes('produit')||h.includes('product')),
+    bom:     header.findIndex(h=>h.includes('bom')||h.includes('est bom')),
+    nom:     header.findIndex(h=>h==='nom'||h==='name'||h.includes('nom fichier')),
+    url:     header.findIndex(h=>h==='url'||h.includes('lien')||h.includes('link')||h.includes('sharepoint')||h.includes('chemin')),
+    type:    header.findIndex(h=>h==='type'||h.includes('type doc'))
+  };
+  const hasDossierCol=col.dossier>=0;
+  if(col.dossier<0) col.dossier=0;
+  if(col.url<0) return {error:'Colonne URL introuvable.'};
+  const urlAsParent=!hasDossierCol&&col.nom>=0&&col.nom!==col.url;
+  const foldersMap={}; const docsMap={}; let totalLinks=0;
+  for(let i=hdrRow+1;i<aoa.length;i++){
+    const row=aoa[i]; let dossier,urlFinal,nom,famille=null;
+    if(urlAsParent){
+      const urlRaw=String(row[col.url]||'').trim(); if(!urlRaw) continue;
+      const nomVal=String(row[col.nom]||'').trim(); if(!nomVal) continue;
+      const segs=urlRaw.split('/');
+      const prodIdx=segs.reduce((best,s,j)=>/^[A-Z]\d+/.test(s)?j:best,-1);
+      if(prodIdx<0) continue;
+      dossier=segs[prodIdx]; famille=prodIdx>0?(segs[prodIdx-1]||null):null; nom=nomVal;
+      urlFinal='https://groupefnac.sharepoint.com/'+segs.map(s=>encodeURIComponent(s)).join('/')+'/'+encodeURIComponent(nomVal);
+    } else {
+      dossier=String(row[col.dossier]||'').trim(); if(!dossier) continue;
+      urlFinal=String(col.url>=0?row[col.url]:'').trim(); if(!urlFinal) continue;
+      famille=col.famille>=0?String(row[col.famille]||'').trim()||null:null;
+      nom=col.nom>=0?String(row[col.nom]||'').trim():urlFinal.split('/').pop().split('?')[0];
+    }
+    const ref    =col.ref>=0?String(row[col.ref]||'').trim():dossier.split(/[\s\-]/)[0];
+    const produit=col.produit>=0?String(row[col.produit]||'').trim():dossier.replace(/^[A-Z0-9]+\s*[-–]\s*/,'');
+    const isRealFile=urlAsParent?/\.[a-zA-Z0-9]{2,5}$/.test(nom):true;
+    const isBom  =col.bom>=0?/^(oui|yes|1|true|x)$/i.test(String(row[col.bom]||'').trim()):isRealFile&&/\bbom\b|bill.of.mat|nomenclat/i.test(nom);
+    const type   =col.type>=0?String(row[col.type]||'').trim().toLowerCase():guessDocType(nom);
+    if(!foldersMap[dossier]){
+      foldersMap[dossier]={name:dossier,ref,product:produit,family:famille};
+      docsMap[dossier]={bom:null,docs:[]};
+    }
+    if(isBom) docsMap[dossier].bom={name:nom,url:urlFinal};
+    else docsMap[dossier].docs.push({name:nom,url:urlFinal,type:type||'other'});
+    totalLinks++;
+  }
+  const allUrls=[]; Object.values(docsMap).forEach(d=>{ if(d.bom)allUrls.push(d.bom.url); d.docs.forEach(doc=>allUrls.push(doc.url)); });
+  let newSpBase=null;
+  if(allUrls.length){
+    let prefix=allUrls[0];
+    for(const u of allUrls){ let j=0; while(j<prefix.length&&j<u.length&&prefix[j]===u[j])j++; prefix=prefix.slice(0,j); }
+    const lastSlash=prefix.lastIndexOf('/');
+    if(lastSlash>8) newSpBase=prefix.slice(0,lastSlash+1);
+  }
+  const families=[...new Set(Object.values(foldersMap).map(f=>f.family).filter(Boolean))];
+  return {folders:Object.values(foldersMap),folderDocs:docsMap,newSpBase,totalLinks,families};
+}
+
+// ══════════════════════════════════════════════════════
+//  PARSEUR BOM (Excel)
+// ══════════════════════════════════════════════════════
+const COL_HINTS={
+  ref:   ['ref','reference','sku','code','p/n','pn','part no','part number','numero','no','item code','material','materiel'],
+  desig: ['designation','description','libelle','name','nom','product','produit','item','article','spare part'],
+  image: ['image','photo','picture','visuel','illustration','preview','apercu','img'],
+  cat:   ['categorie','category','groupe','group','zone','module','section','type','famille','family','assembly'],
+  price: ['prix','price','tarif','cost','cout','pvc','pvp','msrp'],
+  qty:   ['qty','quantite','quantity','stock','qte'],
+  note:  ['note','remarque','remark','comment','commentaire']
+};
+
+function detectCols(header){
+  const map={ref:-1,desig:-1,image:-1,cat:-1,price:-1,qty:-1,note:-1,raw:[]};
+  const norm=header.map(h=>normH(h)); map.raw=header.map(h=>String(h==null?'':h).trim());
+  for(const key of Object.keys(COL_HINTS))
+    for(const hint of COL_HINTS[key]){
+      const n=normH(hint); const idx=norm.findIndex(h=>h&&h.includes(n));
+      if(idx>=0&&map[key]===-1){ map[key]=idx; break; }
+    }
+  return map;
+}
+
+function findHeaderRow(aoa){
+  const KW=['ref','reference','sku','designation','description','name','nom','image','photo','picture','price','prix','part','item','qty'];
+  let bestIdx=0,bestScore=-1; const lim=Math.min(aoa.length,30);
+  for(let i=0;i<lim;i++){
+    const row=aoa[i]||[]; let score=0,nonEmpty=0;
+    for(const cell of row){
+      const n=normH(cell); if(!n)continue; nonEmpty++;
+      for(const kw of KW){ if(n.includes(normH(kw))){ score+=2; break; } }
+    }
+    if(nonEmpty>=2) score+=nonEmpty*0.3;
+    if(score>bestScore){ bestScore=score; bestIdx=i; }
+  }
+  return bestIdx;
+}
+
+function isImageCell(v){
+  if(v==null) return false;
+  const s=String(v).trim();
+  return s.startsWith('http')&&/\.(jpe?g|png|gif|webp|svg)(\?|$)/i.test(s) || s.startsWith('data:image/');
+}
+
+async function extractXlsxImages(arrayBuffer){
+  const result={};
+  try {
+    await ensureJSZip();
+    const zip=await JSZip.loadAsync(arrayBuffer);
+    const sheetNames=[]; const sheetFiles=[];
+    zip.folder('xl/worksheets').forEach((p,f)=>{ if(p.endsWith('.xml')&&!p.includes('_rels')){ sheetFiles.push({p,f}); } });
+    sheetFiles.sort((a,b)=>a.p.localeCompare(b.p));
+
+    for(let si=0;si<sheetFiles.length;si++){
+      const sheetRel=zip.file('xl/worksheets/_rels/'+sheetFiles[si].p.split('/').pop()+'.rels');
+      if(!sheetRel) continue;
+      const relXml=await sheetRel.async('string');
+      const imgRels={};
+      [...relXml.matchAll(/Id="([^"]+)"[^>]+Target="([^"]+)"/g)].forEach(m=>{
+        if(m[2].match(/\.(jpe?g|png|gif|webp|bmp)/i)){
+          const imgPath='xl/'+m[2].replace(/^\.\.\//,'');
+          imgRels[m[1]]=imgPath;
+        }
+      });
+      if(!Object.keys(imgRels).length) continue;
+
+      const drawingRelXml=relXml.match(/Target="\.\.\/drawings\/drawing(\d+)\.xml"/);
+      if(!drawingRelXml) continue;
+      const drawingNum=drawingRelXml[1];
+      const drawingFile=zip.file('xl/drawings/drawing'+drawingNum+'.xml');
+      if(!drawingFile) continue;
+      const drawingXml=await drawingFile.async('string');
+
+      const drawingRelsFile=zip.file('xl/drawings/_rels/drawing'+drawingNum+'.xml.rels');
+      if(!drawingRelsFile) continue;
+      const drawingRelsXml=await drawingRelsFile.async('string');
+      const drawingImgRels={};
+      [...drawingRelsXml.matchAll(/Id="([^"]+)"[^>]+Target="([^"]+)"/g)].forEach(m=>{
+        if(m[2].match(/\.(jpe?g|png|gif|webp|bmp)/i)){
+          const imgPath='xl/media/'+m[2].split('/').pop();
+          drawingImgRels[m[1]]=imgPath;
+        }
+      });
+
+      const anchors=[...drawingXml.matchAll(/<xdr:(?:oneCellAnchor|twoCellAnchor)[^>]*>([\s\S]*?)<\/xdr:(?:oneCellAnchor|twoCellAnchor)>/g)];
+      const sheetImgs={};
+      for(const anchor of anchors){
+        const rowMatch=anchor[1].match(/<xdr:from>[\s\S]*?<xdr:row>(\d+)<\/xdr:row>/);
+        const rIdMatch=anchor[1].match(/r:embed="([^"]+)"/);
+        if(!rowMatch||!rIdMatch) continue;
+        const row=parseInt(rowMatch[1])+1;
+        const imgPath=drawingImgRels[rIdMatch[1]];
+        if(!imgPath) continue;
+        const imgFile=zip.file(imgPath);
+        if(!imgFile) continue;
+        const imgData=await imgFile.async('base64');
+        const ext=imgPath.split('.').pop().toLowerCase();
+        const mime=ext==='jpg'||ext==='jpeg'?'image/jpeg':ext==='png'?'image/png':ext==='gif'?'image/gif':'image/webp';
+        sheetImgs[row]='data:'+mime+';base64,'+imgData;
+      }
+      // Map sheetName
+      const wbXml=await zip.file('xl/workbook.xml').async('string');
+      const sheetDefs=[...wbXml.matchAll(/<sheet[^>]+name="([^"]+)"[^>]+r:id="rId(\d+)"/g)];
+      const sheetName=sheetDefs[si]?sheetDefs[si][1]:('Sheet'+(si+1));
+      if(Object.keys(sheetImgs).length) result[sheetName]=sheetImgs;
+    }
+  } catch(e){ console.warn('extractXlsxImages:', e); }
+  return result;
+}
+
+async function parseWorkbook(arrayBuffer, fileName){
+  const wb=XLSX.read(arrayBuffer,{type:'array',cellStyles:false});
+  let embeddedImages={}, embeddedError=null;
+  try { embeddedImages=await extractXlsxImages(arrayBuffer); } catch(e){ embeddedError=e&&(e.message||String(e)); }
+  const totalEmbedded=Object.values(embeddedImages).reduce((acc,m)=>acc+Object.keys(m).length,0);
+  const allRows=[];
+  for(const sheetName of wb.SheetNames){
+    const sheet=wb.Sheets[sheetName];
+    const aoa=XLSX.utils.sheet_to_json(sheet,{header:1,defval:'',raw:false});
+    if(!aoa.length) continue;
+    const headerIdx=findHeaderRow(aoa); const header=aoa[headerIdx]||[];
+    const cols=detectCols(header); const imgs=embeddedImages[sheetName]||{};
+    for(let r=headerIdx+1;r<aoa.length;r++){
+      const row=aoa[r]||[]; const hasEmbedded=imgs[r]!=null;
+      if(!hasEmbedded&&!row.some(c=>String(c==null?'':c).trim())) continue;
+      const get=i=>(i>=0&&i<row.length)?String(row[i]==null?'':row[i]).trim():'';
+      let imageVal=get(cols.image);
+      if(!imageVal){ for(let c=0;c<row.length;c++){ if(isImageCell(row[c])){ imageVal=String(row[c]).trim(); break; } } }
+      if(!imageVal&&hasEmbedded) imageVal=imgs[r];
+      const ref=get(cols.ref),desig=get(cols.desig),cat=get(cols.cat)||sheetName;
+      const price=get(cols.price),qty=get(cols.qty),note=get(cols.note);
+      if(!ref&&!desig&&!imageVal) continue;
+      const extra={};
+      const usedCols=new Set([cols.ref,cols.desig,cols.image,cols.cat,cols.price,cols.qty,cols.note].filter(x=>x>=0));
+      for(let c=0;c<row.length;c++){
+        if(usedCols.has(c)) continue;
+        const k=(cols.raw[c]||('col_'+(c+1))).trim(); const v=String(row[c]==null?'':row[c]).trim();
+        if(k&&v) extra[k]=v;
+      }
+      allRows.push({sheet:sheetName,ref,desig,image:imageVal,cat,price,qty,note,extra,_hasImage:!!imageVal,_embedded:!!hasEmbedded&&imageVal===imgs[r]});
+    }
+  }
+  return {rows:allRows,sheets:wb.SheetNames,file:fileName,embeddedCount:totalEmbedded,embeddedError};
+}
+
+// ══════════════════════════════════════════════════════
+//  PARSEUR CSV (legacy)
+// ══════════════════════════════════════════════════════
+function parseCSVRow(line,delim){
+  const result=[]; let cur=''; let inQ=false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(inQ){ if(c==='"'&&line[i+1]==='"'){cur+='"';i++;} else if(c==='"'){inQ=false;} else{cur+=c;} }
+    else { if(c==='"'){inQ=true;} else if(c===delim){result.push(cur);cur='';} else{cur+=c;} }
+  }
+  result.push(cur); return result;
+}
+
+// ══════════════════════════════════════════════════════
+//  CHARGEMENT GITHUB
+// ══════════════════════════════════════════════════════
+async function loadCatalogFromGitHub(){
+  const badge=document.getElementById('catalogBadge');
+  if(location.protocol==='file:'){
+    badge.className='badge error'; badge.textContent='⚠ Mode local — utilise Importer'; return;
+  }
+  try {
+    const controller=new AbortController(); const tid=setTimeout(()=>controller.abort(),10000);
+    const resp=await fetch(GITHUB_CATALOG_URL,{signal:controller.signal}); clearTimeout(tid);
+    if(!resp.ok) throw new Error('HTTP '+resp.status);
+    await ensureSheetJS();
+    const result=parseCatalogWorkbook(await resp.arrayBuffer());
+    if(result.error) throw new Error(result.error);
+    if(result.folders.length){
+      FOLDERS.length=0; result.folders.forEach(f=>FOLDERS.push(f));
+      Object.keys(FOLDER_DOCS).forEach(k=>delete FOLDER_DOCS[k]);
+      Object.entries(result.folderDocs).forEach(([k,v])=>FOLDER_DOCS[k]=v);
+      if(result.newSpBase) SP_BASE=result.newSpBase;
+    }
+    FAMILY_FILTER=null; updateFamilyBar();
+    badge.className='badge'; badge.textContent='✅ '+FOLDERS.length+' produits';
+  } catch(e){
+    badge.className='badge error';
+    badge.textContent=e.name==='AbortError'?'Timeout — utilise Importer':'⚠ '+((e.message)||'Erreur chargement');
+  }
+}
+
+// ══════════════════════════════════════════════════════
+//  KEYBOARD
+// ══════════════════════════════════════════════════════
+document.addEventListener('keydown', e => {
+  if(e.key==='Escape'){
+    if(!document.getElementById('bomOverlay').classList.contains('hidden')) closeBomViewer();
+    else if(!document.getElementById('drawerBackdrop').classList.contains('hidden')) closeDossier();
+    else if(!document.getElementById('importModal').classList.contains('hidden')) closeImportModal();
+  }
+});
+
+document.addEventListener('DOMContentLoaded', ()=>loadCatalogFromGitHub());
+</script>
+</body>
+</html>
