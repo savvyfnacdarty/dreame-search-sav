@@ -1,13 +1,11 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
+<html lang="fr"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="Codes Erreurs SAV — module de consultation rapide bilingue EN/FR avec actions atelier. Intégrable OVPEM.">
 <title>Codes Erreurs SAV — EN/FR + Actions</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@600;700&amp;display=swap" rel="stylesheet">
 <style>
 /* ============================================================
    CODES ERREURS SAV — Module OVPEM
@@ -469,7 +467,7 @@ mark {
 
 <header class="topbar">
   <div>
-    <div class="brand">SAV PEM <span class="sep">│</span> Bezons</div>
+    <div class="brand">SAV PEM <span class="sep">│</span></div>
     <div class="subtitle">Codes Erreurs Robots Aspirateurs — EN / FR + Actions atelier</div>
   </div>
   <div class="topbar-actions">
@@ -481,19 +479,859 @@ mark {
 
 <div class="toolbar">
   <div class="search-wrap">
-    <input type="text" class="search-input" id="search"
-           placeholder="Recherche : code, mot anglais/français, geste atelier…"
-           autocomplete="off">
+    <input type="text" class="search-input" id="search" placeholder="Recherche : code, mot anglais/français, geste atelier…" autocomplete="off">
   </div>
   <div class="chips">
     <button class="chip active" data-section="all" onclick="setFilter(this)">Tous</button>
     <button class="chip" data-section="robot" onclick="setFilter(this)">Robot</button>
-    <button class="chip" data-section="base"  onclick="setFilter(this)">Base</button>
+    <button class="chip" data-section="base" onclick="setFilter(this)">Base</button>
   </div>
-  <div class="stats" id="stats">— / —</div>
+  <div class="stats" id="stats">116 / 116</div>
 </div>
 
-<main id="content"></main>
+<main id="content">
+    <div class="section-band">Robot — Codes 0 à 89 — 90 codes</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="col-code">Code</th>
+            <th class="col-en">English</th>
+            <th class="col-fr">Français</th>
+            <th class="col-action">Action SAV — Geste atelier</th>
+          </tr>
+        </thead>
+        <tbody>
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 0)" title="Cliquer pour copier">0</td>
+      <td class="cell-en">Health status indicators</td>
+      <td class="cell-fr">Indicateurs d'état de santé</td>
+      <td class="cell-action">RAS — informatif. Vérifier état général du robot.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 1)" title="Cliquer pour copier">1</td>
+      <td class="cell-en">Fall detection</td>
+      <td class="cell-fr">Détection de chute</td>
+      <td class="cell-action">Nettoyer capteurs anti-chute. Vérifier roulettes folles et roues motrices.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 2)" title="Cliquer pour copier">2</td>
+      <td class="cell-en">Please try cleaning the cliff sensor</td>
+      <td class="cell-fr">Veuillez nettoyer le capteur de vide</td>
+      <td class="cell-action">Nettoyer capteurs falaise (chiffon microfibre + alcool isopropylique).</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 3)" title="Cliquer pour copier">3</td>
+      <td class="cell-en">Bumper detection</td>
+      <td class="cell-fr">Détection du pare-chocs</td>
+      <td class="cell-action">Vérifier libre course du pare-chocs (appuyer/relâcher). Nettoyer interstices.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 4)" title="Cliquer pour copier">4</td>
+      <td class="cell-en">Attitude detection</td>
+      <td class="cell-fr">Détection d'inclinaison</td>
+      <td class="cell-action">Reposer le robot à plat. Si persiste : recalibrer IMU ou remplacer carte.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 5)" title="Cliquer pour copier">5</td>
+      <td class="cell-en">Bumper repeatedly triggered</td>
+      <td class="cell-fr">Pare-chocs déclenché de façon répétée</td>
+      <td class="cell-action">Démonter pare-chocs, vérifier contacteurs et ressorts. Nettoyer.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 6)" title="Cliquer pour copier">6</td>
+      <td class="cell-en">Repeated falls triggered</td>
+      <td class="cell-fr">Chutes répétées détectées</td>
+      <td class="cell-action">Vérifier 4 capteurs falaise. Tester sur sol uni clair (verre/noir = faux positif).</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 7)" title="Cliquer pour copier">7</td>
+      <td class="cell-en">Optical flow abnormal</td>
+      <td class="cell-fr">Flux optique anormal</td>
+      <td class="cell-action">Nettoyer capteur de flux optique (lentille sous châssis).</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 8)" title="Cliquer pour copier">8</td>
+      <td class="cell-en">Dust box installed check</td>
+      <td class="cell-fr">Vérification présence du bac à poussière</td>
+      <td class="cell-action">Réinsérer le bac. Vérifier contacteur de présence (micro-switch).</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 9)" title="Cliquer pour copier">9</td>
+      <td class="cell-en">Water tank installed check</td>
+      <td class="cell-fr">Vérification présence du réservoir d'eau</td>
+      <td class="cell-action">Réinsérer le réservoir. Vérifier contacts et joint.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 10)" title="Cliquer pour copier">10</td>
+      <td class="cell-en">No water</td>
+      <td class="cell-fr">Manque d'eau</td>
+      <td class="cell-action">Remplir le réservoir. Vérifier circuit/pompe si plein.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 11)" title="Cliquer pour copier">11</td>
+      <td class="cell-en">Dust box full</td>
+      <td class="cell-fr">Bac à poussière plein</td>
+      <td class="cell-action">Vider le bac, nettoyer filtre HEPA et grille d'aspiration.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 12)" title="Cliquer pour copier">12</td>
+      <td class="cell-en">Main brush abnormal</td>
+      <td class="cell-fr">Anomalie brosse principale</td>
+      <td class="cell-action">Démonter brosse principale, retirer cheveux/débris. Tester moteur.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 13)" title="Cliquer pour copier">13</td>
+      <td class="cell-en">Side brush overcurrent detection</td>
+      <td class="cell-fr">Surintensité brosse latérale</td>
+      <td class="cell-action">Démonter brosse latérale, libérer axe. Remplacer si moteur HS.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 14)" title="Cliquer pour copier">14</td>
+      <td class="cell-en">Blower overcurrent detection</td>
+      <td class="cell-fr">Surintensité du ventilateur d'aspiration</td>
+      <td class="cell-action">Contrôler filtre HEPA, conduits d'aspiration. Remplacer ventilateur si nécessaire.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 15)" title="Cliquer pour copier">15</td>
+      <td class="cell-en">Left drive wheel detection</td>
+      <td class="cell-fr">Détection roue motrice gauche</td>
+      <td class="cell-action">Démonter roue gauche, vérifier moteur et encodeur. Nettoyer suspension.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 16)" title="Cliquer pour copier">16</td>
+      <td class="cell-en">Right drive wheel detection</td>
+      <td class="cell-fr">Détection roue motrice droite</td>
+      <td class="cell-action">Démonter roue droite. Mêmes vérifications que roue gauche.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 17)" title="Cliquer pour copier">17</td>
+      <td class="cell-en">Rotation jam detection</td>
+      <td class="cell-fr">Blocage en rotation détecté</td>
+      <td class="cell-action">Libérer brosses et roues. Retirer obstructions (câbles, tapis).</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 18)" title="Cliquer pour copier">18</td>
+      <td class="cell-en">Forward jam detection</td>
+      <td class="cell-fr">Blocage en avance détecté</td>
+      <td class="cell-action">Libérer pare-chocs et capteurs frontaux. Tester sur surface dégagée.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 19)" title="Cliquer pour copier">19</td>
+      <td class="cell-en">Charging signal acquisition</td>
+      <td class="cell-fr">Acquisition du signal de charge</td>
+      <td class="cell-action">Nettoyer contacts de charge (robot + base) à l'alcool isopropylique.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 20)" title="Cliquer pour copier">20</td>
+      <td class="cell-en">Low battery</td>
+      <td class="cell-fr">Batterie faible</td>
+      <td class="cell-action">Recharger. Si autonomie &lt; 50% nominale : tester puis remplacer batterie.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 21)" title="Cliquer pour copier">21</td>
+      <td class="cell-en">Charging anomaly detection</td>
+      <td class="cell-fr">Anomalie de charge détectée</td>
+      <td class="cell-action">Tester base, câble, contacts. Mesurer tension de charge.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 22)" title="Cliquer pour copier">22</td>
+      <td class="cell-en">Battery percentage</td>
+      <td class="cell-fr">Niveau de batterie (%)</td>
+      <td class="cell-action">RAS — informatif.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 23)" title="Cliquer pour copier">23</td>
+      <td class="cell-en">Heartbeat abnormality</td>
+      <td class="cell-fr">Anomalie de communication interne (heartbeat)</td>
+      <td class="cell-action">Redémarrer. Mise à jour firmware. Si persiste : carte mère.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 24)" title="Cliquer pour copier">24</td>
+      <td class="cell-en">Camera occlusion detection</td>
+      <td class="cell-fr">Caméra obstruée</td>
+      <td class="cell-action">Nettoyer la caméra (chiffon microfibre sec).</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 25)" title="Cliquer pour copier">25</td>
+      <td class="cell-en">Robot was moved or lifted</td>
+      <td class="cell-fr">Robot déplacé ou soulevé</td>
+      <td class="cell-action">Reposer au sol, redémarrer cycle. Informatif si manipulation utilisateur.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 26)" title="Cliquer pour copier">26</td>
+      <td class="cell-en">Optical flow is blocked</td>
+      <td class="cell-fr">Flux optique obstrué</td>
+      <td class="cell-action">Nettoyer capteur flux optique sous le robot.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 27)" title="Cliquer pour copier">27</td>
+      <td class="cell-en">Infrared is blocked</td>
+      <td class="cell-fr">Capteur infrarouge obstrué</td>
+      <td class="cell-action">Nettoyer capteurs IR (anti-collision, bordure).</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 28)" title="Cliquer pour copier">28</td>
+      <td class="cell-en">Charging dock is out of power</td>
+      <td class="cell-fr">Base de charge sans alimentation</td>
+      <td class="cell-action">Vérifier prise, câble d'alim, transformateur. Mesurer sortie DC.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 29)" title="Cliquer pour copier">29</td>
+      <td class="cell-en">Battery error</td>
+      <td class="cell-fr">Erreur batterie</td>
+      <td class="cell-action">Tester capacité batterie. Remplacer si défaillante.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 30)" title="Cliquer pour copier">30</td>
+      <td class="cell-en">Abnormal blower speed</td>
+      <td class="cell-fr">Vitesse ventilateur anormale</td>
+      <td class="cell-action">Libérer rotor ventilateur. Vérifier filtres. Remplacement si HS.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 31)" title="Cliquer pour copier">31</td>
+      <td class="cell-en">Abnormal left wheel speed</td>
+      <td class="cell-fr">Vitesse roue gauche anormale</td>
+      <td class="cell-action">Démonter et tester moteur roue gauche (encodeur, balais).</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 32)" title="Cliquer pour copier">32</td>
+      <td class="cell-en">Abnormal right wheel speed</td>
+      <td class="cell-fr">Vitesse roue droite anormale</td>
+      <td class="cell-action">Idem — côté droit.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 33)" title="Cliquer pour copier">33</td>
+      <td class="cell-en">Accelerometer abnormality (BMI055)</td>
+      <td class="cell-fr">Anomalie accéléromètre (BMI055)</td>
+      <td class="cell-action">Recalibrer IMU (procédure constructeur). Sinon remplacer carte principale.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 34)" title="Cliquer pour copier">34</td>
+      <td class="cell-en">Gyroscope error (BMI055)</td>
+      <td class="cell-fr">Erreur gyroscope (BMI055)</td>
+      <td class="cell-action">Recalibrer IMU. Sinon remplacer carte principale.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 35)" title="Cliquer pour copier">35</td>
+      <td class="cell-en">Gyroscope error (XV7001)</td>
+      <td class="cell-fr">Erreur gyroscope (XV7001)</td>
+      <td class="cell-action">Recalibrer IMU. Sinon remplacer carte principale.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 36)" title="Cliquer pour copier">36</td>
+      <td class="cell-en">Left geomagnetic anomaly</td>
+      <td class="cell-fr">Anomalie magnétique côté gauche</td>
+      <td class="cell-action">Éloigner sources magnétiques (haut-parleurs, aimants). Recalibrer.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 37)" title="Cliquer pour copier">37</td>
+      <td class="cell-en">Right geomagnetic anomaly</td>
+      <td class="cell-fr">Anomalie magnétique côté droit</td>
+      <td class="cell-action">Idem — côté droit.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 38)" title="Cliquer pour copier">38</td>
+      <td class="cell-en">Optical flow anomaly</td>
+      <td class="cell-fr">Anomalie du flux optique</td>
+      <td class="cell-action">Nettoyer capteur optique. Remplacer module si défaillant.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 39)" title="Cliquer pour copier">39</td>
+      <td class="cell-en">Infrared anomaly</td>
+      <td class="cell-fr">Anomalie infrarouge</td>
+      <td class="cell-action">Nettoyer capteurs IR. Vérifier connecteurs nappe.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 40)" title="Cliquer pour copier">40</td>
+      <td class="cell-en">Camera error</td>
+      <td class="cell-fr">Erreur caméra</td>
+      <td class="cell-action">Vérifier connecteur nappe caméra. Remplacer module si HS.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 41)" title="Cliquer pour copier">41</td>
+      <td class="cell-en">Strong magnetic field detected</td>
+      <td class="cell-fr">Champ magnétique fort détecté</td>
+      <td class="cell-action">Éloigner le robot de la source magnétique. Tester ailleurs.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 42)" title="Cliquer pour copier">42</td>
+      <td class="cell-en">Water pump error</td>
+      <td class="cell-fr">Erreur pompe à eau</td>
+      <td class="cell-action">Vérifier pompe, conduits, connecteur. Remplacer pompe si HS.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 43)" title="Cliquer pour copier">43</td>
+      <td class="cell-en">RTC inconsistency</td>
+      <td class="cell-fr">Incohérence horloge temps réel (RTC)</td>
+      <td class="cell-action">Mise à jour firmware. Vérifier pile RTC sur carte mère.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 44)" title="Cliquer pour copier">44</td>
+      <td class="cell-en">Press and hold the AUTO button</td>
+      <td class="cell-fr">Touche AUTO maintenue enfoncée</td>
+      <td class="cell-action">Vérifier mécanisme bouton (collé/coincé). Démonter coque si nécessaire.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 45)" title="Cliquer pour copier">45</td>
+      <td class="cell-en">3.3V power supply error</td>
+      <td class="cell-fr">Erreur alimentation 3,3 V</td>
+      <td class="cell-action">Mesurer tensions sur carte principale. Remplacer si régulateur HS.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 46)" title="Cliquer pour copier">46</td>
+      <td class="cell-en">Camera does not process images</td>
+      <td class="cell-fr">La caméra ne traite pas les images</td>
+      <td class="cell-action">Redémarrer / MAJ firmware. Vérifier connecteur nappe caméra.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 47)" title="Cliquer pour copier">47</td>
+      <td class="cell-en">Partition out of bounds</td>
+      <td class="cell-fr">Partition hors limites de la carte</td>
+      <td class="cell-action">Réinitialiser carte dans l'application. Refaire cartographie.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 48)" title="Cliquer pour copier">48</td>
+      <td class="cell-en">LDS sensor error</td>
+      <td class="cell-fr">Erreur capteur LDS (LiDAR)</td>
+      <td class="cell-action">Vérifier rotation LDS libre. Nettoyer. Remplacer module si HS.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 49)" title="Cliquer pour copier">49</td>
+      <td class="cell-en">LDS bumper stuck</td>
+      <td class="cell-fr">Pare-chocs LDS bloqué</td>
+      <td class="cell-action">Libérer le pare-chocs LDS. Retirer cheveux/poussière autour.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 50)" title="Cliquer pour copier">50</td>
+      <td class="cell-en">Water pump error</td>
+      <td class="cell-fr">Erreur pompe à eau</td>
+      <td class="cell-action">Vérifier pompe et circuit d'eau. Remplacer pompe si HS.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 51)" title="Cliquer pour copier">51</td>
+      <td class="cell-en">HEPA filter blocked</td>
+      <td class="cell-fr">Filtre HEPA bouché</td>
+      <td class="cell-action">Nettoyer ou remplacer le filtre HEPA.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 52)" title="Cliquer pour copier">52</td>
+      <td class="cell-en">Stuck while moving</td>
+      <td class="cell-fr">Bloqué en déplacement</td>
+      <td class="cell-action">Libérer le robot, dégager environnement. Vérifier capteurs.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 53)" title="Cliquer pour copier">53</td>
+      <td class="cell-en">TOF camera offline</td>
+      <td class="cell-fr">Caméra TOF hors ligne</td>
+      <td class="cell-action">Vérifier connecteur TOF. Remplacer module si pas de réponse.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 54)" title="Cliquer pour copier">54</td>
+      <td class="cell-en">Edge sensor error</td>
+      <td class="cell-fr">Erreur capteur de bordure</td>
+      <td class="cell-action">Nettoyer capteur latéral de bordure. Vérifier connecteur.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 55)" title="Cliquer pour copier">55</td>
+      <td class="cell-en">Carpet water tank start</td>
+      <td class="cell-fr">Démarrage réservoir mode tapis</td>
+      <td class="cell-action">Vérifier détection tapis. Retirer réservoir d'eau en mode tapis.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 56)" title="Cliquer pour copier">56</td>
+      <td class="cell-en">Line laser sensor error</td>
+      <td class="cell-fr">Erreur capteur laser linéaire</td>
+      <td class="cell-action">Nettoyer laser linéaire frontal. Vérifier connecteur.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 57)" title="Cliquer pour copier">57</td>
+      <td class="cell-en">Camera or laser blocked</td>
+      <td class="cell-fr">Caméra ou laser obstrué</td>
+      <td class="cell-action">Nettoyer caméra et laser frontal. Retirer obstacle.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 58)" title="Cliquer pour copier">58</td>
+      <td class="cell-en">Ultrasonic sensor error</td>
+      <td class="cell-fr">Erreur capteur ultrasonique</td>
+      <td class="cell-action">Nettoyer capteur ultrasonique frontal. Vérifier connecteur.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 59)" title="Cliquer pour copier">59</td>
+      <td class="cell-en">Restricted area or virtual wall detected</td>
+      <td class="cell-fr">Zone interdite ou mur virtuel détecté</td>
+      <td class="cell-action">Repositionner le robot hors de la zone interdite.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 60)" title="Cliquer pour copier">60</td>
+      <td class="cell-en">SLAM detected a failure requiring escape</td>
+      <td class="cell-fr">SLAM : échec de localisation</td>
+      <td class="cell-action">Repositionner manuellement. Relancer cartographie.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 61)" title="Cliquer pour copier">61</td>
+      <td class="cell-en">Unable to reach the designated area</td>
+      <td class="cell-fr">Zone inaccessible — vérifier porte/obstacles</td>
+      <td class="cell-action">Vérifier portes fermées, dégager passages.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 62)" title="Cliquer pour copier">62</td>
+      <td class="cell-en">Unable to reach — remove no-go zones</td>
+      <td class="cell-fr">Zone inaccessible — supprimer zones interdites</td>
+      <td class="cell-action">Réviser les zones interdites dans l'app.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 63)" title="Cliquer pour copier">63</td>
+      <td class="cell-en">Cleaning path blocked</td>
+      <td class="cell-fr">Trajet de nettoyage bloqué</td>
+      <td class="cell-action">Dégager le passage, vérifier portes.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 64)" title="Cliquer pour copier">64</td>
+      <td class="cell-en">Area outside map</td>
+      <td class="cell-fr">Zone hors de la carte</td>
+      <td class="cell-action">Refaire une cartographie complète.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 65)" title="Cliquer pour copier">65</td>
+      <td class="cell-en">Warning if leaving / returning to dock</td>
+      <td class="cell-fr">Avertissement départ/retour base</td>
+      <td class="cell-action">Repositionner robot hors zone interdite près de la base.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 66)" title="Cliquer pour copier">66</td>
+      <td class="cell-en">/</td>
+      <td class="cell-fr">/</td>
+      <td class="cell-action">—</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 67)" title="Cliquer pour copier">67</td>
+      <td class="cell-en">Stuck in a loop, returning to charge</td>
+      <td class="cell-fr">Boucle détectée, retour à la charge</td>
+      <td class="cell-action">Réinitialiser cartographie. Redémarrer robot et base.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 68)" title="Cliquer pour copier">68</td>
+      <td class="cell-en">Reminder to retrieve mop from dock</td>
+      <td class="cell-fr">Rappel : récupérer la serpillière</td>
+      <td class="cell-action">Retirer la serpillière de la base avant aspiration.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 69)" title="Cliquer pour copier">69</td>
+      <td class="cell-en">Mop holder inspection</td>
+      <td class="cell-fr">Vérification support de serpillière</td>
+      <td class="cell-action">Vérifier fixation, propreté et état du support.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 70)" title="Cliquer pour copier">70</td>
+      <td class="cell-en">Quick mapping — install mop prompt</td>
+      <td class="cell-fr">Mode cartographie rapide — installer serpillière</td>
+      <td class="cell-action">Installer ou retirer la serpillière selon mode sélectionné.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 71)" title="Cliquer pour copier">71</td>
+      <td class="cell-en">Mop motor error</td>
+      <td class="cell-fr">Erreur moteur serpillière</td>
+      <td class="cell-action">Vérifier connecteur moteur serpillière. Remplacer moteur si HS.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 72)" title="Cliquer pour copier">72</td>
+      <td class="cell-en">Mop motor overcurrent</td>
+      <td class="cell-fr">Surintensité moteur serpillière</td>
+      <td class="cell-action">Libérer mécanisme. Retirer débris bloquant la rotation.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 73)" title="Cliquer pour copier">73</td>
+      <td class="cell-en">AI camera error</td>
+      <td class="cell-fr">Erreur caméra IA</td>
+      <td class="cell-action">Vérifier connecteur. Remplacer module caméra IA si HS.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 74)" title="Cliquer pour copier">74</td>
+      <td class="cell-en">Mop installation failed</td>
+      <td class="cell-fr">Échec installation serpillière</td>
+      <td class="cell-action">Réinstaller correctement la serpillière (alignement aimants/clips).</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 75)" title="Cliquer pour copier">75</td>
+      <td class="cell-en">Low battery automatic shutdown</td>
+      <td class="cell-fr">Arrêt automatique batterie faible</td>
+      <td class="cell-action">Recharger. Informatif.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 76)" title="Cliquer pour copier">76</td>
+      <td class="cell-en">Wastewater tank presence detection</td>
+      <td class="cell-fr">Détection présence réservoir eaux usées</td>
+      <td class="cell-action">Vérifier insertion réservoir eaux usées et contacts.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 77)" title="Cliquer pour copier">77</td>
+      <td class="cell-en">Mop stuck</td>
+      <td class="cell-fr">Serpillière bloquée</td>
+      <td class="cell-action">Libérer la serpillière. Retirer débris coincés.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 78)" title="Cliquer pour copier">78</td>
+      <td class="cell-en">Trapped in hidden map area</td>
+      <td class="cell-fr">Bloqué dans zone masquée</td>
+      <td class="cell-action">Sortir robot manuellement. Ajuster zones masquées dans l'app.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 79)" title="Cliquer pour copier">79</td>
+      <td class="cell-en">LDS lift failure</td>
+      <td class="cell-fr">Échec levage LDS</td>
+      <td class="cell-action">Vérifier mécanisme de levage LDS. Lubrifier glissières.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 80)" title="Cliquer pour copier">80</td>
+      <td class="cell-en">LDS rise — robot under furniture</td>
+      <td class="cell-fr">LDS doit se relever sous meuble</td>
+      <td class="cell-action">Sortir robot manuellement de sous le meuble.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 81)" title="Cliquer pour copier">81</td>
+      <td class="cell-en">Lifting LDS trapped under furniture</td>
+      <td class="cell-fr">Robot LDS rétractable coincé</td>
+      <td class="cell-action">Sortir manuellement. Délimiter zone interdite dans l'app.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 82)" title="Cliquer pour copier">82</td>
+      <td class="cell-en">Mop wet/slippery — wait</td>
+      <td class="cell-fr">Serpillière humide — attendre</td>
+      <td class="cell-action">Patienter / suivre indication de l'application.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 83)" title="Cliquer pour copier">83</td>
+      <td class="cell-en">Side brush lift failure</td>
+      <td class="cell-fr">Échec levage brosse latérale</td>
+      <td class="cell-action">Vérifier mécanisme de levage brosse latérale.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 84)" title="Cliquer pour copier">84</td>
+      <td class="cell-en">Side brush stuck</td>
+      <td class="cell-fr">Brosse latérale bloquée</td>
+      <td class="cell-action">Démonter brosse latérale, retirer cheveux/débris.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 85)" title="Cliquer pour copier">85</td>
+      <td class="cell-en">Mop installation notice</td>
+      <td class="cell-fr">Notification installation serpillière</td>
+      <td class="cell-action">Installer la serpillière selon notice.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 86)" title="Cliquer pour copier">86</td>
+      <td class="cell-en">Wastewater tank water level alarm</td>
+      <td class="cell-fr">Alarme niveau réservoir eaux usées</td>
+      <td class="cell-action">Vider le réservoir d'eaux usées.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 87)" title="Cliquer pour copier">87</td>
+      <td class="cell-en">Triggering entry into obstacle-crossing wait</td>
+      <td class="cell-fr">Entrée en attente de franchissement</td>
+      <td class="cell-action">Patienter. Vérifier obstacle si attente prolongée.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 88)" title="Cliquer pour copier">88</td>
+      <td class="cell-en">Obstacle-crossing motor error</td>
+      <td class="cell-fr">Erreur moteur de franchissement</td>
+      <td class="cell-action">Vérifier moteur suspension/franchissement. Remplacer si HS.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 89)" title="Cliquer pour copier">89</td>
+      <td class="cell-en">TOF sensor error (cliff sensor)</td>
+      <td class="cell-fr">Erreur capteur TOF (vide)</td>
+      <td class="cell-action">Nettoyer capteur TOF. Remplacer module si HS.</td>
+    </tr>
+  </tbody>
+      </table>
+    </div>
+  
+    <div class="section-band">Station de base — Codes 100 à 125 — 26 codes</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="col-code">Code</th>
+            <th class="col-en">English</th>
+            <th class="col-fr">Français</th>
+            <th class="col-action">Action SAV — Geste atelier</th>
+          </tr>
+        </thead>
+        <tbody>
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 100)" title="Cliquer pour copier">100</td>
+      <td class="cell-en">Base station health status indicator</td>
+      <td class="cell-fr">Indicateur d'état de santé base</td>
+      <td class="cell-action">RAS — informatif.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 101)" title="Cliquer pour copier">101</td>
+      <td class="cell-en">Dust bag full (warning)</td>
+      <td class="cell-fr">Sac à poussière plein (avertissement)</td>
+      <td class="cell-action">Remplacer le sac à poussière.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 102)" title="Cliquer pour copier">102</td>
+      <td class="cell-en">Dust bag not installed (error)</td>
+      <td class="cell-fr">Sac à poussière non installé</td>
+      <td class="cell-action">Installer un sac à poussière dans la base.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 103)" title="Cliquer pour copier">103</td>
+      <td class="cell-en">Dust cover open (error)</td>
+      <td class="cell-fr">Couvercle bac collecteur ouvert</td>
+      <td class="cell-action">Fermer le couvercle. Vérifier capteur si reste actif.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 104)" title="Cliquer pour copier">104</td>
+      <td class="cell-en">Dust bin/bag clogged</td>
+      <td class="cell-fr">Bac ou sac obstrué</td>
+      <td class="cell-action">Débourrer conduit aspiration. Remplacer sac.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 105)" title="Cliquer pour copier">105</td>
+      <td class="cell-en">No clean water tank installed</td>
+      <td class="cell-fr">Réservoir d'eau propre non installé</td>
+      <td class="cell-action">Insérer le réservoir d'eau propre.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 106)" title="Cliquer pour copier">106</td>
+      <td class="cell-en">Wastewater tank not installed</td>
+      <td class="cell-fr">Réservoir d'eaux usées non installé</td>
+      <td class="cell-action">Insérer le réservoir d'eaux usées.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 107)" title="Cliquer pour copier">107</td>
+      <td class="cell-en">Clean water tank detected empty</td>
+      <td class="cell-fr">Réservoir d'eau propre vide</td>
+      <td class="cell-action">Remplir le réservoir d'eau propre.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 108)" title="Cliquer pour copier">108</td>
+      <td class="cell-en">Wastewater tank detected full</td>
+      <td class="cell-fr">Réservoir d'eaux usées plein</td>
+      <td class="cell-action">Vider le réservoir d'eaux usées.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 109)" title="Cliquer pour copier">109</td>
+      <td class="cell-en">Sewage pipe blockage detected</td>
+      <td class="cell-fr">Obstruction tuyau d'évacuation</td>
+      <td class="cell-action">Désobstruer le tuyau d'évacuation. Rincer à l'eau claire.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 110)" title="Cliquer pour copier">110</td>
+      <td class="cell-en">Wastewater pump damage detected</td>
+      <td class="cell-fr">Pompe d'évacuation endommagée</td>
+      <td class="cell-action">Remplacer la pompe d'évacuation.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 111)" title="Cliquer pour copier">111</td>
+      <td class="cell-en">Cleaning tray not installed</td>
+      <td class="cell-fr">Bac de nettoyage non installé</td>
+      <td class="cell-action">Installer/repositionner le bac de lavage.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 112)" title="Cliquer pour copier">112</td>
+      <td class="cell-en">Abnormal water level in cleaning tray</td>
+      <td class="cell-fr">Niveau d'eau anormal bac lavage</td>
+      <td class="cell-action">Vider et nettoyer le bac. Vérifier capteur de niveau.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 113)" title="Cliquer pour copier">113</td>
+      <td class="cell-en">Dust bin locks up frequently</td>
+      <td class="cell-fr">Blocages fréquents bac collecteur</td>
+      <td class="cell-action">Vérifier mécanisme bac collecteur. Nettoyer joints.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 114)" title="Cliquer pour copier">114</td>
+      <td class="cell-en">Cleaning tray cleaning instructions</td>
+      <td class="cell-fr">Instructions nettoyage bac</td>
+      <td class="cell-action">Nettoyer le bac de lavage selon notice.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 115)" title="Cliquer pour copier">115</td>
+      <td class="cell-en">Mopping complete — refill/empty</td>
+      <td class="cell-fr">Lavage terminé — remplir/vider</td>
+      <td class="cell-action">Vider eaux usées, remplir eau propre.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 116)" title="Cliquer pour copier">116</td>
+      <td class="cell-en">Insufficient clean water</td>
+      <td class="cell-fr">Eau propre insuffisante</td>
+      <td class="cell-action">Remplir le réservoir d'eau propre.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 117)" title="Cliquer pour copier">117</td>
+      <td class="cell-en">Base station disconnection</td>
+      <td class="cell-fr">Déconnexion de la base</td>
+      <td class="cell-action">Vérifier Wi-Fi, alimentation et connexion base.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 118)" title="Cliquer pour copier">118</td>
+      <td class="cell-en">Wastewater tank full (water in/out)</td>
+      <td class="cell-fr">Réservoir eaux usées plein (alim/évac)</td>
+      <td class="cell-action">Vider le réservoir d'eaux usées.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 119)" title="Cliquer pour copier">119</td>
+      <td class="cell-en">Cleaning tray level too high (water in/out)</td>
+      <td class="cell-fr">Niveau bac de lavage trop haut</td>
+      <td class="cell-action">Évacuer l'eau. Vérifier pompe d'évacuation.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 120)" title="Cliquer pour copier">120</td>
+      <td class="cell-en">Auto mop removal — mop not at dock</td>
+      <td class="cell-fr">Démontage auto — serpillière absente</td>
+      <td class="cell-action">Replacer la serpillière sur la base.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 121)" title="Cliquer pour copier">121</td>
+      <td class="cell-en">Warning after 60 dust collection cycles</td>
+      <td class="cell-fr">Un avertissement sera émis après 60 cycles de collecte de poussière.</td>
+      <td class="cell-action">Vérifier/remplacer sac. Conseil entretien client.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 122)" title="Cliquer pour copier">122</td>
+      <td class="cell-en">Water supply/drainage tasks completed</td>
+      <td class="cell-fr">Alim/évac terminée</td>
+      <td class="cell-action">RAS — informatif.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 123)" title="Cliquer pour copier">123</td>
+      <td class="cell-en">Empty water tank for supply/drainage</td>
+      <td class="cell-fr">Réservoirs alim/évac vides</td>
+      <td class="cell-action">Remplir ou vider les réservoirs selon besoin.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 124)" title="Cliquer pour copier">124</td>
+      <td class="cell-en">Scraper motor error</td>
+      <td class="cell-fr">Erreur moteur racloir</td>
+      <td class="cell-action">Vérifier moteur racloir. Remplacer si HS.</td>
+    </tr>
+  
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, 125)" title="Cliquer pour copier">125</td>
+      <td class="cell-en">Sewage pump lock-up</td>
+      <td class="cell-fr">Pompe d'évacuation bloquée</td>
+      <td class="cell-action">Désobstruer pompe d'évacuation. Remplacer si HS.</td>
+    </tr>
+  </tbody>
+      </table>
+    </div>
+  </main>
 
 <footer class="footer">
   Module de consultation rapide — intégrable OVPEM.
@@ -777,5 +1615,6 @@ function toggleTheme() {
 })();
 </script>
 
-</body>
-</html>
+
+
+</body></html>
