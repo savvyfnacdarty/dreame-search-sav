@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>SAV PEM V5.7.1 — Codes Erreurs DREAME</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet"/>
+<style>
+/* ══════════════════════════════════════════════════════════════
+   TOKENS — LIGHT MODE PROFESSIONNEL (STYLE SAV PEM V5.7.1)
+══════════════════════════════════════════════════════════════ */
+:root {
+  /* Surfaces */
+  --bg:          #f1f3f6;
+  --surface:     #ffffff;
+  --surface-2:   #f8f9fa;
+  --surface-3:   #eef0f3;
+  --border:      #dde1e8;
+  --border-strong:#c0c6d2;
+  --rule:        #e8ebf0;
+
+  /* Texte */
+  --text:        #1a1e2a;
+  --text-2:      #4a5068;
+  --muted:       #8891a8;
+  --muted-2:     #c0c8d8;
+
+  /* Charte FNAC DARTY */
+  --accent:      #e84040;       /* rouge FNAC */
+  --accent-warm: #f07020;       /* orange Darty */
+  --accent-glow: rgba(232,64,64,0.09);
+  --warm-glow:   rgba(240,112,32,0.10);
+
+  /* Ombres */
+  --shadow-sm:   0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md:   0 4px 16px rgba(0,0,0,0.09), 0 1px 4px rgba(0,0,0,0.05);
+  --shadow-lg:   0 12px 40px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
+
+  /* Typo */
+  --font-ui:   'Barlow',sans-serif;
+  --font-cond: 'Barlow Condensed',sans-serif;
+  --font-mono: 'JetBrains Mono',monospace;
+
+  /* Géométrie */
+  --r-sm:3px; --r-md:7px; --r-lg:12px; --r-xl:18px;
+  --tr:0.16s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* ══ RESET ══ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:15px;scroll-behavior:smooth;}
+body{font-family:var(--font-ui);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;line-height:1.6;}
+button{font-family:inherit;}
+input{font-family:inherit;}
+
+/* Scrollbars */
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:3px;}
+::-webkit-scrollbar-thumb:hover{background:var(--muted);}
+
+/* ══════════════════════════════════════════════════════════════
+   HEADER
+══════════════════════════════════════════════════════════════ */
+.hdr{
+  position:sticky;top:0;z-index:100;
+  background:rgba(255,255,255,0.92);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--border);
+  box-shadow:var(--shadow-sm);
+  padding:0 24px;
+}
+.hdr-in{
+  max-width:1440px;margin:0 auto;
+  display:flex;align-items:center;gap:16px;height:62px;
+}
+.logo{display:flex;align-items:center;gap:11px;flex-shrink:0;}
+.logo-badge{
+  width:38px;height:38px;border-radius:var(--r-md);
+  background:linear-gradient(135deg,var(--accent),var(--accent-warm));
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-cond);font-weight:700;font-size:13px;color:#fff;
+  letter-spacing:0.5px;box-shadow:0 2px 8px rgba(232,64,64,0.25);flex-shrink:0;
+}
+.logo-t{font-family:var(--font-cond);font-size:16px;font-weight:700;color:var(--text);letter-spacing:0.3px;}
+.logo-v{font-family:var(--font-mono);font-size:9.5px;color:var(--muted);letter-spacing:1.2px;margin-top:1px;}
+.vsep{width:1px;height:28px;background:var(--border);flex-shrink:0;}
+
+/* Menu / Actions */
+.nav-actions{
+  display:flex;align-items:center;gap:10px;margin-left:auto;
+}
+.btn-nav{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:8px 16px;border-radius:var(--r-md);border:1.5px solid var(--border);
+  background:var(--surface);color:var(--text-2);
+  font-family:var(--font-ui);font-size:13px;font-weight:600;
+  cursor:pointer;transition:all var(--tr);white-space:nowrap;
+}
+.btn-nav:hover{
+  border-color:var(--text-2);background:var(--surface-2);color:var(--text);
+}
+.btn-nav-primary{
+  background:var(--text);color:white;border-color:var(--text);
+}
+.btn-nav-primary:hover{
+  background:#000;border-color:#000;color:white;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   MAIN LAYOUT
+══════════════════════════════════════════════════════════════ */
+.main-container {
+  max-width: 1440px;
+  margin: 24px auto;
+  padding: 0 24px;
+}
+
+.intro-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow-sm);
+}
+.intro-title {
+  font-family: var(--font-cond);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.intro-title span {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  background: var(--bg);
+  padding: 2px 8px;
+  border-radius: var(--r-sm);
+  color: var(--text-2);
+}
+.intro-desc {
+  font-size: 14px;
+  color: var(--text-2);
+}
+
+/* Barre de recherche */
+.search-wrapper {
+  position: relative;
+  margin-bottom: 24px;
+}
+.search-input {
+  width: 100%;
+  height: 52px;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 0 48px 0 16px;
+  font-family: var(--font-ui);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text);
+  transition: all var(--tr);
+  box-shadow: var(--shadow-sm);
+}
+.search-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-glow);
+}
+.search-icon {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  font-size: 18px;
+  pointer-events: none;
+}
+
+/* Statut / Pills */
+.stats-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  align-items: center;
+}
+.stat-pill {
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--surface-3);
+  color: var(--text-2);
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+}
+
+/* Grille des codes */
+.codes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.code-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 16px;
+  transition: all var(--tr);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+.code-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-md);
+}
+
+.code-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 8px;
+}
+.code-badge {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  background: var(--text);
+  color: white;
+  padding: 2px 8px;
+  border-radius: var(--r-sm);
+}
+.code-card.critical .code-badge {
+  background: var(--accent);
+}
+.code-lang-tag {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--muted);
+  letter-spacing: 0.5px;
+}
+
+.code-content {
+  flex-grow: 1;
+}
+.code-title-fr {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+.code-original-box {
+  background: var(--surface-2);
+  border-radius: var(--r-sm);
+  padding: 8px;
+  font-size: 12px;
+  color: var(--text-2);
+  border-left: 2.5px solid var(--border-strong);
+}
+.code-original-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 2px;
+  letter-spacing: 0.3px;
+}
+
+/* Bouton Scroll to Top */
+#scrollTopBtn {
+  position: fixed; bottom: 24px; right: 24px; z-index: 90;
+  width: 42px; height: 42px; border-radius: 50%;
+  background: var(--surface); border: 1.5px solid var(--border);
+  color: var(--text-2); display: flex; align-items: center; justify-content: center;
+  cursor: pointer; box-shadow: var(--shadow-md); opacity: 0; visibility: hidden;
+  transition: all var(--tr);
+}
+#scrollTopBtn.visible { opacity: 1; visibility: visible; }
+#scrollTopBtn:hover { border-color: var(--text); color: var(--text); transform: translateY(-2px); }
+
+/* Message si aucun résultat */
+.no-results {
+  grid-column: 1 / -1;
+  background: var(--surface);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--r-lg);
+  padding: 48px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<header class="hdr">
+  <div class="hdr-in">
+    <div class="logo">
+      <div class="logo-badge">SAV</div>
+      <div>
+        <div class="logo-t">FNAC DARTY — CODES DEFAUTS</div>
+        <div class="logo-v">DREAME ECOSYSTEM — V5.7.1</div>
+      </div>
+    </div>
+    
+    <div class="vsep"></div>
+    
+    <div class="nav-actions">
+      <!-- Bouton Menu principal -->
+      <button class="btn-nav" onclick="goToMenu()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12h18M3 6h18M3 18h18"/></svg>
+        Retour au Menu
+      </button>
+      
+      <!-- Bouton Calibrage -->
+      <button class="btn-nav btn-nav-primary" onclick="goToCalibrage()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        Accéder au Calibrage
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ══ MAIN CONTENT ══ -->
+<main class="main-container">
+  
+  <div class="intro-section">
+    <h1 class="intro-title">Référentiel des Codes Erreurs & Alertes <span>DREAME SAV PEM</span></h1>
+    <p class="intro-desc">
+      Recherche instantanée et traduction automatisée des codes de pannes pour l'écosystème Dreame (Aspirateurs Robots, Balais sans fil et Wet & Dry). Utilisez la barre ci-dessous pour filtrer par numéro de code ou par mot-clé.
+    </p>
+  </div>
+
+  <!-- Zone de Recherche -->
+  <div class="search-wrapper">
+    <input type="text" id="faultSearch" class="search-input" placeholder="Saisissez un numéro de code ou un mot-clé (ex: Bumper, Batterie, Réservoir)..." autofocus/>
+    <div class="search-icon">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+    </div>
+  </div>
+
+  <!-- Barre d'état -->
+  <div class="stats-bar">
+    <div class="stat-pill" id="totalCountPill">Total : -- codes</div>
+    <div class="stat-pill" style="background:var(--accent-glow); border-color:rgba(232,64,64,0.2); color:var(--accent);">Filtrage dynamique actif</div>
+  </div>
+
+  <!-- Grille Interactive -->
+  <div class="codes-grid" id="codesGrid">
+    <!-- Rendu dynamique en JS -->
+  </div>
+
+</main>
+
+<!-- Bouton Retour Haut -->
+<button id="scrollTopBtn" title="Retour en haut">
+  <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+</button>
+
+<!-- ══ SCRIPT DE LOGIQUE ET EMBEDDING DES CODES ══ -->
+<script>
+// Base de données générée à partir du fichier Fault Code Table.xlsx
+const FAULT_CODES = [{"code": "0", "desc": "Health status indicators", "original": "健康状态标志"}, {"code": "1", "desc": "Fall detection", "original": "跌落检测"}, {"code": "2", "desc": "Please try cleaning the cliff sensor.", "original": "请尝试清理悬崖传感器"}, {"code": "3", "desc": "Bumper detection", "original": "撞板检测"}, {"code": "4", "desc": "Attitude detection", "original": "姿态检测"}, {"code": "5", "desc": "Repeatedly triggering the Bumper of the board", "original": "撞板反复触发"}, {"code": "6", "desc": "Repeated falls trigger", "original": "跌落反复触发"}, {"code": "7", "desc": "optical flow abnormal", "original": "光流是否异常"}, {"code": "8", "desc": "dust box installed", "original": "尘盒是否安装"}, {"code": "9", "desc": "water tank installed", "original": "水箱是否安装"}, {"code": "10", "desc": "No water", "original": "水量不足"}, {"code": "11", "desc": "Dust box full", "original": "尘盒满"}, {"code": "12", "desc": "Main brush abnormal", "original": "主刷异常"}, {"code": "13", "desc": "Overcurrent detection", "original": "边刷过流检测"}, {"code": "14", "desc": "Blower overcurrent detection", "original": "风机过流检测"}, {"code": "15", "desc": "Left drive wheel detection", "original": "左驱动轮检测"}, {"code": "16", "desc": "Right drive wheel detection", "original": "右驱动轮检测"}, {"code": "17", "desc": "Rotation jam detection", "original": "旋转卡住检测"}, {"code": "18", "desc": "Forward jam detection", "original": "前进卡住检测"}, {"code": "19", "desc": "Charging signal acquisition", "original": "充电信号获取"}, {"code": "20", "desc": "Low battery", "original": "电量低"}, {"code": "21", "desc": "Charging anomaly detection", "original": "充电异常检测"}, {"code": "22", "desc": "Battery percentage", "original": "电量百分比"}, {"code": "23", "desc": "Heartbeat abnormality", "original": "心跳贞异常"}, {"code": "24", "desc": "Camera occlusion detection", "original": "摄像头遮挡检测"}, {"code": "25", "desc": "The machine was moved and Lifted", "original": "机器被搬动"}, {"code": "26", "desc": "Optical flow is blocked", "original": "光流被遮挡"}, {"code": "27", "desc": "Infrared is blocked", "original": "红外被遮挡"}, {"code": "28", "desc": "The charging dock is out of power.", "original": "充电座没电"}, {"code": "29", "desc": "Battery error", "original": "电池异常"}, {"code": "30", "desc": "abnormal Blower speed", "original": "风机速度异常"}, {"code": "31", "desc": "abnormal Left drive speed", "original": "左轮速度异常"}, {"code": "32", "desc": "abnormal right wheel speed", "original": "右轮速度异常"}, {"code": "33", "desc": "Accelerometer Abnormality", "original": "BMI055加速度计异常"}, {"code": "34", "desc": "Gyroscope error", "original": "BMI055陀螺仪异常"}, {"code": "35", "desc": "Gyroscope error", "original": "XV7001陀螺仪异常"}, {"code": "36", "desc": "Left geomagnetic anomaly", "original": "左地磁异常"}, {"code": "37", "desc": "Right geomagnetic anomaly", "original": "右地磁异常"}, {"code": "38", "desc": "Optical flow anomaly", "original": "光流异常"}, {"code": "39", "desc": "Infrared anomaly", "original": "红外异常"}, {"code": "40", "desc": "Camera error", "original": "摄像头异常"}, {"code": "41", "desc": "Strong magnetic field detected", "original": "检测到强磁场"}, {"code": "42", "desc": "Water pump error", "original": "水泵异常"}, {"code": "43", "desc": "RTC inconsistency", "original": "rtc不一致"}, {"code": "44", "desc": "Press and hold the auto button.", "original": "auto按键一直长按"}, {"code": "45", "desc": "3.3V power supply error", "original": "3.3V电源异常"}, {"code": "46", "desc": "The camera does not process images", "original": "摄像头不处理图像"}, {"code": "47", "desc": "Partition out of bounds", "original": "分区超出边界"}, {"code": "48", "desc": "LDS sensor error", "original": "LDS传感器异常"}, {"code": "49", "desc": "LDS collision plate stuck", "original": "LDS撞板被卡"}, {"code": "50", "desc": "Water pump error", "original": "水泵异常"}, {"code": "51", "desc": "HEAP（filter） was blocked", "original": "海帕被堵检测"}, {"code": "52", "desc": "Stuck while moving", "original": "移动被卡"}, {"code": "53", "desc": "TOF camera offline", "original": "TOF摄像头离线"}, {"code": "54", "desc": "Edge sensor error", "original": "延边传感器"}, {"code": "55", "desc": "Carpet water tank start", "original": "地毯水箱启动"}, {"code": "56", "desc": "Line laser sensor error", "original": "线激光传感器异常"}, {"code": "57", "desc": "Camera or laser blocked", "original": "摄像头或激光被遮挡"}, {"code": "58", "desc": "Ultrasonic sensor error", "original": "超声波传感器异常"}, {"code": "59", "desc": "Restricted area or virtual wall detected", "original": "检测到禁区或虚拟墙"}, {"code": "60", "desc": "SLAM detected a failure requiring escape.", "original": "SLAM检测到要定位失效需要脱困"}, {"code": "61", "desc": "Error message: Unable to reach the designated area. Please check if the door is closed or try clearing obstacles in the path. Selected area cleaning (area selection/zone sweeping/point-and-sweep), machine cannot reach the designated area (blocked by obstacles).", "original": "故障提示:无法到达指定区域,请检查是否关门或尝试清理路径上的障碍物 选定区域清扫(划区/选区/指哪扫哪),机器无法到达指定区域(被障碍阻挡"}, {"code": "62", "desc": "Error message: Unable to reach the specified area. Please try deleting restricted areas on the path and returning to charging station.", "original": "故障提示:无法到达指定区域,请尝试删除路径上的禁区 返回充电电"}, {"code": "63", "desc": "Error message: Cleaning path blocked. Please check if the door is closed or try clearing the obstruction from the path.", "original": "故障提示:清扫路径被阻挡,请检查是否关门或尝试清理路径上的障碍物"}, {"code": "64", "desc": "Error message: Unable to reach the designated area: Selected area cleaning (zone marking/area selection/point-and-swipe), the area is outside the map and the machine returns to the charging station.", "original": "故障提示:无法到达指定区域:选定区域清扫(划区/选区/指哪扫哪),区域在地图外返回充电"}, {"code": "65", "desc": "If the device returns from the charging dock, a warning will appear. If it does not return from the charging dock, an error message will appear: \"The device has been detected in a restricted area. Please move the device out of this area.\"", "original": "若从充电座出发返回充电warning未从充电座出发error故障提示:检测到主机在禁区范围内请将主机搬离此区域"}, {"code": "66", "desc": "/", "original": "暂无"}, {"code": "67", "desc": "Get stuck in a loop and return to charging.", "original": "陷入循环,返回充电"}, {"code": "68", "desc": "Added charging dock reminder to retrieve cleaning cloth", "original": "增加充电座提示取抹布"}, {"code": "69", "desc": "Mop holder inspection", "original": "拖布盘检测"}, {"code": "70", "desc": "Quick Mapping Mode Installation Mop Prompt", "original": "快速建图模式安装抹布提示"}, {"code": "71", "desc": "Mop motor error", "original": "拖布电机异常"}, {"code": "72", "desc": "Mop motor overcurrent", "original": "拖布电机过流"}, {"code": "73", "desc": "AI camera error", "original": "AI相机故障"}, {"code": "74", "desc": "Mop installation failed.", "original": "安装拖布失败"}, {"code": "75", "desc": "Low battery automatic shutdown reminder", "original": "低电自动关机提醒"}, {"code": "76", "desc": "In-situ detection of robot sewage tank", "original": "主机污水箱在位检测"}, {"code": "77", "desc": "Mop stuck", "original": "拖布被卡"}, {"code": "78", "desc": "Hidden map area trapped", "original": "隐藏地图区域被困"}, {"code": "79", "desc": "LDS lift failure", "original": "lds抬升失败"}, {"code": "80", "desc": "The LDS lift machine needs to raise the LDS, but it's under furniture and an error is occurring.", "original": "升降lds机器,需要抬升lds,但是在家具下,报错"}, {"code": "81", "desc": "Lifting LDS machine trapped under furniture", "original": "升降lds机器在家具下被困"}, {"code": "82", "desc": "The mop is wet and slippery, so please wait for the app to provide a prompt.", "original": "拖布湿滑,打滑等待,app提示专用"}, {"code": "83", "desc": "Side brush lift failure", "original": "边刷抬升失效"}, {"code": "84", "desc": "Side brush stuck", "original": "边刷被卡"}, {"code": "85", "desc": "Mop Installation Notice", "original": "拖布安装通知"}, {"code": "86", "desc": "Robot wastewater tank water level alarm", "original": "主机污水箱水位告警"}, {"code": "87", "desc": "Triggering entry into obstacle crossing wait", "original": "触发进入越障等待"}, {"code": "88", "desc": "Obstacle crossing motor error", "original": "越障电机异常"}, {"code": "89", "desc": "TOF sensor error (cliff sensor)", "original": "tof异常(down,followside)"}, {"code": "100", "desc": "Base station health status indicator", "original": "基站健康状态标志"}, {"code": "101", "desc": "Dust bin full alarm -- Dust bag full detection -- warning", "original": "集尘桶尘满告警----尘袋满检测--warning"}, {"code": "102", "desc": "Dust collection bin dust bag not installed -- Dust bag detection --- error", "original": "集尘桶尘袋未安装--尘袋检测---error"}, {"code": "103", "desc": "Dust collection bin cover error ---- Dust cover is open -- error", "original": "集尘桶尘盖异常----尘盖被打开--error"}, {"code": "104", "desc": "Dust bin clogged........ Dust bag clogged....error/warning", "original": "集尘桶堵塞........尘袋阻塞....error/warning"}, {"code": "105", "desc": "No clean water tank installed", "original": "未安装清水箱"}, {"code": "106", "desc": "Wastewater tank not installed", "original": "未安装污水箱"}, {"code": "107", "desc": "The water tank was found to be empty.", "original": "检测到清水箱无水"}, {"code": "108", "desc": "The sewage tank was found to be full.", "original": "检测到污水箱水满"}, {"code": "109", "desc": "Sewage pipe blockage detected", "original": "检测到污水管阻塞"}, {"code": "110", "desc": "Wastewater pump damage detected", "original": "检测到污水泵损坏"}, {"code": "111", "desc": "Cleaning tray not installed", "original": "清洗盘未安装"}, {"code": "112", "desc": "Abnormal water level in the cleaning tray", "original": "清洗盘水位异常"}, {"code": "113", "desc": "Dust collection bin locks up frequently during operation", "original": "集尘桶操作频繁锁住"}, {"code": "114", "desc": "Cleaning tray cleaning instructions", "original": "清洗盘清洗提示"}, {"code": "115", "desc": "The mopping task is complete. Please add water to the clean water tank if it is low, and empty the dirty water tank.", "original": "拖地任务已完成,清水箱水量不足请及时加水,并倾倒污水水箱"}, {"code": "116", "desc": "The water in the clean water tank is insufficient to complete this cleaning task.", "original": "清水箱水量不足以完成此次清洁工作"}, {"code": "117", "desc": "Base station disconnection notification APP", "original": "基站断连通知APP"}, {"code": "118", "desc": "The sewage tank is full.", "original": "上下水污水箱满"}, {"code": "119", "desc": "The liquid level in the water inlet and outlet cleaning pans is too high.", "original": "上下水清洗盘液位过高"}, {"code": "120", "desc": "Automatic mop removal: Alarm when mop is not installed at the base station.", "original": "自动拆卸拖布:安装拖布拖布不在基站告警"}, {"code": "121", "desc": "A warning will be issued after 60 dust collection cycles.", "original": "集尘满60次进行warning告警"}, {"code": "122", "desc": "Water supply and drainage tasks completed", "original": "上下水任务完成"}, {"code": "123", "desc": "Empty water tank for both water supply and drainage", "original": "上下水清水箱空"}, {"code": "124", "desc": "Scraper motor error", "original": "刮条电机异常"}, {"code": "125", "desc": "Sewage pump lock-up", "original": "排污泵锁转"}];
+
+// Dictionnaire de traduction et d'amélioration française automatisée
+const EN_TO_FR_MAPPING = {
+  "Health status indicators": "Indicateurs d'état de santé général",
+  "Fall detection": "Détection de chute (Capteurs de vide déclenchés)",
+  "Please try cleaning the cliff sensor.": "Veuillez essayer de nettoyer les capteurs de vide / falaise.",
+  "Bumper detection": "Détection du pare-chocs (Bumper bloqué ou activé)",
+  "Attitude detection": "Détection d'attitude / inclinaison de l'appareil",
+  "Repeatedly triggering the Bumper of the board": "Déclenchement répétitif du pare-chocs / Bumper",
+  "Repeated falls trigger": "Déclenchements répétés des capteurs de vide (chutes successives)",
+  "optical flow abnormal": "Anomalie du capteur de flux optique",
+  "dust box installed": "Vérification de la présence du bac à poussière",
+  "water tank installed": "Vérification de la présence du réservoir d'eau",
+  "No water": "Manque d'eau / Réservoir d'eau propre vide",
+  "Dust box full": "Bac à poussière plein ou obstrué",
+  "Main brush abnormal": "Anomalie ou blocage de la brosse principale",
+  "Overcurrent detection": "Détection de surintensité (brosse ou moteur bloqué)",
+  "Blower overcurrent detection": "Détection de surintensité du ventilateur d'aspiration",
+  "Left drive wheel detection": "Anomalie ou blocage de la roue motrice gauche",
+  "Right drive wheel detection": "Anomalie ou blocage de la roue motrice droite",
+  "Rotation jam detection": "Détection de blocage de rotation",
+  "Forward jam detection": "Détection de blocage en marche avant",
+  "Charging signal acquisition": "Acquisition du signal de charge",
+  "Low battery": "Batterie faible, retour à la station requis",
+  "Charging anomaly detection": "Détection d'une anomalie de charge",
+  "Battery percentage": "Pourcentage de niveau de batterie",
+  "Heartbeat abnormality": "Anomalie de communication interne (Trame Heartbeat)",
+  "Camera occlusion detection": "Détection d'obstruction ou d'occlusion de la caméra",
+  "The machine was moved and Lifted": "L'appareil a été déplacé ou soulevé du sol",
+  "Optical flow is blocked": "Le capteur de flux optique est obstrué / bloqué",
+  "Infrared is blocked": "Le capteur infrarouge est obstrué / masqué",
+  "The charging dock is out of power.": "La station de charge n'est pas alimentée en électricité",
+  "Battery error": "Erreur critique de la batterie",
+  "abnormal Blower": "Anomalie ou dysfonctionnement du ventilateur d'aspiration",
+  "LDS error": "Erreur du télémètre laser (LDS coincé ou défaillant)",
+  "Edge brush abnormal": "Anomalie ou blocage de la brosse latérale",
+  "The machine is trapped": "L'appareil est piégé ou coincé",
+  "Mop board detection": "Détection de la plaque/support de la serpillière",
+  "Mop in place detection": "Détection de la présence de la serpillière",
+  "Water tank detection": "Détection du réservoir d'eau",
+  "The water tank is short of water": "Le réservoir d'eau est presque vide",
+  "Dust box detection": "Détection du bac à poussière",
+  "Please insert the dust collection box properly": "Veuillez insérer correctement le bac à poussière",
+  "Please clean the main brush": "Veuillez nettoyer la brosse principale",
+  "Please clean the edge brush": "Veuillez nettoyer la brosse latérale",
+  "Please check the drive wheels": "Veuillez vérifier les roues motrices",
+  "Please clear the foreign object around the machine": "Veuillez dégager les objets étrangers autour de la machine",
+  "Please install the dust bag": "Veuillez installer le sac à poussière dans la station",
+  "Please put the machine back on the ground": "Veuillez reposer l'appareil correctement sur le sol",
+  "Battery overheating or overcooling": "Surchauffe ou sous-refroidissement de la batterie",
+  "LDS collision sensor stuck": "Capteur de collision du télémètre laser (LDS) coincé",
+  "Magnetic field abnormality": "Anomalie du champ magnétique (interférences ou zone interdite)",
+  "The charging dock position is abnormal": "La position de la station de charge est incorrecte ou inaccessible",
+  "Wastewater tank is full": "Le réservoir d'eaux usées (污水箱) est plein",
+  "No clean water tank installed": "Réservoir d'eau propre non installé",
+  "Wastewater tank not installed": "Réservoir d'eaux usées non installé",
+  "The water tank was found to be empty.": "Détection : Le réservoir d'eau propre est vide",
+  "The sewage tank was found to be full.": "Détection : Le réservoir d'eaux usées est plein",
+  "Sewage pipe blockage detected": "Blocage détecté dans le conduit d'évacuation des eaux usées",
+  "Wastewater pump damage detected": "Dommage ou panne détectée sur la pompe à eaux usées",
+  "Cleaning tray not installed": "Plateau de nettoyage non installé",
+  "Abnormal water level in the cleaning tray": "Niveau d'eau anormal dans le plateau de nettoyage",
+  "The mopping task is complete. Please add water to the clean water tank if it is low, and empty the dirty water tank.": "Tâche de lavage terminée. Veuillez vider le réservoir d'eau sale et remplir le réservoir d'eau propre.",
+  "The water in the clean water tank is insufficient to complete this cleaning task.": "L'eau dans le réservoir propre est insuffisante pour terminer cette tâche.",
+  "The sewage tank is full.": "Le réservoir d'eaux usées est plein."
+};
+
+// Fonction de traduction intelligente (Mapping -> Anglais -> Original)
+function getFrenchTranslation(item) {
+  if (EN_TO_FR_MAPPING[item.desc]) {
+    return EN_TO_FR_MAPPING[item.desc];
+  }
+  
+  let d = item.desc.trim();
+  if (!d || d === 'NaN' || d === 'undefined') {
+    if (item.original) return item.original;
+    return "Code d'état système / Alerte générale";
+  }
+  
+  d = d.replace(/error/gi, "Erreur")
+       .replace(/warning/gi, "Alerte")
+       .replace(/abnormal/gi, "Anomalie")
+       .replace(/clogged/gi, "Obstrué/Bloqué")
+       .replace(/stuck/gi, "Coincé")
+       .replace(/harness/gi, "Faisceau de câbles")
+       .replace(/detection/gi, "Détection");
+       
+  return d;
+}
+
+// Initialisation et Rendu
+const codesGrid = document.getElementById('codesGrid');
+const faultSearch = document.getElementById('faultSearch');
+const totalCountPill = document.getElementById('totalCountPill');
+
+function renderCodes(filterText = '') {
+  codesGrid.innerHTML = '';
+  const searchLower = filterText.toLowerCase().trim();
+  
+  let filtered = FAULT_CODES.filter(item => {
+    if (!searchLower) return true;
+    const codeMatch = item.code.toLowerCase().includes(searchLower);
+    const descMatch = item.desc.toLowerCase().includes(searchLower);
+    const origMatch = item.original.toLowerCase().includes(searchLower);
+    const frMatch = getFrenchTranslation(item).toLowerCase().includes(searchLower);
+    return codeMatch || descMatch || origMatch || frMatch;
+  });
+  
+  totalCountPill.textContent = `${filtered.length} code(s) trouvé(s) / ${FAULT_CODES.length} au total`;
+  
+  if (filtered.length === 0) {
+    codesGrid.innerHTML = `
+      <div class="no-results">
+        <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="margin-bottom:12px; color:var(--muted);"><path stroke-linecap="round" stroke-linejoin="round" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <p>Aucun code d'erreur ne correspond à votre recherche "<strong>${filterText}</strong>".</p>
+        <p style="font-size:12px; margin-top:6px; color:var(--muted);">Vérifiez le numéro ou essayez un autre mot-clé technique.</p>
+      </div>
+    `;
+    return;
+  }
+  
+  filtered.forEach(item => {
+    const card = document.createElement('div');
+    const isCritical = item.desc.toLowerCase().includes('error') || item.desc.toLowerCase().includes('abnormal') || item.desc.toLowerCase().includes('critical') || item.desc.toLowerCase().includes('damage') || item.desc.toLowerCase().includes('clogged');
+    card.className = `code-card ${isCritical ? 'critical' : ''}`;
+    
+    const frTranslation = getFrenchTranslation(item);
+    
+    card.innerHTML = `
+      <div class="code-card-header">
+        <span class="code-badge">CODE ${item.code}</span>
+        <span class="code-lang-tag">${isCritical ? 'CRITIQUE / ERREUR' : 'ALERTE / STATUT'}</span>
+      </div>
+      <div class="code-content">
+        <div class="code-title-fr">${frTranslation}</div>
+        ${item.desc ? `<div style="font-size:12px; color:var(--text-2); margin-bottom:8px; font-style:italic;">EN: ${item.desc}</div>` : ''}
+        ${item.original ? `
+          <div class="code-original-box">
+            <div class="code-original-label">Donnée Source (ZH)</div>
+            ${item.original}
+          </div>
+        ` : ''}
+      </div>
+    `;
+    codesGrid.appendChild(card);
+  });
+}
+
+faultSearch.addEventListener('input', (e) => {
+  renderCodes(e.target.value);
+});
+
+function goToMenu() {
+  window.location.href = 'index.html';
+}
+
+function goToCalibrage() {
+  window.location.href = 'index.html#calibrage';
+}
+
+const scrollTopBtn = document.getElementById('scrollTopBtn');
+window.addEventListener('scroll', () => {
+  if (window.scrollY > 200) {
+    scrollTopBtn.classList.add('visible');
+  } else {
+    scrollTopBtn.classList.remove('visible');
+  }
+});
+scrollTopBtn.addEventListener('click', () => {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+renderCodes();
+</script>
+</body>
+</html>
