@@ -1,0 +1,1482 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>SAV PEM V5.7.1 — Outil Technique DREAME</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+/* ══════════════════════════════════════════════════════════════
+   TOKENS — LIGHT MODE PROFESSIONNEL
+══════════════════════════════════════════════════════════════ */
+:root {
+  /* Surfaces */
+  --bg:          #f1f3f6;
+  --surface:     #ffffff;
+  --surface-2:   #f8f9fa;
+  --surface-3:   #eef0f3;
+  --border:      #dde1e8;
+  --border-strong:#c0c6d2;
+  --rule:        #e8ebf0;
+
+  /* Texte */
+  --text:        #1a1e2a;
+  --text-2:      #4a5068;
+  --muted:       #8891a8;
+  --muted-2:     #c0c8d8;
+
+  /* Charte FNAC DARTY */
+  --accent:      #e84040;       /* rouge FNAC */
+  --accent-warm: #f07020;       /* orange Darty */
+  --accent-glow: rgba(232,64,64,0.09);
+  --warm-glow:   rgba(240,112,32,0.10);
+
+  /* Ombres */
+  --shadow-sm:   0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md:   0 4px 16px rgba(0,0,0,0.09), 0 1px 4px rgba(0,0,0,0.05);
+  --shadow-lg:   0 12px 40px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
+  --shadow-modal:0 24px 70px rgba(0,0,0,0.18), 0 0 0 1px var(--border);
+
+  /* Typo */
+  --font-ui:   'Barlow',sans-serif;
+  --font-cond: 'Barlow Condensed',sans-serif;
+  --font-mono: 'JetBrains Mono',monospace;
+
+  /* Géométrie */
+  --r-sm:3px; --r-md:7px; --r-lg:12px; --r-xl:18px;
+  --tr:0.16s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* ══ RESET ══ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:15px;scroll-behavior:smooth;}
+body{font-family:var(--font-ui);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;line-height:1.6;}
+a{color:inherit;text-decoration:none;}
+button{font-family:inherit;}
+input{font-family:inherit;}
+
+/* Scrollbars discrètes */
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:3px;}
+::-webkit-scrollbar-thumb:hover{background:var(--muted);}
+
+/* ══════════════════════════════════════════════════════════════
+   HEADER
+══════════════════════════════════════════════════════════════ */
+.hdr{
+  position:sticky;top:0;z-index:100;
+  background:rgba(255,255,255,0.92);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--border);
+  box-shadow:var(--shadow-sm);
+  padding:0 24px;
+}
+.hdr-in{
+  max-width:1440px;margin:0 auto;
+  display:flex;align-items:center;gap:16px;height:62px;
+}
+.logo{display:flex;align-items:center;gap:11px;flex-shrink:0;}
+.logo-badge{
+  width:38px;height:38px;border-radius:var(--r-md);
+  background:linear-gradient(135deg,var(--accent),var(--accent-warm));
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-cond);font-weight:700;font-size:13px;color:#fff;
+  letter-spacing:0.5px;box-shadow:0 2px 8px rgba(232,64,64,0.25);flex-shrink:0;
+}
+.logo-t{font-family:var(--font-cond);font-size:16px;font-weight:700;color:var(--text);letter-spacing:0.3px;}
+.logo-v{font-family:var(--font-mono);font-size:9.5px;color:var(--muted);letter-spacing:1.2px;margin-top:1px;}
+.vsep{width:1px;height:28px;background:var(--border);flex-shrink:0;}
+
+/* Boutons import */
+.btn-imp{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:8px 15px;border-radius:var(--r-md);border:1.5px solid;
+  font-family:var(--font-ui);font-size:12.5px;font-weight:600;
+  cursor:pointer;transition:all var(--tr);white-space:nowrap;
+}
+.btn-main{
+  background:linear-gradient(135deg,var(--accent),#c42020);
+  border-color:transparent;color:#fff;
+  box-shadow:0 2px 10px rgba(232,64,64,0.28);
+}
+.btn-main:hover{box-shadow:0 4px 18px rgba(232,64,64,0.42);transform:translateY(-1px);}
+.btn-bom{
+  background:#fff;border-color:var(--accent-warm);color:var(--accent-warm);
+}
+.btn-bom:hover{background:var(--warm-glow);box-shadow:0 2px 10px rgba(240,112,32,0.18);}
+
+.hdr-status{font-family:var(--font-mono);font-size:10.5px;color:var(--muted);margin-left:auto;flex-shrink:0;}
+.hdr-status.ok{color:#1e8c3e;font-weight:700;}
+
+/* ══════════════════════════════════════════════════════════════
+   MAIN
+══════════════════════════════════════════════════════════════ */
+.main{max-width:1440px;margin:0 auto;padding:28px 24px;}
+
+/* ── Barre de recherche ── */
+.search-section{margin-bottom:24px;}
+.search-lbl{
+  font-family:var(--font-cond);font-size:10.5px;font-weight:700;
+  letter-spacing:2px;text-transform:uppercase;color:var(--muted);
+  margin-bottom:8px;display:block;
+}
+.search-wrap{position:relative;}
+.search-ico{
+  position:absolute;left:14px;top:50%;transform:translateY(-50%);
+  width:17px;height:17px;color:var(--muted);pointer-events:none;
+  transition:color var(--tr);
+}
+.search-wrap:focus-within .search-ico{color:var(--accent);}
+.search-inp{
+  width:100%;padding:13px 14px 13px 44px;
+  background:var(--surface);
+  border:1.5px solid var(--border);
+  border-radius:var(--r-lg);
+  color:var(--text);font-family:var(--font-mono);font-size:14.5px;
+  outline:none;transition:all var(--tr);
+  box-shadow:var(--shadow-sm);
+}
+.search-inp::placeholder{color:var(--muted);}
+.search-inp:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px var(--accent-glow),var(--shadow-sm);
+}
+.res-meta{font-size:12px;color:var(--muted);font-family:var(--font-mono);margin-top:8px;min-height:16px;}
+.res-meta strong{color:var(--accent-warm);font-weight:700;}
+
+/* ── Accueil / invite ── */
+.invite{
+  text-align:center;padding:72px 24px 60px;
+  color:var(--muted);
+}
+.invite-icon{
+  width:72px;height:72px;margin:0 auto 20px;
+  background:var(--surface);border:1.5px solid var(--border);
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  box-shadow:var(--shadow-sm);color:var(--muted);
+}
+.invite h2{
+  font-family:var(--font-cond);font-size:23px;font-weight:700;
+  color:var(--text-2);margin-bottom:8px;letter-spacing:0.3px;
+}
+.invite p{font-size:14px;line-height:1.75;max-width:440px;margin:0 auto;}
+.invite p strong{color:var(--text);}
+
+/* ── Grille projets ── */
+.pgrid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(268px,1fr));
+  gap:13px;
+}
+
+/* Carte projet */
+.pcard{
+  background:var(--surface);
+  border:1.5px solid var(--border);
+  border-radius:var(--r-lg);
+  cursor:pointer;
+  transition:all var(--tr);
+  overflow:hidden;
+  box-shadow:var(--shadow-sm);
+}
+.pcard:hover{
+  border-color:var(--border-strong);
+  box-shadow:var(--shadow-md);
+  transform:translateY(-2px);
+}
+.pcard.active{
+  border-color:var(--accent);
+  box-shadow:0 0 0 1px var(--accent),var(--shadow-md);
+}
+.pcard-head{padding:14px 16px;display:flex;align-items:center;gap:11px;}
+.pcard-ico{
+  width:36px;height:36px;border-radius:var(--r-md);
+  background:var(--surface-2);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:17px;flex-shrink:0;
+}
+.pcard-info{flex:1;min-width:0;}
+.pcard-code{
+  font-family:var(--font-mono);font-size:10px;font-weight:700;
+  color:var(--accent-warm);letter-spacing:1.2px;text-transform:uppercase;
+  margin-bottom:1px;
+}
+.pcard-name{
+  font-family:var(--font-cond);font-size:15px;font-weight:700;
+  color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.pcard-fam{font-size:11px;color:var(--muted);margin-top:1px;}
+.pcard-arr{
+  width:20px;height:20px;border-radius:50%;
+  background:var(--surface-2);color:var(--muted);
+  font-size:9px;display:flex;align-items:center;justify-content:center;
+  transition:all var(--tr);flex-shrink:0;border:1px solid var(--border);
+}
+.pcard.active .pcard-arr{background:var(--accent);color:#fff;border-color:var(--accent);transform:rotate(180deg);}
+
+.pcard-foot{padding:6px 16px 13px;display:flex;gap:5px;flex-wrap:wrap;}
+.badge{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:2px 8px;border-radius:100px;
+  font-size:10.5px;font-weight:600;
+  background:var(--surface-2);color:var(--text-2);
+  border:1px solid var(--border);
+}
+.badge.bom{
+  background:rgba(240,112,32,0.08);
+  color:var(--accent-warm);
+  border-color:rgba(240,112,32,0.3);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PANNEAU DÉTAIL PROJET
+══════════════════════════════════════════════════════════════ */
+.dpanel-wrap{
+  margin-top:14px;
+  background:var(--surface);
+  border:1.5px solid var(--border);
+  border-radius:var(--r-lg);
+  overflow:hidden;
+  box-shadow:var(--shadow-md);
+  animation:sld .2s ease-out;
+}
+@keyframes sld{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
+
+.dhead{
+  padding:15px 22px;
+  border-bottom:1px solid var(--rule);
+  display:flex;align-items:center;gap:14px;
+  background:var(--surface-2);
+}
+.dtitle{font-family:var(--font-cond);font-size:19px;font-weight:700;color:var(--text);}
+.dpath{font-family:var(--font-mono);font-size:10.5px;color:var(--muted);margin-top:2px;word-break:break-all;}
+.dclose{
+  margin-left:auto;width:28px;height:28px;border-radius:50%;
+  background:var(--surface-3);border:1px solid var(--border);
+  color:var(--text-2);font-size:13px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all var(--tr);
+}
+.dclose:hover{background:var(--accent);border-color:var(--accent);color:#fff;}
+.dbody{padding:18px 22px;}
+
+.slbl{
+  font-family:var(--font-cond);font-size:10px;font-weight:700;
+  letter-spacing:2px;text-transform:uppercase;color:var(--muted);
+  margin-bottom:10px;
+}
+.bom-sec{margin-bottom:18px;}
+
+/* Carte BOM prioritaire */
+.bcard{
+  display:flex;align-items:center;gap:13px;padding:12px 16px;
+  background:linear-gradient(135deg,rgba(240,112,32,0.06),rgba(232,64,64,0.03));
+  border:1.5px solid rgba(240,112,32,0.30);
+  border-left:3px solid var(--accent-warm);
+  border-radius:var(--r-lg);
+  margin-bottom:8px;position:relative;
+  transition:all var(--tr);
+}
+.bcard:hover{border-color:rgba(240,112,32,0.55);box-shadow:var(--shadow-sm);}
+.bcard-ico{
+  width:40px;height:40px;border-radius:var(--r-md);
+  background:linear-gradient(135deg,var(--accent-warm),var(--accent));
+  display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;
+}
+.bcard-star{
+  position:absolute;top:8px;right:10px;
+  background:linear-gradient(135deg,var(--accent-warm),var(--accent));
+  color:#fff;font-family:var(--font-cond);font-size:9.5px;font-weight:700;
+  letter-spacing:1.2px;text-transform:uppercase;padding:2px 7px;border-radius:100px;
+}
+.fi{flex:1;min-width:0;}
+.fn{font-family:var(--font-mono);font-size:12px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px;}
+.fm{font-size:11px;color:var(--muted);}
+.fa{display:flex;gap:6px;flex-shrink:0;}
+
+/* Boutons fichier */
+.bf{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:6px 12px;border-radius:var(--r-md);
+  font-family:var(--font-ui);font-size:11.5px;font-weight:600;
+  border:1.5px solid;cursor:pointer;transition:all var(--tr);white-space:nowrap;
+}
+.bf-dl-main{background:linear-gradient(135deg,var(--accent-warm),#c84010);border-color:transparent;color:#fff;box-shadow:0 2px 8px rgba(240,112,32,0.22);}
+.bf-dl-main:hover{box-shadow:0 4px 14px rgba(240,112,32,0.38);transform:translateY(-1px);}
+.bf-open{background:#fff;border-color:var(--border-strong);color:var(--text-2);}
+.bf-open:hover{border-color:#4a9fd4;color:#4a9fd4;background:rgba(74,159,212,0.07);}
+.bf-dl{background:#fff;border-color:var(--border-strong);color:var(--text-2);}
+.bf-dl:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-glow);}
+
+/* Lignes fichiers */
+.flist{display:flex;flex-direction:column;gap:5px;}
+.frow{
+  display:flex;align-items:center;gap:10px;padding:9px 13px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-md);transition:all var(--tr);
+}
+.frow:hover{background:var(--surface-2);border-color:var(--border-strong);}
+.fdot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.d-pdf{background:#e84040;}.d-vid{background:#7c5cfc;}.d-ppt{background:#d44000;}
+.d-xls{background:#1e8c3e;}.d-oth{background:#4a9fd4;}
+
+/* ══════════════════════════════════════════════════════════════
+   MODAL OVERLAY (générique)
+══════════════════════════════════════════════════════════════ */
+.modal-overlay{
+  display:none;position:fixed;inset:0;z-index:200;
+  background:rgba(20,24,36,0.55);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  align-items:flex-start;justify-content:center;
+  padding:24px;overflow-y:auto;
+}
+.modal-overlay.vis{display:flex;}
+
+.modal{
+  width:100%;background:var(--surface);
+  border:1px solid var(--border);border-radius:var(--r-xl);
+  overflow:hidden;box-shadow:var(--shadow-modal);
+  animation:mup .22s ease-out;
+}
+@keyframes mup{from{opacity:0;transform:scale(0.97) translateY(10px);}to{opacity:1;transform:scale(1) translateY(0);}}
+
+.modal-head{
+  padding:15px 22px;
+  display:flex;align-items:center;gap:12px;
+  border-bottom:1px solid var(--rule);
+  background:var(--surface-2);
+}
+.modal-head-icon{font-size:22px;flex-shrink:0;}
+.modal-title{flex:1;}
+.modal-title h2{font-family:var(--font-cond);font-size:19px;font-weight:700;color:var(--text);}
+.modal-title p{font-size:11.5px;color:var(--muted);margin-top:1px;font-family:var(--font-mono);}
+.modal-close{
+  width:32px;height:32px;border-radius:50%;
+  background:var(--surface-3);border:1px solid var(--border);
+  color:var(--text-2);font-size:14px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all var(--tr);flex-shrink:0;
+}
+.modal-close:hover{background:var(--accent);border-color:var(--accent);color:#fff;}
+
+/* ══════════════════════════════════════════════════════════════
+   MODULE LECTEUR BOM
+══════════════════════════════════════════════════════════════ */
+#bomModal{max-width:1200px;margin:auto;}
+
+.bom-controls{
+  padding:13px 20px;
+  background:var(--surface-2);
+  border-bottom:1px solid var(--rule);
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+}
+.bom-search-wrap{position:relative;flex:1;min-width:220px;}
+.bom-search-wrap svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;width:15px;height:15px;}
+.bom-sinp{
+  width:100%;padding:8px 11px 8px 34px;
+  background:var(--surface);border:1.5px solid var(--border);
+  border-radius:var(--r-md);color:var(--text);
+  font-family:var(--font-mono);font-size:13px;
+  outline:none;transition:all var(--tr);
+}
+.bom-sinp:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow);}
+.bom-sinp::placeholder{color:var(--muted);}
+.bom-cnt{font-family:var(--font-mono);font-size:11px;color:var(--muted);white-space:nowrap;flex-shrink:0;}
+
+/* Toggle vue */
+.view-toggle{
+  display:inline-flex;border:1.5px solid var(--border);
+  border-radius:var(--r-md);overflow:hidden;background:var(--surface);flex-shrink:0;
+}
+.view-toggle button{
+  border:none;background:transparent;color:var(--muted);
+  padding:7px 11px;cursor:pointer;font-size:13px;
+  transition:all var(--tr);display:flex;align-items:center;gap:4px;
+}
+.view-toggle button+button{border-left:1px solid var(--border);}
+.view-toggle button.act{background:var(--text);color:#fff;}
+
+.bom-body{max-height:70vh;overflow-y:auto;background:var(--bg);}
+
+/* Vue grille */
+.bom-grid-wrap{
+  padding:14px;
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+  gap:11px;
+}
+.bom-pc{
+  background:var(--surface);border:1.5px solid var(--border);
+  border-radius:var(--r-lg);overflow:hidden;
+  cursor:pointer;transition:all var(--tr);
+  box-shadow:var(--shadow-sm);
+}
+.bom-pc:hover{
+  border-color:var(--accent);
+  box-shadow:var(--shadow-md);
+  transform:translateY(-2px);
+}
+.bom-pc-thumb{
+  width:100%;aspect-ratio:1/1;background:var(--surface-2);
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;border-bottom:1px solid var(--border);position:relative;
+}
+.bom-pc-thumb img{max-width:100%;max-height:100%;object-fit:contain;display:block;}
+.bom-pc-noimg{color:var(--muted-2);font-size:30px;font-family:var(--font-cond);font-weight:700;}
+.bom-pc-info{padding:9px 11px;}
+.bom-pc-ref{
+  font-family:var(--font-mono);font-size:10.5px;font-weight:700;
+  color:var(--accent);background:var(--accent-glow);
+  padding:2px 6px;border-radius:3px;
+  display:inline-block;margin-bottom:4px;word-break:break-all;
+}
+.bom-pc-name{
+  font-family:var(--font-cond);font-size:13.5px;font-weight:700;color:var(--text);
+  line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.bom-pc-ver{font-family:var(--font-mono);font-size:10px;color:var(--muted);margin-top:4px;}
+
+/* Vue tableau */
+.bom-table-wrap{padding:12px;overflow-x:auto;}
+.bom-table{
+  width:100%;border-collapse:separate;border-spacing:0;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-md);overflow:hidden;font-size:13px;
+}
+.bom-table thead th{
+  background:var(--surface-2);color:var(--muted);
+  font-family:var(--font-mono);font-size:9.5px;font-weight:700;
+  letter-spacing:1.2px;text-transform:uppercase;
+  padding:9px 11px;text-align:left;
+  border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:1;
+}
+.bom-table tbody td{padding:9px 11px;border-bottom:1px solid var(--rule);color:var(--text);vertical-align:middle;}
+.bom-table tbody tr{cursor:pointer;transition:background .1s;}
+.bom-table tbody tr:hover{background:var(--surface-2);}
+.bom-table tbody tr:last-child td{border-bottom:none;}
+.bom-table td.t-ref{font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--accent);white-space:nowrap;}
+.bom-table td.t-name{font-weight:500;}
+.bom-table td.t-ver{font-family:var(--font-mono);font-size:10px;color:var(--muted);white-space:nowrap;}
+.bom-table td.t-qty{font-family:var(--font-mono);font-size:11px;font-weight:700;text-align:center;}
+.bom-table td.t-thumb{width:50px;padding:5px 11px;}
+.bom-table td.t-thumb .mini{
+  width:40px;height:40px;background:var(--surface-2);border:1px solid var(--border);
+  border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;overflow:hidden;
+}
+.bom-table td.t-thumb .mini img{max-width:100%;max-height:100%;object-fit:contain;}
+.bom-table td.t-thumb .mini .em{color:var(--muted-2);font-size:16px;}
+
+/* ══════════════════════════════════════════════════════════════
+   MODAL ZOOM PIÈCE
+══════════════════════════════════════════════════════════════ */
+#partModal{max-width:920px;margin:auto;}
+
+.pv-detail{
+  padding:26px 28px 32px;
+  display:grid;
+  grid-template-columns:400px 1fr;
+  gap:28px;
+  align-items:start;
+}
+.pv-detail-img{
+  width:100%;aspect-ratio:1/1;max-height:400px;
+  background:var(--surface-2);
+  border:1.5px solid var(--border);
+  border-radius:var(--r-lg);overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:var(--shadow-md);
+}
+.pv-detail-img img{width:100%;height:100%;object-fit:contain;}
+.pv-detail-noimg{
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  color:var(--muted-2);font-family:var(--font-cond);font-weight:700;font-size:40px;
+}
+.pv-detail-noimg span{font-size:12px;font-family:var(--font-mono);letter-spacing:1px;}
+
+.pv-detail-info{min-width:0;}
+.pv-detail-info h4{
+  font-family:var(--font-cond);font-size:21px;font-weight:700;
+  color:var(--text);line-height:1.2;margin-bottom:6px;
+}
+.ref-line{
+  display:inline-block;
+  font-family:var(--font-mono);font-size:12.5px;font-weight:700;
+  color:var(--accent);background:var(--accent-glow);
+  padding:3px 9px;border-radius:4px;margin-bottom:14px;
+}
+.pv-meta-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;
+}
+.pv-meta-item{
+  background:var(--surface-2);border:1px solid var(--border);
+  border-radius:var(--r-md);padding:8px 10px;
+}
+.pv-meta-item .lab{
+  font-family:var(--font-mono);font-size:9px;color:var(--muted);
+  letter-spacing:1.2px;text-transform:uppercase;margin-bottom:2px;
+}
+.pv-meta-item .val{
+  font-family:var(--font-ui);font-weight:600;color:var(--text);
+  font-size:13px;word-break:break-word;
+}
+.pv-rows{
+  background:var(--surface-2);border:1px solid var(--border);
+  border-radius:var(--r-md);overflow:hidden;
+}
+.pv-row{
+  display:grid;grid-template-columns:130px 1fr;gap:10px;
+  padding:7px 12px;border-bottom:1px solid var(--rule);
+}
+.pv-row:last-child{border-bottom:none;}
+.pv-row .lab{
+  font-family:var(--font-mono);font-size:9.5px;color:var(--muted);
+  letter-spacing:1px;text-transform:uppercase;align-self:center;
+}
+.pv-row .val{color:var(--text);font-size:13px;word-break:break-word;}
+
+/* ══════════════════════════════════════════════════════════════
+   TOASTS
+══════════════════════════════════════════════════════════════ */
+.tbox{position:fixed;bottom:22px;right:22px;z-index:999;display:flex;flex-direction:column;gap:7px;pointer-events:none;}
+.toast{
+  padding:11px 16px;background:var(--surface);
+  border:1.5px solid var(--border);border-radius:var(--r-md);
+  font-size:13px;color:var(--text);
+  box-shadow:var(--shadow-lg);
+  animation:tin .18s ease-out;pointer-events:auto;max-width:360px;
+}
+.toast.ok {border-color:#1e8c3e;color:#1e8c3e;}
+.toast.err{border-color:var(--accent);color:var(--accent);}
+.toast.inf{border-color:var(--accent-warm);color:var(--accent-warm);}
+@keyframes tin{from{opacity:0;transform:translateX(18px);}to{opacity:1;transform:translateX(0);}}
+
+/* Spinner */
+.spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(0,0,0,0.1);border-top-color:currentColor;border-radius:50%;animation:sp .7s linear infinite;}
+@keyframes sp{to{transform:rotate(360deg);}}
+
+/* Responsive */
+@media(max-width:820px){.pv-detail{grid-template-columns:1fr;} .pv-detail-img{max-width:280px;margin:0 auto;}}
+@media(max-width:640px){.hdr-in{height:auto;flex-wrap:wrap;padding:10px 0;gap:10px;} .vsep{display:none;} .bom-grid-wrap{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));}}
+@media(max-width:480px){.main{padding:16px 12px;} .pgrid{grid-template-columns:1fr;}}
+.hidden{display:none !important;}
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<header class="hdr">
+  <div class="hdr-in">
+    <div class="logo">
+      <div class="logo-badge">PEM</div>
+      <div>
+        <div class="logo-t">SAV TECH — DREAME</div>
+        <div class="logo-v">V5.7.1 · FNAC DARTY</div>
+      </div>
+    </div>
+    <div class="vsep"></div>
+    <!-- Bouton 1 : import arborescence SharePoint -->
+    <button class="btn-imp btn-main" id="btnArbo">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Charger extraction SharePoint (.xlsx)
+    </button>
+    <!-- Bouton 2 : import pièces détachées -->
+    <button class="btn-imp btn-bom" id="btnBom">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Ouvrir liste pièces (.xlsx)
+    </button>
+    <input type="file" accept=".xlsx,.xls" id="inArbo" style="display:none"/>
+    <input type="file" accept=".xlsx,.xls" id="inBom"  style="display:none"/>
+    <div class="hdr-status" id="arboSt">Aucun fichier chargé</div>
+  </div>
+</header>
+
+<!-- ══ MAIN ══ -->
+<main class="main">
+  <!-- Barre de recherche -->
+  <div class="search-section">
+    <label class="search-lbl" for="si">Recherche de projet</label>
+    <div class="search-wrap">
+      <svg class="search-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input type="search" id="si" class="search-inp"
+        placeholder="Référence commerciale (ex: X40 Master) ou code projet (ex: R2465)…"
+        autocomplete="off" spellcheck="false"/>
+    </div>
+    <div class="res-meta" id="rm"></div>
+  </div>
+
+  <!-- Accueil/invite (avant tout chargement ou avant toute saisie) -->
+  <div class="invite" id="invite">
+    <div class="invite-icon">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+    </div>
+    <h2 id="inviteTitle">Chargez votre extraction SharePoint</h2>
+    <p id="inviteSub">Cliquez sur le bouton rouge pour importer le fichier <strong>.xlsx</strong> exporté depuis SharePoint. Les projets DREAME apparaîtront dès que vous saisirez un terme de recherche.</p>
+  </div>
+
+  <!-- Grille des projets (masquée par défaut) -->
+  <div class="pgrid hidden" id="pgrid"></div>
+  <!-- Panneau détail (masqué par défaut) -->
+  <div class="hidden" id="dpanel"></div>
+</main>
+
+<!-- ══ MODAL LECTEUR BOM ══ -->
+<div class="modal-overlay" id="bomOverlay" role="dialog" aria-modal="true">
+  <div class="modal" id="bomModal">
+    <div class="modal-head">
+      <div class="modal-head-icon">🔧</div>
+      <div class="modal-title">
+        <h2>Lecteur Pièces Détachées</h2>
+        <p id="bomSub">Aucun fichier chargé</p>
+      </div>
+      <button class="modal-close" id="bomClose">✕</button>
+    </div>
+    <!-- Barre de contrôle -->
+    <div class="bom-controls">
+      <div class="bom-search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="search" class="bom-sinp" id="bomSi" placeholder="Filtrer par référence, désignation, version…" autocomplete="off"/>
+      </div>
+      <div class="view-toggle" id="viewToggle">
+        <button class="act" data-view="grid" title="Vue grille">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Grille
+        </button>
+        <button data-view="table" title="Vue tableau">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          Tableau
+        </button>
+      </div>
+      <span class="bom-cnt" id="bomCnt"></span>
+    </div>
+    <div class="bom-body" id="bomBody"></div>
+  </div>
+</div>
+
+<!-- ══ MODAL ZOOM PIÈCE ══ -->
+<div class="modal-overlay" id="partOverlay" role="dialog" aria-modal="true">
+  <div class="modal" id="partModal">
+    <div class="modal-head">
+      <div class="modal-head-icon">🔩</div>
+      <div class="modal-title">
+        <h2 id="partModalTitle">Fiche pièce</h2>
+        <p id="partModalRef"></p>
+      </div>
+      <button class="modal-close" id="partClose">✕</button>
+    </div>
+    <div id="partDetail"></div>
+  </div>
+</div>
+
+<!-- ══ TOASTS ══ -->
+<div class="tbox" id="tbox" aria-live="polite"></div>
+
+<script>
+/* ════════════════════════════════════════════════════════════
+   CONSTANTES & ÉTAT
+════════════════════════════════════════════════════════════ */
+
+/* URL de base SharePoint — reconstruite depuis le chemin relatif extrait du fichier Excel */
+var SP_BASE = 'https://groupefnac.sharepoint.com';
+
+var S = {
+  projects:    [],    /* arborescence chargée */
+  activeId:    null,  /* projet ouvert */
+  bomAll:      [],    /* toutes les pièces chargées */
+  bomFiltered: [],    /* pièces affichées après filtre */
+  bomView:     'grid' /* 'grid' ou 'table' */
+};
+
+/* ════════════════════════════════════════════════════════════
+   HELPERS DOM
+════════════════════════════════════════════════════════════ */
+var $ = function(s,c){ return (c||document).querySelector(s); };
+var $$ = function(s,c){ return Array.from((c||document).querySelectorAll(s)); };
+
+function esc(s){
+  return String(s||'')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+/* ════════════════════════════════════════════════════════════
+   RECONSTRUCTION DU LIEN SHAREPOINT
+   ─────────────────────────────────────────────────────────
+   Chemin extrait du fichier Excel (colonne "Chemin d'accès") :
+     sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Robot_Vacuum/R2465 - X40 Master/BOM_R2465.xlsx
+   ↓
+   Lien SharePoint absolu :
+     https://groupefnac.sharepoint.com/sites/SAVVY_FNACDARTY/Documents%20partages/DREAME_Referent/DREAME/Robot_Vacuum/R2465%20-%20X40%20Master/BOM_R2465.xlsx
+════════════════════════════════════════════════════════════ */
+function buildSharePointUrl(cheminBrut, nomFichier) {
+  if (!cheminBrut) return null;
+
+  /* Nettoyage : retire les slashes en début/fin et tout ce qui précède "sites/" */
+  var chemin = cheminBrut.trim().replace(/\\/g, '/');
+
+  /* Supprime l'éventuel préfixe "file:///" ou disque local ajouté par le navigateur */
+  chemin = chemin.replace(/^[a-zA-Z]:\/.*?(?=sites\/)/, '');
+  chemin = chemin.replace(/^\/+/, '');
+
+  /* S'assure que le chemin commence bien par "sites/" */
+  if (!chemin.startsWith('sites/') && chemin.indexOf('sites/') > -1) {
+    chemin = chemin.substring(chemin.indexOf('sites/'));
+  }
+
+  /* Encode chaque segment du chemin séparément (encode les espaces et caractères spéciaux,
+     mais préserve les slashes qui sont les séparateurs de dossiers) */
+  var segments = chemin.split('/').map(function(seg) {
+    /* encodeURIComponent encode tout y compris les espaces en %20 */
+    return encodeURIComponent(seg);
+  });
+
+  var pathEncoded = segments.join('/');
+
+  /* Si le chemin ne contient pas déjà le nom du fichier, on l'ajoute */
+  if (nomFichier) {
+    var nomEncode = encodeURIComponent(nomFichier);
+    if (chemin.indexOf(nomFichier) === -1) {
+      pathEncoded = pathEncoded + '/' + nomEncode;
+    }
+  }
+
+  /* Lien d'ouverture direct SharePoint (lecture dans le navigateur) */
+  return SP_BASE + '/' + pathEncoded;
+}
+
+/* Construit le lien de téléchargement SharePoint (paramètre ?download=1) */
+function buildSharePointDownloadUrl(cheminBrut, nomFichier) {
+  var url = buildSharePointUrl(cheminBrut, nomFichier);
+  if (!url) return null;
+  return url + (url.indexOf('?') > -1 ? '&' : '?') + 'download=1';
+}
+
+/* ════════════════════════════════════════════════════════════
+   TOASTS
+════════════════════════════════════════════════════════════ */
+function toast(msg, type, ms) {
+  type = type || 'inf'; ms = ms || 3500;
+  var t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  $('#tbox').appendChild(t);
+  setTimeout(function() {
+    t.style.cssText = 'opacity:0;transform:translateX(16px);transition:.25s ease';
+    setTimeout(function() { t.remove(); }, 260);
+  }, ms);
+}
+
+/* ════════════════════════════════════════════════════════════
+   LECTURE XLSX (via SheetJS — méthode BinaryString, la plus compatible)
+════════════════════════════════════════════════════════════ */
+function readXlsx(file, sheetSelector, cb, onErr) {
+  /* sheetSelector : null = première feuille, function(names) = retourne le nom voulu */
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var wb = XLSX.read(e.target.result, { type: 'binary', cellDates: true, raw: false });
+      var sheetName = wb.SheetNames[0];
+      if (typeof sheetSelector === 'function') {
+        sheetName = sheetSelector(wb.SheetNames) || sheetName;
+      }
+      var ws = wb.Sheets[sheetName];
+      var rows = XLSX.utils.sheet_to_json(ws, { defval: '', raw: false });
+      cb(wb, sheetName, rows);
+    } catch(err) { onErr(err); }
+  };
+  reader.onerror = function() { onErr(new Error('Lecture impossible')); };
+  reader.readAsBinaryString(file);
+}
+
+/* ════════════════════════════════════════════════════════════
+   NORMALISATION COLONNES
+════════════════════════════════════════════════════════════ */
+function normKey(k) {
+  return String(k).trim().toLowerCase()
+    .replace(/[éèêë]/g,'e').replace(/[àâä]/g,'a').replace(/[îï]/g,'i')
+    .replace(/[ùûü]/g,'u').replace(/[ôö]/g,'o').replace(/ç/g,'c')
+    .replace(/[\s'"\-\/\\]+/g,'_').replace(/[^a-z0-9_]/g,'');
+}
+function normRows(rows) {
+  return rows.map(function(row) {
+    var out = {};
+    Object.keys(row).forEach(function(k) { out[normKey(k)] = String(row[k]||'').trim(); });
+    return out;
+  });
+}
+function findKey(keys /*, ...candidates */) {
+  var cands = Array.prototype.slice.call(arguments, 1);
+  return keys.find(function(k) {
+    return cands.some(function(c) { return k.indexOf(c) > -1; });
+  }) || null;
+}
+
+/* ════════════════════════════════════════════════════════════
+   PARSING ARBORESCENCE SHAREPOINT
+════════════════════════════════════════════════════════════ */
+function parseArbo(file) {
+  readXlsx(file, null, function(wb, sheet, rows) {
+    if (!rows.length) { toast('Fichier vide ou illisible', 'err'); return; }
+    var norm = normRows(rows);
+    var keys = Object.keys(norm[0] || {});
+
+    var K_NOM    = findKey(keys, 'nom', 'name', 'titre', 'filename');
+    var K_CHEMIN = findKey(keys, 'chemin', 'path', 'url', 'acces', 'access');
+    var K_TYPE   = findKey(keys, 'type');
+    var K_MODIF  = findKey(keys, 'modifie', 'modif', 'date', 'modified');
+    var K_AUTEUR = findKey(keys, 'auteur', 'par', 'by', 'modifier', 'modifie_par');
+
+    /* Pattern de détection de dossier projet dans le chemin */
+    var PROJ_PAT = /([A-Z][A-Z0-9]{3,6})\s*[-\u2013\u2014]\s*([^\/\\]+?)(?:\s*\/.*)?$/i;
+
+    var map = {};
+    norm.forEach(function(row) {
+      var nom    = row[K_NOM]    || '';
+      var chemin = row[K_CHEMIN] || '';
+      var type   = (row[K_TYPE]  || '').toLowerCase();
+      var modif  = row[K_MODIF]  || '';
+      var auteur = row[K_AUTEUR] || '';
+      if (!nom && !chemin) return;
+
+      /* Cherche le dossier projet dans les segments du chemin */
+      var parts = chemin.replace(/\\/g, '/').split('/');
+      var projSeg = null, projIdx = -1;
+      for (var i = parts.length - 1; i >= 0; i--) {
+        if (PROJ_PAT.test(parts[i])) { projSeg = parts[i]; projIdx = i; break; }
+      }
+      if (!projSeg) return;
+
+      var m = projSeg.match(PROJ_PAT);
+      if (!m) return;
+      var code    = m[1].toUpperCase();
+      var refComm = m[2].trim();
+      var key     = code + ' - ' + refComm;
+      var family  = projIdx > 0 ? parts[projIdx - 1].trim() : 'Général';
+      var basePath= parts.slice(0, projIdx + 1).join('/');
+
+      if (!map[key]) {
+        map[key] = { id:key, code:code, name:refComm, fullName:key, family:family, path:basePath, files:[] };
+      }
+
+      /* Ajoute le fichier si ce n'est pas un dossier */
+      var isFolder = type.indexOf('dossier') > -1 || type.indexOf('folder') > -1 || !nom;
+      var isSelf   = nom === projSeg || nom === refComm || nom === key;
+      if (!isFolder && !isSelf && nom) {
+        var dup = map[key].files.find(function(f) { return f.name === nom && f.path === chemin; });
+        if (!dup) {
+          map[key].files.push({ name:nom, path:chemin, modif:modif, auteur:auteur });
+        }
+      }
+    });
+
+    S.projects = Object.values(map);
+    if (!S.projects.length) {
+      toast('Aucun projet détecté. Vérifiez les colonnes Nom / Chemin d\'accès.', 'err', 6000);
+      return;
+    }
+
+    var st = $('#arboSt');
+    st.textContent = '✓ ' + S.projects.length + ' projets chargés';
+    st.className = 'hdr-status ok';
+
+    /* Mise à jour de l'invite : le fichier est chargé, attendons une saisie */
+    $('#inviteTitle').textContent = 'Fichier chargé — lancez votre recherche';
+    $('#inviteSub').innerHTML = S.projects.length + ' projets DREAME disponibles. ' +
+      'Saisissez un <strong>code projet</strong> (ex: R2465) ou une <strong>référence commerciale</strong> (ex: X40 Master) pour afficher les dossiers correspondants.';
+
+    toast(S.projects.length + ' projets chargés', 'ok');
+
+  }, function(err) {
+    console.error('[ARBO]', err);
+    toast('Erreur lecture : ' + err.message, 'err', 5000);
+  });
+}
+
+/* ════════════════════════════════════════════════════════════
+   TYPE DE FICHIER
+════════════════════════════════════════════════════════════ */
+function isBom(name) { return /bom|part.?list|spare|pi[eè]ces|nomenclature/i.test(name || ''); }
+
+function fileType(name) {
+  var ext = ((name || '').split('.').pop() || '').toLowerCase();
+  if (isBom(name))                                    return { dot:'d-xls', icon:'📋' };
+  if (['xlsx','xls','csv'].indexOf(ext) > -1)         return { dot:'d-xls', icon:'📊' };
+  if (ext === 'pdf')                                  return { dot:'d-pdf', icon:'📄' };
+  if (['mp4','mov','avi','mkv'].indexOf(ext) > -1)    return { dot:'d-vid', icon:'🎬' };
+  if (['pptx','ppt'].indexOf(ext) > -1)               return { dot:'d-ppt', icon:'📊' };
+  return                                                     { dot:'d-oth', icon:'📁' };
+}
+function emoji(code) {
+  var c = (code || '').toUpperCase();
+  if (c[0] === 'R') return '🤖';
+  if (c[0] === 'W') return '🌀';
+  if (c[0] === 'P') return '🍳';
+  if (c[0] === 'F') return '❄️';
+  return '🔧';
+}
+
+/* ════════════════════════════════════════════════════════════
+   AFFICHAGE PROJETS
+   !! S'affiche SEULEMENT si l'utilisateur a saisi quelque chose !!
+════════════════════════════════════════════════════════════ */
+function renderProjects(list) {
+  var grid = $('#pgrid');
+  var inv  = $('#invite');
+  var rm   = $('#rm');
+  grid.innerHTML = '';
+
+  /* Aucune saisie → on montre l'invite, on cache la grille */
+  var query = ($('#si').value || '').trim();
+  if (!query) {
+    grid.classList.add('hidden');
+    inv.classList.remove('hidden');
+    rm.innerHTML = '';
+    return;
+  }
+
+  /* Mise à jour du compteur */
+  var total = S.projects.length;
+  if (!total) {
+    rm.innerHTML = '';
+    return;
+  }
+  if (list.length < total) {
+    rm.innerHTML = '<strong>' + list.length + '</strong> résultat' + (list.length > 1 ? 's' : '') + ' sur ' + total + ' projets';
+  } else {
+    rm.innerHTML = '<strong>' + list.length + '</strong> projet' + (list.length > 1 ? 's' : '') + ' affiché' + (list.length > 1 ? 's' : '');
+  }
+
+  /* Aucun résultat */
+  if (!list.length) {
+    grid.classList.add('hidden');
+    inv.classList.remove('hidden');
+    $('#inviteTitle').textContent = 'Aucun résultat';
+    $('#inviteSub').innerHTML = 'Aucun projet ne correspond à <strong>"' + esc(query) + '"</strong>. Essayez un autre terme.';
+    return;
+  }
+
+  inv.classList.add('hidden');
+  grid.classList.remove('hidden');
+
+  list.forEach(function(p) {
+    var boms  = p.files.filter(function(f) { return isBom(f.name); });
+    var other = p.files.filter(function(f) { return !isBom(f.name); });
+    var bdg = '';
+    if (boms.length)  bdg += '<span class="badge bom">📋 ' + boms.length + ' BOM</span>';
+    if (other.length) bdg += '<span class="badge">' + other.length + ' fichier' + (other.length > 1 ? 's' : '') + '</span>';
+    if (!p.files.length) bdg = '<span class="badge">Dossier vide</span>';
+
+    var c = document.createElement('div');
+    c.className = 'pcard'; c.dataset.id = p.id;
+    c.setAttribute('role','button'); c.setAttribute('tabindex','0');
+    c.innerHTML =
+      '<div class="pcard-head">' +
+        '<div class="pcard-ico">' + emoji(p.code) + '</div>' +
+        '<div class="pcard-info">' +
+          '<div class="pcard-code">' + esc(p.code) + '</div>' +
+          '<div class="pcard-name" title="' + esc(p.fullName) + '">' + esc(p.name) + '</div>' +
+          '<div class="pcard-fam">' + esc(p.family) + '</div>' +
+        '</div>' +
+        '<div class="pcard-arr">▼</div>' +
+      '</div>' +
+      '<div class="pcard-foot">' + bdg + '</div>';
+
+    c.addEventListener('click', function() { toggleDetail(p.id); });
+    c.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleDetail(p.id); }
+    });
+    grid.appendChild(c);
+  });
+}
+
+/* ════════════════════════════════════════════════════════════
+   DÉTAIL PROJET
+════════════════════════════════════════════════════════════ */
+function toggleDetail(id) {
+  if (S.activeId === id) { closeDetail(); return; }
+  S.activeId = id;
+  $$('.pcard').forEach(function(c) { c.classList.toggle('active', c.dataset.id === id); });
+  var p = S.projects.find(function(x) { return x.id === id; });
+  if (!p) return;
+  renderDetail(p);
+  setTimeout(function() { $('#dpanel').scrollIntoView({ behavior:'smooth', block:'nearest' }); }, 60);
+}
+
+function closeDetail() {
+  S.activeId = null;
+  var dp = $('#dpanel');
+  dp.classList.add('hidden'); dp.innerHTML = '';
+  $$('.pcard.active').forEach(function(c) { c.classList.remove('active'); });
+}
+
+function renderDetail(p) {
+  var dp = $('#dpanel');
+  var boms  = p.files.filter(function(f) { return isBom(f.name); });
+  var other = p.files.filter(function(f) { return !isBom(f.name); });
+
+  var bomH = '';
+  if (boms.length) {
+    bomH = '<div class="bom-sec"><div class="slbl">⭐ Fichiers BOM — Pièces Détachées prioritaires</div>' +
+      boms.map(buildBomCard).join('') + '</div>';
+  }
+  var fileH = '';
+  if (other.length) {
+    fileH = '<div><div class="slbl">📁 Fichiers du projet</div>' +
+      '<div class="flist">' + other.map(buildFileRow).join('') + '</div></div>';
+  }
+  if (!p.files.length) {
+    fileH = '<p style="color:var(--muted);font-size:13px;padding:8px 0;">Ce dossier ne contient aucun fichier référencé.</p>';
+  }
+
+  dp.innerHTML =
+    '<div class="dpanel-wrap">' +
+      '<div class="dhead">' +
+        '<div style="font-size:26px;">' + emoji(p.code) + '</div>' +
+        '<div>' +
+          '<div class="dtitle">' + esc(p.fullName) + '</div>' +
+          '<div class="dpath">' + esc(p.path || '—') + '</div>' +
+        '</div>' +
+        '<button class="dclose" id="dcl">✕</button>' +
+      '</div>' +
+      '<div class="dbody">' + bomH + fileH + '</div>' +
+    '</div>';
+
+  dp.classList.remove('hidden');
+  $('#dcl', dp).addEventListener('click', closeDetail);
+}
+
+/* ─── Carte BOM (fichier prioritaire) ─── */
+function buildBomCard(f) {
+  /* Construction des vrais liens SharePoint */
+  var urlOpen = buildSharePointUrl(f.path, f.name);
+  var urlDl   = buildSharePointDownloadUrl(f.path, f.name);
+
+  var dlBtn = urlDl
+    ? '<a href="' + esc(urlDl) + '" class="bf bf-dl-main" title="Télécharger via SharePoint">⬇ Télécharger</a>'
+    : '<button class="bf bf-dl-main" disabled style="opacity:.4;cursor:not-allowed;">⬇ Télécharger</button>';
+
+  return '<div class="bcard">' +
+    '<div class="bcard-star">⭐ BOM</div>' +
+    '<div class="bcard-ico">📋</div>' +
+    '<div class="fi">' +
+      '<div class="fn">' + esc(f.name) + '</div>' +
+      '<div class="fm">' +
+        (f.modif  ? 'Modifié : ' + esc(f.modif)  : '') +
+        (f.auteur ? ' · ' + esc(f.auteur) : '') +
+      '</div>' +
+    '</div>' +
+    '<div class="fa">' + dlBtn + '</div>' +
+  '</div>';
+}
+
+/* ─── Ligne fichier standard ─── */
+function buildFileRow(f) {
+  var ft = fileType(f.name);
+  var urlOpen = buildSharePointUrl(f.path, f.name);
+  var urlDl   = buildSharePointDownloadUrl(f.path, f.name);
+
+  var acts = urlOpen
+    ? '<a href="' + esc(urlOpen) + '" target="_blank" rel="noopener" class="bf bf-open" title="Ouvrir dans SharePoint">↗ Ouvrir</a>' +
+      '<a href="' + esc(urlDl)   + '" class="bf bf-dl" title="Télécharger">⬇ Télécharger</a>'
+    : '<button class="bf bf-open" disabled style="opacity:.4;cursor:not-allowed;">↗ Ouvrir</button>' +
+      '<button class="bf bf-dl"   disabled style="opacity:.4;cursor:not-allowed;">⬇ Télécharger</button>';
+
+  return '<div class="frow">' +
+    '<div class="fdot ' + ft.dot + '"></div>' +
+    '<div style="font-size:15px;">' + ft.icon + '</div>' +
+    '<div class="fi" style="flex:1;min-width:0;">' +
+      '<div class="fn">' + esc(f.name) + '</div>' +
+      (f.modif ? '<div class="fm">' + esc(f.modif) + '</div>' : '') +
+    '</div>' +
+    '<div class="fa">' + acts + '</div>' +
+  '</div>';
+}
+
+/* ════════════════════════════════════════════════════════════
+   RECHERCHE PRINCIPALE
+   !! Affiche les résultats SEULEMENT si l'utilisateur a saisi qqch !!
+════════════════════════════════════════════════════════════ */
+function doSearch() {
+  var query = ($('#si').value || '').trim().toLowerCase();
+  closeDetail();
+
+  /* Si la barre est vide → on revient à l'invite */
+  if (!query) {
+    renderProjects([]);
+    return;
+  }
+
+  if (!S.projects.length) {
+    var inv = $('#invite');
+    inv.classList.remove('hidden');
+    $('#inviteTitle').textContent = 'Chargez d\'abord le fichier SharePoint';
+    $('#inviteSub').innerHTML = 'Cliquez sur le bouton rouge en haut pour importer l\'extraction SharePoint <strong>.xlsx</strong>.';
+    return;
+  }
+
+  var terms = query.split(/\s+/).filter(Boolean);
+  var filtered = S.projects.filter(function(p) {
+    var h = (p.code + ' ' + p.name + ' ' + p.fullName + ' ' + p.family).toLowerCase();
+    return terms.every(function(t) { return h.indexOf(t) > -1; });
+  });
+
+  renderProjects(filtered);
+}
+
+/* ════════════════════════════════════════════════════════════
+   PARSING PIÈCES DÉTACHÉES (BOM)
+════════════════════════════════════════════════════════════ */
+function parseBom(file) {
+  /* On cherche la feuille qui contient les pièces */
+  readXlsx(file, function(names) {
+    return names.find(function(n) { return /spare|bom|parts|pi[eè]ces/i.test(n); }) || names[1] || names[0];
+  }, function(wb, sheetName, rows) {
+
+    if (!rows.length) { toast('Fichier BOM vide — feuille : ' + sheetName, 'err'); return; }
+
+    var norm = normRows(rows);
+    var keys = Object.keys(norm[0] || {});
+
+    /* Détection des colonnes clés */
+    var K_REF = findKey(keys, 'material_code', 'liao_hao', 'bei_jian_liao', 'material', 'code', 'ref', 'pn', 'numero');
+    var K_DES = findKey(keys, 'part_name', 'ying_wen', 'english', 'bei_jian_ming_cheng', 'name', 'des', 'designation', 'lib');
+    var K_DES_CN = findKey(keys, 'zhong_wen', 'chinese', 'bei_jian_ming_cheng');
+    var K_VER = findKey(keys, 'version', 'ji_qi_ban', 'ver', 'machine_version');
+    var K_IMG = findKey(keys, 'picture', 'tu_pian', 'img', 'image', 'photo', 'url');
+    var K_QTY = findKey(keys, 'qty', 'quantity', 'yong_liang', 'usage', 'qte');
+    var K_CAT = findKey(keys, 'category', 'cat', 'type', 'level', 'maintenance', 'niveau');
+    var K_REM = findKey(keys, 'remarks', 'remark', 'note', 'beizhuremark', 'beizhu');
+
+    /* Fallback si colonnes non trouvées */
+    if (!K_REF && keys.length > 1) K_REF = keys[1];
+    if (!K_DES && keys.length > 4) K_DES = keys[4];
+
+    /* On garde TOUTES les clés disponibles pour l'affichage détail */
+    S.bomAll = [];
+    norm.forEach(function(row) {
+      var ref = K_REF ? row[K_REF] : '';
+      if (!ref || ref.length < 3) return;
+      /* Filtre les lignes d'en-tête parasites */
+      if (/num|code|name|version|picture|序号|料号|名称|图片/i.test(ref)) return;
+
+      var des     = (K_DES    ? row[K_DES]    : '') || (K_DES_CN ? row[K_DES_CN] : '') || '—';
+      var ver     = K_VER ? row[K_VER] : '';
+      var imgUrl  = K_IMG ? row[K_IMG] : '';
+      var qty     = K_QTY ? row[K_QTY] : '';
+      var cat     = K_CAT ? row[K_CAT] : '';
+      var rem     = K_REM ? row[K_REM] : '';
+
+      /* Stocke aussi la ligne brute normalisée pour le détail complet */
+      S.bomAll.push({
+        ref: ref.trim(),
+        des: des.trim(),
+        ver: ver.trim(),
+        img: imgUrl.trim(),
+        qty: qty.trim(),
+        cat: cat.trim(),
+        rem: rem.trim(),
+        raw: row   /* ligne complète pour affichage exhaustif */
+      });
+    });
+
+    if (!S.bomAll.length) {
+      toast('Aucune pièce extraite — vérifiez la feuille "' + sheetName + '"', 'err', 5000);
+      return;
+    }
+
+    S.bomFiltered = S.bomAll.slice();
+    $('#bomSub').textContent = S.bomAll.length + ' pièce' + (S.bomAll.length > 1 ? 's' : '') + ' — ' + sheetName + ' — ' + file.name;
+    $('#bomSi').value = '';
+    S.bomView = 'grid';
+    updateViewToggle();
+    renderBom();
+    openModal('bomOverlay');
+    toast(S.bomAll.length + ' pièces chargées depuis "' + sheetName + '"', 'ok');
+
+  }, function(err) {
+    console.error('[BOM]', err);
+    toast('Erreur BOM : ' + err.message, 'err', 5000);
+  });
+}
+
+/* ════════════════════════════════════════════════════════════
+   RENDU LECTEUR BOM
+════════════════════════════════════════════════════════════ */
+function renderBom() {
+  var body = $('#bomBody');
+  var cnt  = $('#bomCnt');
+  var list = S.bomFiltered;
+  cnt.textContent = list.length + ' pièce' + (list.length !== 1 ? 's' : '');
+
+  if (!list.length) {
+    body.innerHTML = '<div style="padding:48px 20px;text-align:center;color:var(--muted);"><div style="font-size:32px;margin-bottom:12px;">🔍</div><p style="font-family:var(--font-cond);font-size:15px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Aucune pièce trouvée</p></div>';
+    return;
+  }
+
+  if (S.bomView === 'table') {
+    renderBomTable(list, body);
+  } else {
+    renderBomGrid(list, body);
+  }
+}
+
+function renderBomGrid(list, body) {
+  var wrap = document.createElement('div');
+  wrap.className = 'bom-grid-wrap';
+  list.forEach(function(p, i) {
+    var card = document.createElement('div');
+    card.className = 'bom-pc';
+    var imgH = p.img
+      ? '<img src="' + esc(p.img) + '" alt="' + esc(p.ref) + '" loading="lazy" ' +
+          'onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\';"/>' +
+          '<div class="bom-pc-noimg" style="display:none;">📦</div>'
+      : '<div class="bom-pc-noimg">📦</div>';
+
+    card.innerHTML =
+      '<div class="bom-pc-thumb">' + imgH + '</div>' +
+      '<div class="bom-pc-info">' +
+        '<div class="bom-pc-ref">' + esc(p.ref) + '</div>' +
+        '<div class="bom-pc-name">' + esc(p.des) + '</div>' +
+        (p.ver ? '<div class="bom-pc-ver">v.' + esc(p.ver) + '</div>' : '') +
+      '</div>';
+
+    card.addEventListener('click', function() { openPartDetail(i); });
+    wrap.appendChild(card);
+  });
+  body.innerHTML = '';
+  body.appendChild(wrap);
+}
+
+function renderBomTable(list, body) {
+  var wrap = document.createElement('div');
+  wrap.className = 'bom-table-wrap';
+  var rows = list.map(function(p, i) {
+    var miniImg = p.img
+      ? '<img src="' + esc(p.img) + '" alt="" onerror="this.style.display=\'none\'"/>'
+      : '<span class="em">📦</span>';
+    return '<tr data-idx="' + i + '">' +
+      '<td class="t-thumb"><div class="mini">' + miniImg + '</div></td>' +
+      '<td class="t-ref">' + esc(p.ref) + '</td>' +
+      '<td class="t-name">' + esc(p.des) + '</td>' +
+      '<td class="t-ver">' + esc(p.ver) + '</td>' +
+      '<td class="t-qty">' + esc(p.qty) + '</td>' +
+    '</tr>';
+  }).join('');
+
+  wrap.innerHTML =
+    '<table class="bom-table">' +
+      '<thead><tr>' +
+        '<th></th><th>Référence</th><th>Désignation</th><th>Version</th><th>Qté</th>' +
+      '</tr></thead>' +
+      '<tbody>' + rows + '</tbody>' +
+    '</table>';
+
+  /* Clic sur une ligne → zoom */
+  wrap.querySelector('tbody').addEventListener('click', function(e) {
+    var tr = e.target.closest('tr');
+    if (tr && tr.dataset.idx !== undefined) openPartDetail(parseInt(tr.dataset.idx, 10));
+  });
+
+  body.innerHTML = '';
+  body.appendChild(wrap);
+}
+
+/* ════════════════════════════════════════════════════════════
+   ZOOM PIÈCE — MODAL DÉTAIL
+════════════════════════════════════════════════════════════ */
+function openPartDetail(idx) {
+  var p = S.bomFiltered[idx];
+  if (!p) return;
+
+  $('#partModalTitle').textContent = p.des || 'Fiche pièce';
+  $('#partModalRef').textContent   = p.ref;
+
+  /* Image */
+  var imgH = p.img
+    ? '<img src="' + esc(p.img) + '" alt="' + esc(p.ref) + '" ' +
+        'onerror="this.parentNode.innerHTML=\'<div class=pv-detail-noimg><span>📦</span><span>Image non disponible</span></div>\';"/>'
+    : '<div class="pv-detail-noimg"><span>📦</span><span style="font-size:12px;font-family:var(--font-mono);">Pas d\'image</span></div>';
+
+  /* Champs principaux */
+  var metaH = '';
+  var metas = [
+    { lab:'Version machine', val:p.ver },
+    { lab:'Quantité / Usage',val:p.qty },
+    { lab:'Catégorie',       val:p.cat },
+  ].filter(function(m) { return m.val; });
+  if (metas.length) {
+    metaH = '<div class="pv-meta-grid">' +
+      metas.map(function(m) {
+        return '<div class="pv-meta-item"><div class="lab">' + esc(m.lab) + '</div><div class="val">' + esc(m.val) + '</div></div>';
+      }).join('') +
+    '</div>';
+  }
+
+  /* Remarques */
+  var remH = '';
+  if (p.rem) {
+    remH = '<div style="background:rgba(240,112,32,0.07);border:1px solid rgba(240,112,32,0.25);border-radius:var(--r-md);padding:10px 14px;margin-bottom:12px;">' +
+      '<div style="font-family:var(--font-mono);font-size:9.5px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;">Remarques</div>' +
+      '<div style="font-size:13px;color:var(--text);">' + esc(p.rem) + '</div>' +
+    '</div>';
+  }
+
+  /* Toutes les autres colonnes de la ligne brute */
+  var skipKeys = ['ref','des','ver','img','qty','cat','rem']; /* déjà affichés */
+  var extraRows = '';
+  if (p.raw) {
+    Object.keys(p.raw).forEach(function(k) {
+      var val = p.raw[k];
+      if (!val || val === '—') return;
+      /* Filtre les doublons déjà affichés */
+      var isSkip = skipKeys.some(function(sk) { return k.indexOf(sk) > -1; });
+      if (isSkip) return;
+      /* Reformate la clé pour l'affichage */
+      var lab = k.replace(/_/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();});
+      extraRows += '<div class="pv-row"><div class="lab">' + esc(lab) + '</div><div class="val">' + esc(val) + '</div></div>';
+    });
+  }
+  var rowsH = extraRows ? '<div class="pv-rows" style="margin-top:10px;">' + extraRows + '</div>' : '';
+
+  $('#partDetail').innerHTML =
+    '<div class="pv-detail">' +
+      '<div class="pv-detail-img">' + imgH + '</div>' +
+      '<div class="pv-detail-info">' +
+        '<h4>' + esc(p.des || '—') + '</h4>' +
+        '<div class="ref-line">' + esc(p.ref) + '</div>' +
+        metaH +
+        remH +
+        rowsH +
+      '</div>' +
+    '</div>';
+
+  openModal('partOverlay');
+}
+
+/* ════════════════════════════════════════════════════════════
+   RECHERCHE BOM INTERNE
+════════════════════════════════════════════════════════════ */
+function bomSearch() {
+  var q = ($('#bomSi').value || '').trim().toLowerCase();
+  var terms = q.split(/\s+/).filter(Boolean);
+  S.bomFiltered = terms.length
+    ? S.bomAll.filter(function(p) {
+        var h = (p.ref + ' ' + p.des + ' ' + p.ver + ' ' + p.cat).toLowerCase();
+        return terms.every(function(t) { return h.indexOf(t) > -1; });
+      })
+    : S.bomAll.slice();
+  renderBom();
+}
+
+/* ════════════════════════════════════════════════════════════
+   MODALS (open/close générique)
+════════════════════════════════════════════════════════════ */
+function openModal(id) {
+  var el = $('#' + id);
+  if (el) { el.classList.add('vis'); document.body.style.overflow = 'hidden'; }
+}
+function closeModal(id) {
+  var el = $('#' + id);
+  if (el) { el.classList.remove('vis'); }
+  /* Remet le scroll seulement si plus aucun modal ouvert */
+  if (!$$('.modal-overlay.vis').length) document.body.style.overflow = '';
+}
+
+/* ════════════════════════════════════════════════════════════
+   VUE TOGGLE (grille / tableau)
+════════════════════════════════════════════════════════════ */
+function updateViewToggle() {
+  $$('#viewToggle button').forEach(function(btn) {
+    btn.classList.toggle('act', btn.dataset.view === S.bomView);
+  });
+}
+
+/* ════════════════════════════════════════════════════════════
+   INITIALISATION
+════════════════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', function() {
+
+  /* Boutons import */
+  $('#btnArbo').addEventListener('click', function() { $('#inArbo').click(); });
+  $('#btnBom').addEventListener('click',  function() { $('#inBom').click();  });
+
+  /* Chargement arborescence */
+  $('#inArbo').addEventListener('change', function(e) {
+    var f = e.target.files[0]; if (!f) return;
+    var btn = $('#btnArbo'), orig = btn.innerHTML;
+    btn.innerHTML = '<span class="spin"></span> Chargement…'; btn.disabled = true;
+    setTimeout(function() {
+      parseArbo(f);
+      btn.innerHTML = orig; btn.disabled = false;
+      e.target.value = '';
+    }, 80);
+  });
+
+  /* Chargement BOM */
+  $('#inBom').addEventListener('change', function(e) {
+    var f = e.target.files[0]; if (!f) return;
+    var btn = $('#btnBom'), orig = btn.innerHTML;
+    btn.innerHTML = '<span class="spin"></span> Chargement…'; btn.disabled = true;
+    setTimeout(function() {
+      parseBom(f);
+      btn.innerHTML = orig; btn.disabled = false;
+      e.target.value = '';
+    }, 80);
+  });
+
+  /* Recherche principale */
+  $('#si').addEventListener('input', doSearch);
+
+  /* Recherche BOM interne */
+  $('#bomSi').addEventListener('input', bomSearch);
+
+  /* Toggle vue BOM */
+  $('#viewToggle').addEventListener('click', function(e) {
+    var btn = e.target.closest('button[data-view]');
+    if (!btn) return;
+    S.bomView = btn.dataset.view;
+    updateViewToggle();
+    renderBom();
+  });
+
+  /* Fermetures modals */
+  $('#bomClose').addEventListener('click', function() { closeModal('bomOverlay'); });
+  $('#partClose').addEventListener('click', function() { closeModal('partOverlay'); });
+
+  /* Clic overlay → ferme */
+  $$('.modal-overlay').forEach(function(ov) {
+    ov.addEventListener('click', function(e) {
+      if (e.target === ov) closeModal(ov.id);
+    });
+  });
+
+  /* Echap → ferme le modal le plus proche */
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      /* Ferme d'abord le zoom pièce s'il est ouvert */
+      if ($('#partOverlay').classList.contains('vis')) {
+        closeModal('partOverlay');
+      } else if ($('#bomOverlay').classList.contains('vis')) {
+        closeModal('bomOverlay');
+      } else {
+        closeDetail();
+      }
+    }
+  });
+
+  /* Vérif SheetJS */
+  if (typeof XLSX === 'undefined') {
+    toast('SheetJS non disponible — vérifiez votre connexion internet', 'err', 8000);
+  }
+});
+</script>
+</body>
+</html>
