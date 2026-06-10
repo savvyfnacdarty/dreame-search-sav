@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Lecteur BOM — SAV DREAME</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+/* ══════════════════════════════════════════════════════════════
+   TOKENS
+══════════════════════════════════════════════════════════════ */
+:root {
+  --bg:#f1f3f6; --surface:#ffffff; --surface-2:#f8f9fa; --surface-3:#eef0f3;
+  --border:#dde1e8; --border-strong:#c0c6d2; --rule:#e8ebf0;
+  --text:#1a1e2a; --text-2:#4a5068; --muted:#8891a8; --muted-2:#c0c8d8;
+  --accent:#e84040; --accent-warm:#f07020; --accent-glow:rgba(232,64,64,0.09);
+  --green:#16a34a; --green-bg:#f0fdf4; --green-border:#bbf7d0;
+  --orange:#d97706; --orange-bg:#fffbeb; --orange-border:#fde68a;
+  --shadow-sm:0 1px 3px rgba(0,0,0,0.07),0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md:0 4px 16px rgba(0,0,0,0.09),0 1px 4px rgba(0,0,0,0.05);
+  --shadow-lg:0 12px 40px rgba(0,0,0,0.12),0 2px 8px rgba(0,0,0,0.06);
+  --shadow-modal:0 24px 70px rgba(0,0,0,0.22),0 0 0 1px rgba(0,0,0,0.06);
+  --font-ui:'Barlow',sans-serif; --font-cond:'Barlow Condensed',sans-serif; --font-mono:'JetBrains Mono',monospace;
+  --r-sm:3px; --r-md:7px; --r-lg:12px; --r-xl:18px;
+  --tr:0.16s cubic-bezier(0.4,0,0.2,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:15px;scroll-behavior:smooth;}
+body{font-family:var(--font-ui);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;line-height:1.6;}
+a{color:inherit;text-decoration:none;}
+button{font-family:inherit;cursor:pointer;}
+
+/* ══════════════════════════════════════════════════════════════
+   HEADER
+══════════════════════════════════════════════════════════════ */
+.hdr{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.92);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);box-shadow:var(--shadow-sm);padding:0 24px;}
+.hdr-in{max-width:1440px;margin:0 auto;display:flex;align-items:center;gap:16px;height:62px;}
+.logo{display:flex;align-items:center;gap:11px;flex-shrink:0;}
+.logo-badge{width:38px;height:38px;border-radius:var(--r-md);background:linear-gradient(135deg,var(--accent),var(--accent-warm));display:flex;align-items:center;justify-content:center;font-family:var(--font-cond);font-weight:700;font-size:13px;color:#fff;}
+.logo-t{font-family:var(--font-cond);font-size:16px;font-weight:700;color:var(--text);letter-spacing:0.3px;}
+.logo-v{font-family:var(--font-mono);font-size:9.5px;color:var(--muted);letter-spacing:1.2px;}
+.nav-actions{display:flex;align-items:center;gap:10px;margin-left:auto;}
+.btn-nav{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:var(--r-md);border:1.5px solid var(--border);background:var(--surface);color:var(--text-2);font-family:var(--font-ui);font-size:13px;font-weight:600;cursor:pointer;transition:all var(--tr);white-space:nowrap;}
+.btn-nav:hover{border-color:var(--text-2);background:var(--surface-2);color:var(--text);}
+.btn-nav-primary{background:var(--text);color:white;border-color:var(--text);}
+.btn-nav-primary:hover{background:#000;border-color:#000;}
+
+/* ══════════════════════════════════════════════════════════════
+   LAYOUT
+══════════════════════════════════════════════════════════════ */
+.main-container{max-width:1440px;margin:24px auto;padding:0 24px;}
+
+/* ══════════════════════════════════════════════════════════════
+   UPLOAD ZONE
+══════════════════════════════════════════════════════════════ */
+.upload-zone{border:2px dashed var(--border-strong);border-radius:var(--r-lg);background:var(--surface);padding:48px 24px;text-align:center;cursor:pointer;transition:all var(--tr);position:relative;}
+.upload-zone:hover,.upload-zone.drag-over{border-color:var(--accent);background:var(--accent-glow);}
+.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.upload-icon{width:48px;height:48px;margin:0 auto 16px;color:var(--muted);}
+.upload-title{font-family:var(--font-cond);font-size:22px;font-weight:700;color:var(--text);margin-bottom:6px;}
+.upload-sub{font-size:13px;color:var(--muted);}
+.upload-sub span{color:var(--accent);font-weight:600;}
+
+/* ══════════════════════════════════════════════════════════════
+   LOADING
+══════════════════════════════════════════════════════════════ */
+.spinner{width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-bar{display:none;align-items:center;gap:12px;padding:14px 18px;background:var(--surface);border-radius:var(--r-md);border:1px solid var(--border);margin:16px 0;font-size:13px;font-weight:600;color:var(--text-2);}
+.loading-bar.active{display:flex;}
+
+/* ══════════════════════════════════════════════════════════════
+   SÉLECTEUR DE FEUILLE
+══════════════════════════════════════════════════════════════ */
+.sheet-picker{display:none;background:var(--surface);border:2px solid var(--accent);border-radius:var(--r-lg);padding:22px 24px;margin:16px 0;animation:fadeUp .22s ease;}
+.sheet-picker-title{font-family:var(--font-cond);font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.sheet-picker-sub{font-size:13px;color:var(--text-2);margin-bottom:14px;}
+.sheet-buttons{display:flex;flex-wrap:wrap;gap:8px;}
+.sheet-btn{padding:8px 18px;border-radius:var(--r-md);border:1.5px solid var(--border);background:var(--surface-2);color:var(--text);font-size:13px;font-weight:600;transition:all var(--tr);}
+.sheet-btn:hover{border-color:var(--accent);background:var(--accent-glow);color:var(--accent);}
+
+/* ══════════════════════════════════════════════════════════════
+   BANNIÈRES
+══════════════════════════════════════════════════════════════ */
+.detect-banner{display:none;padding:14px 18px;border-radius:var(--r-md);margin:16px 0;font-size:13px;font-weight:600;gap:10px;align-items:flex-start;}
+.detect-banner.active{display:flex;}
+.detect-ok{background:var(--green-bg);border:1px solid var(--green-border);color:var(--green);}
+.detect-warn{background:var(--orange-bg);border:1px solid var(--orange-border);color:var(--orange);}
+.detect-banner .col-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+.chip{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;font-family:var(--font-mono);background:rgba(0,0,0,0.07);}
+.fallback-banner{display:none;padding:20px 24px;background:var(--orange-bg);border:1px solid var(--orange-border);border-radius:var(--r-md);margin:16px 0;}
+.fallback-banner.active{display:flex;align-items:flex-start;gap:14px;}
+.fallback-title{font-family:var(--font-cond);font-size:18px;font-weight:700;color:var(--orange);margin-bottom:4px;}
+.fallback-sub{font-size:13px;color:var(--text-2);}
+
+/* ══════════════════════════════════════════════════════════════
+   TOOLBAR
+══════════════════════════════════════════════════════════════ */
+.toolbar{display:flex;align-items:center;gap:12px;margin:20px 0 16px;flex-wrap:wrap;}
+.search-wrap{position:relative;flex:1;min-width:200px;}
+.search-wrap svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;}
+.search-bom{width:100%;height:42px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-md);padding:0 16px 0 40px;font-size:14px;font-family:var(--font-ui);color:var(--text);transition:all var(--tr);}
+.search-bom:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow);}
+.sort-select{height:42px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-md);padding:0 12px;font-size:13px;font-family:var(--font-ui);color:var(--text);cursor:pointer;transition:border-color var(--tr);white-space:nowrap;}
+.sort-select:focus{outline:none;border-color:var(--accent);}
+.stats-badge{font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap;background:var(--surface);border:1px solid var(--border);padding:6px 12px;border-radius:var(--r-md);}
+
+/* ══════════════════════════════════════════════════════════════
+   GRILLE DE TUILES
+══════════════════════════════════════════════════════════════ */
+.tiles-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+  gap:16px;
+}
+
+/* Carte tuile */
+.tile-card{
+  background:var(--surface);
+  border:1.5px solid var(--border);
+  border-radius:var(--r-lg);
+  overflow:hidden;
+  cursor:pointer;
+  transition:transform var(--tr),box-shadow var(--tr),border-color var(--tr);
+  box-shadow:var(--shadow-sm);
+  display:flex;
+  flex-direction:column;
+}
+.tile-card:hover{
+  transform:translateY(-3px);
+  box-shadow:var(--shadow-md);
+  border-color:var(--accent);
+}
+.tile-card.has-photo{border-color:var(--border-strong);}
+.tile-card.has-photo:hover{border-color:var(--accent);}
+
+/* Zone image */
+.tile-img-wrap{
+  aspect-ratio:1/1;
+  background:var(--surface-2);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:14px;
+  border-bottom:1px solid var(--rule);
+  flex-shrink:0;
+  overflow:hidden;
+  position:relative;
+}
+.tile-card.has-photo .tile-img-wrap{background:#fff;}
+.tile-img{
+  max-width:100%;
+  max-height:100%;
+  object-fit:contain;
+  transition:transform 0.2s;
+}
+.tile-card:hover .tile-img{transform:scale(1.04);}
+.tile-ph-icon{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:8px;
+  color:var(--muted-2);
+  font-size:10px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+}
+
+/* Corps de la tuile */
+.tile-body{
+  padding:12px 14px 14px;
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  flex:1;
+}
+.tile-ref{
+  font-family:var(--font-mono);
+  font-weight:700;
+  font-size:11.5px;
+  color:var(--accent);
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.tile-desc{
+  font-size:12.5px;
+  color:var(--text-2);
+  line-height:1.4;
+  overflow:hidden;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  flex:1;
+}
+.tile-qty{
+  display:inline-block;
+  margin-top:6px;
+  padding:2px 9px;
+  border-radius:10px;
+  background:var(--surface-3);
+  border:1px solid var(--border);
+  font-size:11px;
+  font-weight:700;
+  color:var(--muted);
+  align-self:flex-start;
+}
+.no-tiles-msg{
+  grid-column:1/-1;
+  padding:56px 24px;
+  text-align:center;
+  color:var(--muted);
+  font-size:13px;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   MODE SECOURS
+══════════════════════════════════════════════════════════════ */
+.fallback-table-wrap{overflow:auto;max-height:65vh;border-radius:var(--r-md);border:1px solid var(--border);box-shadow:var(--shadow-sm);}
+.fallback-table{width:100%;border-collapse:collapse;background:var(--surface);font-size:12px;}
+.fallback-table th{background:var(--surface-3);padding:8px 12px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);border-bottom:2px solid var(--border);position:sticky;top:0;white-space:nowrap;}
+.fallback-table td{padding:7px 12px;border-bottom:1px solid var(--rule);font-family:var(--font-mono);font-size:11px;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.fallback-table tr:hover td{background:var(--surface-2);}
+
+/* ══════════════════════════════════════════════════════════════
+   MODAL PIÈCE
+══════════════════════════════════════════════════════════════ */
+#partModal{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:1500;
+  background:rgba(15,18,30,0.65);
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  backdrop-filter:blur(4px);
+}
+#partModal.active{display:flex;}
+
+.modal-inner{
+  background:var(--surface);
+  border-radius:var(--r-xl);
+  box-shadow:var(--shadow-modal);
+  max-width:720px;
+  width:100%;
+  max-height:90vh;
+  display:flex;
+  overflow:hidden;
+  position:relative;
+  animation:fadeUp .2s ease;
+}
+@keyframes fadeUp{from{opacity:0;transform:scale(0.96) translateY(10px);}to{opacity:1;transform:scale(1) translateY(0);}}
+
+/* Bouton fermer */
+.modal-close-btn{
+  position:absolute;
+  top:14px;right:14px;
+  width:32px;height:32px;
+  border-radius:50%;
+  border:1.5px solid var(--border);
+  background:var(--surface-2);
+  color:var(--text-2);
+  font-size:15px;
+  display:flex;align-items:center;justify-content:center;
+  transition:all var(--tr);
+  z-index:10;
+}
+.modal-close-btn:hover{background:var(--border);color:var(--text);}
+
+/* Côté image */
+.modal-img-side{
+  width:260px;
+  flex-shrink:0;
+  background:var(--surface-2);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:32px 20px;
+  border-right:1px solid var(--border);
+}
+.modal-img-side img{
+  max-width:100%;
+  max-height:280px;
+  object-fit:contain;
+  cursor:zoom-in;
+  transition:opacity .15s,transform .15s;
+  border-radius:var(--r-sm);
+}
+.modal-img-side img:hover{opacity:0.88;transform:scale(1.02);}
+.modal-no-img{
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+  color:var(--muted-2);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;
+}
+
+/* Côté infos */
+.modal-body{
+  flex:1;
+  padding:28px 24px 28px 28px;
+  overflow-y:auto;
+  display:flex;
+  flex-direction:column;
+  gap:20px;
+}
+
+/* En-tête modal : ref + copier */
+.modal-ref-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+  padding-right:36px; /* espace pour le bouton X */
+}
+.modal-ref{
+  font-family:var(--font-mono);
+  font-size:20px;
+  font-weight:700;
+  color:var(--accent);
+  user-select:all;
+  word-break:break-all;
+}
+
+/* Grille des champs */
+.modal-fields{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px 20px;
+}
+.modal-field{display:flex;flex-direction:column;gap:3px;}
+.modal-field.full{grid-column:1/-1;}
+.modal-field-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);}
+.modal-field-value{font-size:14px;font-weight:500;color:var(--text);line-height:1.5;}
+
+/* Bouton copier */
+.copy-ref-btn{
+  padding:5px 12px;
+  border-radius:var(--r-sm);
+  border:1.5px solid var(--border);
+  background:var(--surface-2);
+  color:var(--muted);
+  font-size:12px;
+  font-weight:600;
+  transition:all var(--tr);
+  white-space:nowrap;
+}
+.copy-ref-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-glow);}
+.copy-ref-btn:active{transform:scale(0.96);}
+
+/* ══════════════════════════════════════════════════════════════
+   LIGHTBOX
+══════════════════════════════════════════════════════════════ */
+#lightbox{
+  display:none;position:fixed;inset:0;z-index:2000;
+  background:rgba(0,0,0,0.9);
+  align-items:center;justify-content:center;
+  cursor:zoom-out;backdrop-filter:blur(6px);
+}
+#lightbox.active{display:flex;}
+#lightboxImg{max-width:92vw;max-height:90vh;object-fit:contain;border-radius:var(--r-md);box-shadow:0 32px 80px rgba(0,0,0,0.5);pointer-events:none;}
+#lightboxClose{
+  position:fixed;top:18px;right:22px;
+  width:40px;height:40px;border-radius:50%;
+  background:rgba(255,255,255,0.12);border:1.5px solid rgba(255,255,255,0.25);
+  color:white;font-size:18px;
+  display:flex;align-items:center;justify-content:center;
+  transition:background var(--tr);z-index:2001;
+}
+#lightboxClose:hover{background:rgba(255,255,255,0.25);}
+
+/* ══════════════════════════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════════════════════════ */
+#toast{
+  position:fixed;bottom:28px;right:28px;z-index:3000;
+  background:var(--text);color:white;
+  padding:10px 18px;border-radius:var(--r-md);
+  font-size:13px;font-weight:600;box-shadow:var(--shadow-lg);
+  opacity:0;transform:translateY(8px);transition:opacity .2s,transform .2s;
+  pointer-events:none;
+}
+#toast.show{opacity:1;transform:translateY(0);}
+
+/* ══════════════════════════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════════════════════════ */
+@media(max-width:600px){
+  .modal-inner{flex-direction:column;max-height:95vh;}
+  .modal-img-side{width:100%;height:200px;border-right:none;border-bottom:1px solid var(--border);padding:20px;}
+  .modal-body{padding:20px;}
+  .modal-fields{grid-template-columns:1fr;}
+  .tiles-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════ HEADER ══════════ -->
+<header class="hdr">
+  <div class="hdr-in">
+    <div class="logo">
+      <div class="logo-badge">SAV</div>
+      <div>
+        <div class="logo-t">FNAC DARTY — LECTEUR BOM</div>
+        <div class="logo-v">DREAME ECOSYSTEM — BOM MANAGER</div>
+      </div>
+    </div>
+    <div class="nav-actions">
+      <a href="index.html" class="btn-nav">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        Accueil
+      </a>
+      <a href="index_fault_codes.html" class="btn-nav">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        Codes Erreurs
+      </a>
+      <a href="calibrage_dreame.html" class="btn-nav btn-nav-primary">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        Calibrage
+      </a>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════ MAIN ══════════ -->
+<main class="main-container">
+
+  <!-- Upload -->
+  <div class="upload-zone" id="uploadZone">
+    <input type="file" id="bomFile" accept=".xlsx" />
+    <svg class="upload-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+    </svg>
+    <div class="upload-title">Importer un fichier BOM Excel</div>
+    <div class="upload-sub">Glissez-déposez votre fichier <span>.xlsx</span> ici, ou cliquez pour parcourir</div>
+  </div>
+
+  <!-- Chargement -->
+  <div class="loading-bar" id="loadingBar">
+    <div class="spinner"></div>
+    <span id="loadingMsg">Analyse en cours…</span>
+  </div>
+
+  <!-- Sélecteur de feuille -->
+  <div class="sheet-picker" id="sheetPicker">
+    <div class="sheet-picker-title">📋 Plusieurs feuilles détectées — choisissez votre BOM</div>
+    <div class="sheet-picker-sub" id="sheetPickerSub">Cliquez sur la feuille qui contient la nomenclature à analyser.</div>
+    <div class="sheet-buttons" id="sheetButtons"></div>
+  </div>
+
+  <!-- Bannière détection -->
+  <div class="detect-banner" id="detectBanner">
+    <div>
+      <div id="detectTitle" style="font-size:14px;margin-bottom:4px;"></div>
+      <div class="col-chips" id="detectChips"></div>
+    </div>
+  </div>
+
+  <!-- Bannière mode secours -->
+  <div class="fallback-banner" id="fallbackBanner">
+    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;color:#d97706;margin-top:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+    <div>
+      <div class="fallback-title">⚠ Mode de Secours activé</div>
+      <div class="fallback-sub">La détection automatique des colonnes n'a pas abouti. Affichage brut du fichier.</div>
+    </div>
+  </div>
+
+  <!-- Vue normale : toolbar + tuiles -->
+  <div id="normalView" style="display:none;">
+    <div class="toolbar">
+      <div class="search-wrap">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" class="search-bom" id="bomSearch" placeholder="Filtrer par référence, désignation…" />
+      </div>
+      <select class="sort-select" id="sortSelect">
+        <option value="photo">📷 Photos d'abord</option>
+        <option value="ref">🔤 Référence A→Z</option>
+        <option value="desc">📝 Désignation A→Z</option>
+      </select>
+      <div class="stats-badge" id="statsBadge">0 pièce(s)</div>
+    </div>
+
+    <div class="tiles-grid" id="tilesGrid"></div>
+  </div>
+
+  <!-- Vue Secours : tableau brut -->
+  <div id="fallbackView" style="display:none;">
+    <div class="fallback-table-wrap">
+      <table class="fallback-table">
+        <thead id="fbThead"></thead>
+        <tbody id="fbTbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<!-- ══════════ MODAL PIÈCE ══════════ -->
+<div id="partModal">
+  <div class="modal-inner" id="modalInner">
+    <button class="modal-close-btn" id="modalClose" title="Fermer (Échap)">✕</button>
+
+    <!-- Côté image -->
+    <div class="modal-img-side">
+      <div class="modal-no-img" id="modalNoImg">
+        <svg width="44" height="44" fill="none" stroke="currentColor" stroke-width="1.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        Aucune image
+      </div>
+      <img id="modalImg" src="" alt="" style="display:none;" title="Cliquer pour agrandir" />
+    </div>
+
+    <!-- Côté infos -->
+    <div class="modal-body">
+      <div class="modal-ref-row">
+        <span class="modal-ref" id="modalRef"></span>
+        <button class="copy-ref-btn" id="modalCopyBtn">📋 Copier</button>
+      </div>
+      <div class="modal-fields" id="modalFields"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ LIGHTBOX ══════════ -->
+<div id="lightbox">
+  <button id="lightboxClose" title="Fermer (Échap)">✕</button>
+  <img id="lightboxImg" src="" alt="Photo de la pièce" />
+</div>
+
+<!-- ══════════ TOAST ══════════ -->
+<div id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   CDN
+══════════════════════════════════════════════════════════════ */
+const JSZIP_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+const JSZIP_FB  = 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';
+
+/* ══════════════════════════════════════════════════════════════
+   ÉTAT GLOBAL
+══════════════════════════════════════════════════════════════ */
+let allRows         = [];
+let filteredRows    = [];
+let currentSort     = 'photo';  // 'photo' | 'ref' | 'desc'
+let currentWorkbook = null;
+let currentEmbedded = {};
+let currentFileName = '';
+let toastTimer      = null;
+
+/* ══════════════════════════════════════════════════════════════
+   1. JSZip à la demande
+══════════════════════════════════════════════════════════════ */
+function loadJSZip() {
+  return new Promise((resolve, reject) => {
+    if (typeof JSZip !== 'undefined') return resolve();
+    const load = (url, fallback) => {
+      const s = document.createElement('script');
+      s.src = url; s.async = true;
+      s.onload = resolve;
+      s.onerror = fallback || (() => reject(new Error('JSZip introuvable')));
+      document.head.appendChild(s);
+    };
+    load(JSZIP_CDN, () => load(JSZIP_FB));
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   2. EXTRACTION IMAGES drawingML
+══════════════════════════════════════════════════════════════ */
+async function extractImages(arrayBuffer) {
+  try {
+    await loadJSZip();
+    const zip = await JSZip.loadAsync(arrayBuffer).catch(() => null);
+    if (!zip) return {};
+
+    const mediaMap = {};
+    await Promise.all(Object.keys(zip.files).filter(p => /^xl\/media\//i.test(p)).map(p => {
+      const fname = p.split('/').pop();
+      const ext   = (fname.split('.').pop()||'').toLowerCase();
+      const mime  = {png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',gif:'image/gif',bmp:'image/bmp',webp:'image/webp',svg:'image/svg+xml'}[ext]||'application/octet-stream';
+      return zip.file(p).async('base64').then(b64 => { mediaMap[fname]='data:'+mime+';base64,'+b64; });
+    }));
+    if (!Object.keys(mediaMap).length) return {};
+
+    const wbFile = zip.file('xl/workbook.xml'); if (!wbFile) return {};
+    const wbXml  = await wbFile.async('text');
+    const sheets = [];
+    let m;
+    const shRe = /<sheet\b[^>]*>/g;
+    while ((m=shRe.exec(wbXml))!==null){
+      const nM=m[0].match(/\bname="([^"]*)"/), rM=m[0].match(/\br:id="([^"]+)"/)
+                                                      ||m[0].match(/\brelationships:id="([^"]+)"/i);
+      if(nM&&rM) sheets.push({name:nM[1],rId:rM[1]});
+    }
+    if (!sheets.length) return {};
+
+    const wbRelsFile = zip.file('xl/_rels/workbook.xml.rels'); if (!wbRelsFile) return {};
+    const wbRelsXml  = await wbRelsFile.async('text');
+    const wbRels = {};
+    const relRe = /<Relationship\b[^>]*>/g;
+    while ((m=relRe.exec(wbRelsXml))!==null){
+      const iM=m[0].match(/\bId="([^"]+)"/), tM=m[0].match(/\bTarget="([^"]+)"/);
+      if(iM&&tM) wbRels[iM[1]]=tM[1];
+    }
+
+    const out = {};
+    for (const s of sheets) {
+      const target = wbRels[s.rId]; if (!target) continue;
+      const shPath = target.replace(/^\//,'').startsWith('xl/') ? target.replace(/^\//,'') : 'xl/'+target.replace(/^\.\.\//,'');
+      const shRelsFile = zip.file(shPath.replace(/([^/]+)$/,'_rels/$1.rels')); if (!shRelsFile) continue;
+      const shRelsXml  = await shRelsFile.async('text');
+      let drTarget = null;
+      relRe.lastIndex=0;
+      while((m=relRe.exec(shRelsXml))!==null){
+        if(!/drawing/i.test(m[0])) continue;
+        const tM=m[0].match(/\bTarget="([^"]+)"/); if(tM){drTarget=tM[1];break;}
+      }
+      if (!drTarget) continue;
+      const drPath = drTarget.replace(/^\//,'').startsWith('xl/') ? drTarget.replace(/^\//,'') : 'xl/'+drTarget.replace(/^\.\.\//,'');
+      const drFile = zip.file(drPath); if (!drFile) continue;
+      const drXml  = await drFile.async('text');
+      const drRelsFile = zip.file(drPath.replace(/([^/]+)$/,'_rels/$1.rels')); if (!drRelsFile) continue;
+      const drRelsXml  = await drRelsFile.async('text');
+      const drRels = {};
+      relRe.lastIndex=0;
+      while((m=relRe.exec(drRelsXml))!==null){
+        const iM=m[0].match(/\bId="([^"]+)"/), tM=m[0].match(/\bTarget="([^"]+)"/);
+        if(iM&&tM) drRels[iM[1]]=tM[1].split('/').pop();
+      }
+      const rowMap = {};
+      const ancRe = /<xdr:(twoCellAnchor|oneCellAnchor|absoluteAnchor)\b[^>]*>([\s\S]*?)<\/xdr:\1>/g;
+      let am;
+      while ((am=ancRe.exec(drXml))!==null){
+        const inner=am[2];
+        const rowM =inner.match(/<xdr:from>[\s\S]*?<xdr:row>(\d+)<\/xdr:row>/);
+        const blipM=inner.match(/(?:r|relationships):embed="([^"]+)"/);
+        if(!rowM||!blipM) continue;
+        const row=parseInt(rowM[1],10), fname=drRels[blipM[1]];
+        if(fname&&mediaMap[fname]) rowMap[row]=mediaMap[fname];
+      }
+      if(Object.keys(rowMap).length) out[s.name]=rowMap;
+    }
+    return out;
+  } catch(e) {
+    console.warn('extractImages failed:', e);
+    return {};
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   3. DÉTECTION FUZZY DES COLONNES
+══════════════════════════════════════════════════════════════ */
+const KW = {
+  ref:   ['料号','material code','material','reference','référence','ref','part number','part no','article','sku','numéro','numero','code article','p/n'],
+  desc:  ['名称','part name','designation','désignation','description','name','配件名称','nom','libelle','libellé','product name'],
+  qty:   ['qty','quantité','quantite','quantity','数量','qte','nb ','nombre'],
+  level: ['等级','level','attribut','备注','repair','niveau','remark','note','repair level'],
+  img:   ['image','photo','picture','img','visuel','illustration'],
+};
+
+function normalize(s){ return String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').trim(); }
+
+function fuzzyDetect(rawData) {
+  let best = { headerRow:-1, colMap:null, score:0 };
+  for (let r=0; r<Math.min(30, rawData.length); r++){
+    const row = rawData[r];
+    const cm  = { ref:-1, desc1:-1, desc2:-1, qty:-1, level:-1, img:-1 };
+    let score = 0;
+    for (let c=0; c<row.length; c++){
+      const v = normalize(row[c]);
+      if (!v || v.length>60) continue;
+      for (const [key,kws] of Object.entries(KW)){
+        if (!kws.some(kw=>v.includes(kw))) continue;
+        if      (key==='ref'   && cm.ref  ===-1) { cm.ref  =c; score+=4; break; }
+        else if (key==='desc'  && cm.desc1===-1) { cm.desc1=c; score+=3; break; }
+        else if (key==='desc'  && cm.desc2===-1) { cm.desc2=c; score+=1; break; }
+        else if (key==='qty'   && cm.qty  ===-1) { cm.qty  =c; score+=2; break; }
+        else if (key==='level' && cm.level===-1) { cm.level=c; score+=1; break; }
+        else if (key==='img'   && cm.img  ===-1) { cm.img  =c; score+=1; break; }
+      }
+    }
+    if (score>best.score && cm.ref!==-1) best = { headerRow:r, colMap:{...cm}, score };
+  }
+  if (best.score<5 || !best.colMap || best.colMap.ref===-1) return null;
+  return best;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   4. TRI
+══════════════════════════════════════════════════════════════ */
+function sortRows() {
+  if (currentSort === 'photo') {
+    allRows.sort((a, b) => (b.imgSrc ? 1 : 0) - (a.imgSrc ? 1 : 0));
+  } else if (currentSort === 'ref') {
+    allRows.sort((a, b) => normalize(a.ref).localeCompare(normalize(b.ref)));
+  } else if (currentSort === 'desc') {
+    allRows.sort((a, b) => normalize(a.desc).localeCompare(normalize(b.desc)));
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   5. RENDU — GRILLE DE TUILES
+══════════════════════════════════════════════════════════════ */
+function renderTiles() {
+  const grid = document.getElementById('tilesGrid');
+  grid.innerHTML = '';
+
+  const q = normalize(document.getElementById('bomSearch').value);
+  filteredRows = q
+    ? allRows.filter(r =>
+        normalize(r.ref).includes(q) ||
+        normalize(r.desc).includes(q) ||
+        normalize(r.desc2||'').includes(q))
+    : [...allRows];
+
+  document.getElementById('statsBadge').textContent =
+    `${filteredRows.length} pièce(s) / ${allRows.length}`;
+
+  if (!filteredRows.length) {
+    grid.innerHTML = `<div class="no-tiles-msg">Aucun résultat pour « ${q} »</div>`;
+    return;
+  }
+
+  filteredRows.forEach((row, i) => {
+    const card = document.createElement('div');
+    card.className = 'tile-card' + (row.imgSrc ? ' has-photo' : '');
+
+    /* Zone image */
+    const imgWrap = document.createElement('div');
+    imgWrap.className = 'tile-img-wrap';
+    if (row.imgSrc) {
+      const img = document.createElement('img');
+      img.src = row.imgSrc;
+      img.className = 'tile-img';
+      img.alt = row.ref;
+      img.loading = 'lazy';
+      imgWrap.appendChild(img);
+    } else {
+      imgWrap.innerHTML = `
+        <div class="tile-ph-icon">
+          <svg width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.3" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+          Pas de photo
+        </div>`;
+    }
+    card.appendChild(imgWrap);
+
+    /* Corps */
+    const body = document.createElement('div');
+    body.className = 'tile-body';
+
+    const refEl = document.createElement('div');
+    refEl.className = 'tile-ref';
+    refEl.textContent = row.ref;
+    body.appendChild(refEl);
+
+    const descEl = document.createElement('div');
+    descEl.className = 'tile-desc';
+    descEl.textContent = row.desc || '—';
+    body.appendChild(descEl);
+
+    if (row.qty) {
+      const qtyEl = document.createElement('span');
+      qtyEl.className = 'tile-qty';
+      qtyEl.textContent = `Qté : ${row.qty}`;
+      body.appendChild(qtyEl);
+    }
+
+    card.appendChild(body);
+    card.addEventListener('click', () => openModal(i));
+    grid.appendChild(card);
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   6. MODAL PIÈCE
+══════════════════════════════════════════════════════════════ */
+function openModal(filteredIdx) {
+  const row = filteredRows[filteredIdx];
+  if (!row) return;
+
+  /* Image */
+  const imgEl   = document.getElementById('modalImg');
+  const noImgEl = document.getElementById('modalNoImg');
+  if (row.imgSrc) {
+    imgEl.src = row.imgSrc;
+    imgEl.style.display = 'block';
+    imgEl.onclick = () => openLightbox(row.imgSrc);
+    noImgEl.style.display = 'none';
+  } else {
+    imgEl.style.display = 'none';
+    imgEl.onclick = null;
+    noImgEl.style.display = 'flex';
+  }
+
+  /* Référence + copier */
+  document.getElementById('modalRef').textContent = row.ref;
+  document.getElementById('modalCopyBtn').onclick = () => copyToClipboard(row.ref);
+
+  /* Champs */
+  const fields = document.getElementById('modalFields');
+  const items = [
+    ['Désignation', row.desc || '—', 'full'],
+    row.desc2 ? ['Désignation (ZH/EN)', row.desc2, 'full'] : null,
+    row.qty   ? ['Quantité',            row.qty,   '']     : null,
+    row.level ? ['Niveau de réparation',row.level, '']     : null,
+    ...(row.extra||[]).map(([k,v]) => [k, v, ''])
+  ].filter(Boolean);
+
+  fields.innerHTML = items.map(([label, value, cls]) => `
+    <div class="modal-field ${cls}">
+      <div class="modal-field-label">${escHtml(label)}</div>
+      <div class="modal-field-value">${escHtml(value||'—')}</div>
+    </div>`).join('');
+
+  document.getElementById('partModal').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('partModal').classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+function escHtml(s) {
+  return String(s)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+/* ══════════════════════════════════════════════════════════════
+   7. LIGHTBOX
+══════════════════════════════════════════════════════════════ */
+function openLightbox(src) {
+  document.getElementById('lightboxImg').src = src;
+  document.getElementById('lightbox').classList.add('active');
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('active');
+}
+document.getElementById('lightbox').addEventListener('click', closeLightbox);
+document.getElementById('lightboxClose').addEventListener('click', e => { e.stopPropagation(); closeLightbox(); });
+
+/* ══════════════════════════════════════════════════════════════
+   8. TOAST + CLIPBOARD
+══════════════════════════════════════════════════════════════ */
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+function copyToClipboard(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text)
+      .then(() => showToast('✓ Référence copiée : ' + text))
+      .catch(() => fallbackCopy(text));
+  } else {
+    fallbackCopy(text);
+  }
+}
+function fallbackCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.cssText = 'position:fixed;opacity:0;top:-9999px;';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); showToast('✓ Référence copiée : ' + text); }
+  catch(e) { showToast('⚠ Sélectionner manuellement pour copier'); }
+  document.body.removeChild(ta);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   9. RENDU FALLBACK (mode secours)
+══════════════════════════════════════════════════════════════ */
+function renderFallback(rawData) {
+  document.getElementById('fallbackBanner').classList.add('active');
+  document.getElementById('fallbackView').style.display = 'block';
+  document.getElementById('normalView').style.display   = 'none';
+
+  let hRow = 0;
+  for (let r=0; r<rawData.length; r++){ if(rawData[r].some(c=>String(c).trim())){ hRow=r; break; }}
+  const thead = document.getElementById('fbThead');
+  const tbody = document.getElementById('fbTbody');
+  const hData = rawData[hRow];
+  thead.innerHTML = '<tr>' + hData.map(h=>`<th>${h||''}</th>`).join('') + '</tr>';
+  tbody.innerHTML = rawData.slice(hRow+1)
+    .filter(r=>r.some(c=>String(c).trim()))
+    .map(r=>'<tr>'+hData.map((_,c)=>`<td title="${String(r[c]||'').replace(/"/g,'')}">${r[c]||''}</td>`).join('')+'</tr>')
+    .join('');
+}
+
+/* ══════════════════════════════════════════════════════════════
+   10. SÉLECTEUR DE FEUILLE
+══════════════════════════════════════════════════════════════ */
+function showSheetPicker(sheetNames) {
+  const picker  = document.getElementById('sheetPicker');
+  const buttons = document.getElementById('sheetButtons');
+  document.getElementById('sheetPickerSub').textContent =
+    `"${currentFileName}" contient ${sheetNames.length} feuilles. Cliquez sur celle qui contient votre BOM :`;
+  buttons.innerHTML = '';
+  sheetNames.forEach(name => {
+    const btn = document.createElement('button');
+    btn.className = 'sheet-btn';
+    btn.textContent = '📄 ' + name;
+    btn.addEventListener('click', () => {
+      picker.style.display = 'none';
+      parseSheet(name);
+    });
+    buttons.appendChild(btn);
+  });
+  picker.style.display = 'block';
+}
+
+/* ══════════════════════════════════════════════════════════════
+   11. PARSING D'UNE FEUILLE
+══════════════════════════════════════════════════════════════ */
+function parseSheet(sheetName) {
+  setLoading(true, `Analyse de la feuille "${sheetName}"…`);
+  try {
+    const sheet     = currentWorkbook.Sheets[sheetName];
+    const rawData   = XLSX.utils.sheet_to_json(sheet, { header:1, defval:'' });
+    const sheetImgs = currentEmbedded[sheetName] || {};
+    const detection = fuzzyDetect(rawData);
+
+    if (!detection) {
+      setLoading(false);
+      showDetectBanner(false, `Colonnes non identifiées — feuille "${sheetName}" dans "${currentFileName}"`);
+      renderFallback(rawData);
+      return;
+    }
+
+    const { headerRow, colMap } = detection;
+    const rawHeaders = rawData[headerRow];
+
+    allRows = [];
+    for (let r = headerRow+1; r < rawData.length; r++) {
+      const row = rawData[r];
+      if (!row || !row.some(c=>String(c).trim())) continue;
+      const ref = String(row[colMap.ref]||'').trim();
+      if (!ref || ref.length<2) continue;
+
+      let desc  = colMap.desc1!==-1 ? String(row[colMap.desc1]||'').trim() : '';
+      let desc2 = colMap.desc2!==-1 ? String(row[colMap.desc2]||'').trim() : '';
+      if (desc.match(/[㐀-鿿]/) && desc2 && !desc2.match(/[㐀-鿿]/)) [desc, desc2] = [desc2, desc];
+
+      const qty   = colMap.qty  !==-1 ? String(row[colMap.qty  ]||'').trim() : '';
+      const level = colMap.level!==-1 ? String(row[colMap.level]||'').trim() : '';
+
+      const usedCols = new Set([colMap.ref,colMap.desc1,colMap.desc2,colMap.qty,colMap.level,colMap.img].filter(c=>c!==-1));
+      const extra = [];
+      rawHeaders.forEach((h,c)=>{
+        if(!usedCols.has(c)&&h&&String(row[c]||'').trim()) extra.push([h,String(row[c]).trim()]);
+      });
+
+      allRows.push({ ref, desc, desc2, qty, level, imgSrc: sheetImgs[r]||null, extra });
+    }
+
+    /* Tri initial : photos d'abord */
+    currentSort = 'photo';
+    document.getElementById('sortSelect').value = 'photo';
+    sortRows();
+
+    setLoading(false);
+    const photoCount = allRows.filter(r=>r.imgSrc).length;
+    showDetectBanner(true,
+      `Feuille "${sheetName}" — ${allRows.length} pièce(s)${photoCount ? ` (${photoCount} avec photo)` : ''}`,
+      colMap, rawHeaders);
+    document.getElementById('normalView').style.display = 'block';
+    renderTiles();
+
+  } catch(err) {
+    console.error(err);
+    setLoading(false);
+    alert('Erreur lors de l\'analyse : ' + err.message);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   12. CHARGEMENT FICHIER PRINCIPAL
+══════════════════════════════════════════════════════════════ */
+async function parseBOM(file) {
+  setLoading(true, 'Lecture du fichier Excel…');
+  hideResults();
+  currentFileName = file.name;
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    setLoading(true, 'Extraction des images embarquées…');
+    currentEmbedded = await extractImages(arrayBuffer);
+    setLoading(true, 'Chargement du classeur…');
+    currentWorkbook = XLSX.read(arrayBuffer, { type:'array' });
+    setLoading(false);
+    if (currentWorkbook.SheetNames.length > 1) {
+      showSheetPicker(currentWorkbook.SheetNames);
+    } else {
+      parseSheet(currentWorkbook.SheetNames[0]);
+    }
+  } catch(err) {
+    console.error(err);
+    setLoading(false);
+    alert('Erreur lors de la lecture du fichier : ' + err.message);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   13. HELPERS UI
+══════════════════════════════════════════════════════════════ */
+function setLoading(on, msg='') {
+  document.getElementById('loadingBar').classList.toggle('active', on);
+  if (msg) document.getElementById('loadingMsg').textContent = msg;
+}
+
+function hideResults() {
+  document.getElementById('sheetPicker').style.display  = 'none';
+  document.getElementById('normalView').style.display   = 'none';
+  document.getElementById('fallbackView').style.display = 'none';
+  document.getElementById('detectBanner').classList.remove('active');
+  document.getElementById('fallbackBanner').classList.remove('active');
+  allRows=[]; filteredRows=[];
+}
+
+function showDetectBanner(ok, title, colMap, rawHeaders) {
+  const banner = document.getElementById('detectBanner');
+  banner.className = 'detect-banner active ' + (ok?'detect-ok':'detect-warn');
+  document.getElementById('detectTitle').textContent = title;
+  const chips = document.getElementById('detectChips');
+  chips.innerHTML = '';
+  if (ok && colMap && rawHeaders) {
+    const colNames = { ref:'Référence',desc1:'Désignation',desc2:'Désig.2',qty:'Quantité',level:'Niveau',img:'Image' };
+    Object.entries(colNames).forEach(([k,label])=>{
+      const idx = colMap[k]; if(idx===-1) return;
+      const chip = document.createElement('span');
+      chip.className='chip';
+      chip.textContent=`${label} → col.${String.fromCharCode(65+idx)} "${rawHeaders[idx]||idx}"`;
+      chips.appendChild(chip);
+    });
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   14. ÉVÉNEMENTS
+══════════════════════════════════════════════════════════════ */
+/* Drag & drop */
+const zone = document.getElementById('uploadZone');
+zone.addEventListener('dragover',  e=>{e.preventDefault();zone.classList.add('drag-over');});
+zone.addEventListener('dragleave', ()=>zone.classList.remove('drag-over'));
+zone.addEventListener('drop', e=>{
+  e.preventDefault(); zone.classList.remove('drag-over');
+  const f = e.dataTransfer.files[0];
+  if(f&&f.name.endsWith('.xlsx')) parseBOM(f);
+  else alert('Merci d\'utiliser un fichier .xlsx');
+});
+
+/* Input fichier */
+document.getElementById('bomFile').addEventListener('change', e=>{
+  if(e.target.files[0]) parseBOM(e.target.files[0]);
+  e.target.value='';
+});
+
+/* Recherche */
+document.getElementById('bomSearch').addEventListener('input', renderTiles);
+
+/* Tri */
+document.getElementById('sortSelect').addEventListener('change', e=>{
+  currentSort = e.target.value;
+  sortRows();
+  renderTiles();
+});
+
+/* Modal — fermeture clic extérieur */
+document.getElementById('partModal').addEventListener('click', e=>{
+  if(e.target === document.getElementById('partModal')) closeModal();
+});
+document.getElementById('modalClose').addEventListener('click', closeModal);
+
+/* Clavier */
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape'){
+    if(document.getElementById('lightbox').classList.contains('active')) closeLightbox();
+    else closeModal();
+  }
+});
+</script>
+</body>
+</html>
