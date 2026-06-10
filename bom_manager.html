@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Lecteur BOM — SAV DREAME</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+/* ══════════════════════════════════════════════════════════════
+   TOKENS
+══════════════════════════════════════════════════════════════ */
+:root {
+  --bg:#f1f3f6; --surface:#ffffff; --surface-2:#f8f9fa; --surface-3:#eef0f3;
+  --border:#dde1e8; --border-strong:#c0c6d2; --rule:#e8ebf0;
+  --text:#1a1e2a; --text-2:#4a5068; --muted:#8891a8; --muted-2:#c0c8d8;
+  --accent:#e84040; --accent-warm:#f07020; --accent-glow:rgba(232,64,64,0.09);
+  --green:#16a34a; --green-bg:#f0fdf4; --green-border:#bbf7d0;
+  --orange:#d97706; --orange-bg:#fffbeb; --orange-border:#fde68a;
+  --shadow-sm:0 1px 3px rgba(0,0,0,0.07),0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md:0 4px 16px rgba(0,0,0,0.09),0 1px 4px rgba(0,0,0,0.05);
+  --shadow-lg:0 12px 40px rgba(0,0,0,0.12),0 2px 8px rgba(0,0,0,0.06);
+  --shadow-modal:0 24px 70px rgba(0,0,0,0.18),0 0 0 1px var(--border);
+  --font-ui:'Barlow',sans-serif; --font-cond:'Barlow Condensed',sans-serif; --font-mono:'JetBrains Mono',monospace;
+  --r-sm:3px; --r-md:7px; --r-lg:12px; --r-xl:18px;
+  --tr:0.16s cubic-bezier(0.4,0,0.2,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:15px;scroll-behavior:smooth;}
+body{font-family:var(--font-ui);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;line-height:1.6;}
+a{color:inherit;text-decoration:none;}
+button{font-family:inherit;}
+
+/* ── Header ── */
+.hdr{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.92);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);box-shadow:var(--shadow-sm);padding:0 24px;}
+.hdr-in{max-width:1440px;margin:0 auto;display:flex;align-items:center;gap:16px;height:62px;}
+.logo{display:flex;align-items:center;gap:11px;flex-shrink:0;}
+.logo-badge{width:38px;height:38px;border-radius:var(--r-md);background:linear-gradient(135deg,var(--accent),var(--accent-warm));display:flex;align-items:center;justify-content:center;font-family:var(--font-cond);font-weight:700;font-size:13px;color:#fff;}
+.logo-t{font-family:var(--font-cond);font-size:16px;font-weight:700;color:var(--text);letter-spacing:0.3px;}
+.logo-v{font-family:var(--font-mono);font-size:9.5px;color:var(--muted);letter-spacing:1.2px;}
+.nav-actions{display:flex;align-items:center;gap:10px;margin-left:auto;}
+.btn-nav{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:var(--r-md);border:1.5px solid var(--border);background:var(--surface);color:var(--text-2);font-family:var(--font-ui);font-size:13px;font-weight:600;cursor:pointer;transition:all var(--tr);white-space:nowrap;}
+.btn-nav:hover{border-color:var(--text-2);background:var(--surface-2);color:var(--text);}
+.btn-nav-primary{background:var(--text);color:white;border-color:var(--text);}
+.btn-nav-primary:hover{background:#000;border-color:#000;}
+.btn-accent{background:var(--accent);color:white;border:none;}
+.btn-accent:hover{background:#c53030;}
+
+/* ── Layout principal ── */
+.main-container{max-width:1440px;margin:24px auto;padding:0 24px;}
+
+/* ── Zone de dépôt ── */
+.upload-zone{border:2px dashed var(--border-strong);border-radius:var(--r-lg);background:var(--surface);padding:48px 24px;text-align:center;cursor:pointer;transition:all var(--tr);position:relative;}
+.upload-zone:hover,.upload-zone.drag-over{border-color:var(--accent);background:var(--accent-glow);}
+.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.upload-icon{width:48px;height:48px;margin:0 auto 16px;color:var(--muted);}
+.upload-title{font-family:var(--font-cond);font-size:22px;font-weight:700;color:var(--text);margin-bottom:6px;}
+.upload-sub{font-size:13px;color:var(--muted);}
+.upload-sub span{color:var(--accent);font-weight:600;}
+
+/* ── Spinner ── */
+.spinner{width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-bar{display:none;align-items:center;gap:12px;padding:14px 18px;background:var(--surface);border-radius:var(--r-md);border:1px solid var(--border);margin:16px 0;font-size:13px;font-weight:600;color:var(--text-2);}
+.loading-bar.active{display:flex;}
+
+/* ── Bannière de détection ── */
+.detect-banner{display:none;padding:14px 18px;border-radius:var(--r-md);margin:16px 0;font-size:13px;font-weight:600;gap:10px;align-items:flex-start;}
+.detect-banner.active{display:flex;}
+.detect-ok{background:var(--green-bg);border:1px solid var(--green-border);color:var(--green);}
+.detect-warn{background:var(--orange-bg);border:1px solid var(--orange-border);color:var(--orange);}
+.detect-banner .col-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+.chip{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;font-family:var(--font-mono);background:rgba(0,0,0,0.07);}
+
+/* ── Barre filtre + stats ── */
+.toolbar{display:flex;align-items:center;gap:12px;margin:20px 0 12px;}
+.search-bom{flex:1;height:42px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-md);padding:0 16px 0 40px;font-size:14px;font-family:var(--font-ui);color:var(--text);transition:all var(--tr);}
+.search-bom:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow);}
+.search-wrap{position:relative;flex:1;}
+.search-wrap svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;}
+.stats-badge{font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap;background:var(--surface);border:1px solid var(--border);padding:6px 12px;border-radius:var(--r-md);}
+
+/* ── Tableau BOM ── */
+.bom-table-wrap{overflow-x:auto;border-radius:var(--r-md);box-shadow:var(--shadow-sm);border:1px solid var(--border);}
+.bom-table{width:100%;border-collapse:collapse;background:var(--surface);font-size:13px;}
+.bom-table thead th{background:var(--surface-3);padding:10px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);border-bottom:2px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none;position:sticky;top:0;}
+.bom-table thead th:hover{color:var(--text);}
+.bom-table thead th .sort-icon{display:inline-block;margin-left:4px;opacity:0.4;font-size:10px;}
+.bom-table thead th.sort-asc .sort-icon::after{content:'▲';}
+.bom-table thead th.sort-desc .sort-icon::after{content:'▼';}
+.bom-table thead th:not(.sort-asc):not(.sort-desc) .sort-icon::after{content:'⇅';}
+.bom-table tbody tr{border-bottom:1px solid var(--rule);cursor:pointer;transition:background var(--tr);}
+.bom-table tbody tr:last-child{border-bottom:none;}
+.bom-table tbody tr:hover{background:var(--surface-2);}
+.bom-table tbody tr.selected{background:var(--accent-glow);border-left:3px solid var(--accent);}
+.bom-table td{padding:9px 14px;vertical-align:middle;}
+.td-ref{font-family:var(--font-mono);font-weight:700;font-size:12px;color:var(--accent);}
+.td-thumb{width:52px;padding:6px 10px;}
+.td-thumb-img{width:40px;height:40px;object-fit:contain;border-radius:var(--r-sm);background:var(--surface-2);}
+.td-thumb-ph{width:40px;height:40px;background:var(--surface-3);border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;color:var(--muted-2);}
+.td-qty{font-weight:700;color:var(--text-2);text-align:center;width:60px;}
+.no-data{padding:48px;text-align:center;color:var(--muted);font-size:13px;}
+
+/* ── Carte détail (slide-in) ── */
+.detail-card{display:none;margin-top:16px;background:var(--surface);border-radius:var(--r-lg);border:1px solid var(--border);box-shadow:var(--shadow-md);overflow:hidden;animation:slideDown .22s ease;}
+.detail-card.active{display:flex;}
+@keyframes slideDown{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
+.detail-img-pane{width:280px;flex-shrink:0;background:var(--surface-2);display:flex;align-items:center;justify-content:center;padding:24px;border-right:1px solid var(--border);min-height:220px;}
+.detail-img-pane img{max-width:100%;max-height:240px;object-fit:contain;mix-blend-mode:multiply;}
+.detail-no-img{display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--muted-2);font-size:11px;font-weight:600;text-transform:uppercase;}
+.detail-info{flex:1;padding:24px 28px;display:grid;grid-template-columns:1fr 1fr;gap:16px;align-content:start;}
+.detail-close{position:absolute;right:16px;top:16px;}
+.detail-card{position:relative;}
+.info-group{display:flex;flex-direction:column;gap:3px;}
+.info-group.full{grid-column:1/-1;}
+.info-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);}
+.info-value{font-size:14px;font-weight:500;color:var(--text);}
+.info-value.ref{font-family:var(--font-mono);font-size:16px;font-weight:700;color:var(--accent);user-select:all;}
+.close-btn{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:var(--surface-2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;transition:background var(--tr);}
+.close-btn:hover{background:var(--border);}
+
+/* ── Mode Secours (fallback) ── */
+.fallback-banner{display:none;padding:20px 24px;background:var(--orange-bg);border:1px solid var(--orange-border);border-radius:var(--r-md);margin:16px 0;}
+.fallback-banner.active{display:flex;align-items:flex-start;gap:14px;}
+.fallback-title{font-family:var(--font-cond);font-size:18px;font-weight:700;color:var(--orange);margin-bottom:4px;}
+.fallback-sub{font-size:13px;color:var(--text-2);}
+.fallback-table-wrap{overflow:auto;max-height:65vh;border-radius:var(--r-md);border:1px solid var(--border);box-shadow:var(--shadow-sm);}
+.fallback-table{width:100%;border-collapse:collapse;background:var(--surface);font-size:12px;}
+.fallback-table th{background:var(--surface-3);padding:8px 12px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);border-bottom:2px solid var(--border);position:sticky;top:0;white-space:nowrap;}
+.fallback-table td{padding:7px 12px;border-bottom:1px solid var(--rule);font-family:var(--font-mono);font-size:11px;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.fallback-table tr:hover td{background:var(--surface-2);}
+</style>
+</head>
+<body>
+
+<!-- ══════════ HEADER ══════════ -->
+<header class="hdr">
+  <div class="hdr-in">
+    <div class="logo">
+      <div class="logo-badge">SAV</div>
+      <div>
+        <div class="logo-t">FNAC DARTY — LECTEUR BOM</div>
+        <div class="logo-v">DREAME ECOSYSTEM — BOM MANAGER</div>
+      </div>
+    </div>
+    <div class="nav-actions">
+      <a href="index.html" class="btn-nav">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        Accueil
+      </a>
+      <a href="index_fault_codes.html" class="btn-nav">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        Codes Erreurs
+      </a>
+      <a href="calibrage_dreame.html" class="btn-nav btn-nav-primary">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        Calibrage
+      </a>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════ MAIN ══════════ -->
+<main class="main-container">
+
+  <!-- Zone Upload -->
+  <div class="upload-zone" id="uploadZone">
+    <input type="file" id="bomFile" accept=".xlsx" />
+    <svg class="upload-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+    </svg>
+    <div class="upload-title">Importer un fichier BOM Excel</div>
+    <div class="upload-sub">Glissez-déposez votre fichier <span>.xlsx</span> ici, ou cliquez pour parcourir</div>
+  </div>
+
+  <!-- Chargement -->
+  <div class="loading-bar" id="loadingBar">
+    <div class="spinner"></div>
+    <span id="loadingMsg">Analyse en cours…</span>
+  </div>
+
+  <!-- Bannière détection -->
+  <div class="detect-banner" id="detectBanner">
+    <div>
+      <div id="detectTitle" style="font-size:14px;margin-bottom:4px;"></div>
+      <div class="col-chips" id="detectChips"></div>
+    </div>
+  </div>
+
+  <!-- Bannière mode secours -->
+  <div class="fallback-banner" id="fallbackBanner">
+    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;color:#d97706;margin-top:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+    <div>
+      <div class="fallback-title">⚠ Mode de Secours activé</div>
+      <div class="fallback-sub">La détection automatique des colonnes n'a pas abouti sur les 30 premières lignes. Affichage brut de toutes les données du fichier.</div>
+    </div>
+  </div>
+
+  <!-- Vue normale : barre + tableau + carte -->
+  <div id="normalView" style="display:none;">
+    <div class="toolbar">
+      <div class="search-wrap">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" class="search-bom" id="bomSearch" placeholder="Filtrer par référence, désignation…" />
+      </div>
+      <div class="stats-badge" id="statsBadge">0 pièce(s)</div>
+    </div>
+
+    <div class="bom-table-wrap">
+      <table class="bom-table" id="bomTable">
+        <thead id="bomThead"></thead>
+        <tbody id="bomTbody"></tbody>
+      </table>
+    </div>
+
+    <!-- Carte détail -->
+    <div class="detail-card" id="detailCard">
+      <button class="close-btn detail-close" id="closeDetail" title="Fermer">✕</button>
+      <div class="detail-img-pane" id="detailImgPane">
+        <div class="detail-no-img" id="detailNoImg">
+          <svg width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          Aucune image
+        </div>
+        <img id="detailImg" src="" alt="" style="display:none;" />
+      </div>
+      <div class="detail-info" id="detailInfo"></div>
+    </div>
+  </div>
+
+  <!-- Vue Secours : tableau brut -->
+  <div id="fallbackView" style="display:none;">
+    <div class="fallback-table-wrap">
+      <table class="fallback-table">
+        <thead id="fbThead"></thead>
+        <tbody id="fbTbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   CONSTANTES CDN
+══════════════════════════════════════════════════════════════ */
+const JSZIP_CDN  = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+const JSZIP_FB   = 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';
+
+/* ══════════════════════════════════════════════════════════════
+   ÉTAT GLOBAL
+══════════════════════════════════════════════════════════════ */
+let allRows      = [];   // [{ref, desc, desc2, qty, level, imgSrc, extra:[]}]
+let filteredRows = [];
+let sortCol      = -1;
+let sortDir      = 1;    // 1=asc -1=desc
+let headers      = [];   // noms des colonnes affichées dans le tableau
+
+/* ══════════════════════════════════════════════════════════════
+   1. CHARGEMENT JSZip À LA DEMANDE
+══════════════════════════════════════════════════════════════ */
+function loadJSZip() {
+  return new Promise((resolve, reject) => {
+    if (typeof JSZip !== 'undefined') return resolve();
+    const load = (url, fallback) => {
+      const s = document.createElement('script');
+      s.src = url; s.async = true;
+      s.onload = resolve;
+      s.onerror = fallback || (() => reject(new Error('JSZip introuvable')));
+      document.head.appendChild(s);
+    };
+    load(JSZIP_CDN, () => load(JSZIP_FB));
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   2. EXTRACTION IMAGES drawingML (row-based — robuste)
+══════════════════════════════════════════════════════════════ */
+async function extractImages(arrayBuffer) {
+  try {
+    await loadJSZip();
+    const zip = await JSZip.loadAsync(arrayBuffer).catch(() => null);
+    if (!zip) return {};
+
+    // Charger tous les médias
+    const mediaMap = {};
+    await Promise.all(Object.keys(zip.files).filter(p => /^xl\/media\//i.test(p)).map(p => {
+      const fname = p.split('/').pop();
+      const ext   = (fname.split('.').pop()||'').toLowerCase();
+      const mime  = {png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',gif:'image/gif',bmp:'image/bmp',webp:'image/webp',svg:'image/svg+xml'}[ext]||'application/octet-stream';
+      return zip.file(p).async('base64').then(b64 => { mediaMap[fname]='data:'+mime+';base64,'+b64; });
+    }));
+    if (!Object.keys(mediaMap).length) return {};
+
+    // Lire workbook.xml → ordre des feuilles
+    const wbFile = zip.file('xl/workbook.xml');
+    if (!wbFile) return {};
+    const wbXml = await wbFile.async('text');
+    const sheets = [];
+    let m;
+    const shRe = /<sheet\b[^>]*>/g;
+    while ((m=shRe.exec(wbXml))!==null){
+      const nM=m[0].match(/\bname="([^"]*)"/), rM=m[0].match(/\br:id="([^"]+)"/)
+                                                      ||m[0].match(/\brelationships:id="([^"]+)"/i);
+      if(nM&&rM) sheets.push({name:nM[1],rId:rM[1]});
+    }
+    if (!sheets.length) return {};
+
+    // workbook.xml.rels → rId → chemin feuille
+    const wbRelsFile = zip.file('xl/_rels/workbook.xml.rels');
+    if (!wbRelsFile) return {};
+    const wbRelsXml = await wbRelsFile.async('text');
+    const wbRels = {};
+    const relRe = /<Relationship\b[^>]*>/g;
+    while ((m=relRe.exec(wbRelsXml))!==null){
+      const iM=m[0].match(/\bId="([^"]+)"/), tM=m[0].match(/\bTarget="([^"]+)"/);
+      if(iM&&tM) wbRels[iM[1]]=tM[1];
+    }
+
+    const out = {};
+    for (const s of sheets) {
+      const target = wbRels[s.rId]; if (!target) continue;
+      const shPath = target.replace(/^\//,'').startsWith('xl/') ? target.replace(/^\//,'') : 'xl/'+target.replace(/^\.\.\//,'');
+      const shRelsPath = shPath.replace(/([^/]+)$/,'_rels/$1.rels');
+      const shRelsFile = zip.file(shRelsPath); if (!shRelsFile) continue;
+      const shRelsXml = await shRelsFile.async('text');
+      let drTarget = null;
+      relRe.lastIndex=0;
+      while((m=relRe.exec(shRelsXml))!==null){
+        if(!/drawing/i.test(m[0])) continue;
+        const tM=m[0].match(/\bTarget="([^"]+)"/); if(tM){drTarget=tM[1];break;}
+      }
+      if (!drTarget) continue;
+      const drPath = drTarget.replace(/^\//,'').startsWith('xl/') ? drTarget.replace(/^\//,'') : 'xl/'+drTarget.replace(/^\.\.\//,'');
+      const drFile = zip.file(drPath); if (!drFile) continue;
+      const drXml = await drFile.async('text');
+      const drRelsPath = drPath.replace(/([^/]+)$/,'_rels/$1.rels');
+      const drRelsFile = zip.file(drRelsPath); if (!drRelsFile) continue;
+      const drRelsXml = await drRelsFile.async('text');
+      const drRels = {};
+      relRe.lastIndex=0;
+      while((m=relRe.exec(drRelsXml))!==null){
+        const iM=m[0].match(/\bId="([^"]+)"/), tM=m[0].match(/\bTarget="([^"]+)"/);
+        if(iM&&tM) drRels[iM[1]]=tM[1].split('/').pop();
+      }
+      const rowMap = {};
+      const ancRe = /<xdr:(twoCellAnchor|oneCellAnchor|absoluteAnchor)\b[^>]*>([\s\S]*?)<\/xdr:\1>/g;
+      let am;
+      while ((am=ancRe.exec(drXml))!==null){
+        const inner=am[2];
+        const rowM=inner.match(/<xdr:from>[\s\S]*?<xdr:row>(\d+)<\/xdr:row>/);
+        const blipM=inner.match(/(?:r|relationships):embed="([^"]+)"/);
+        if(!rowM||!blipM) continue;
+        const row=parseInt(rowM[1],10), fname=drRels[blipM[1]];
+        if(fname&&mediaMap[fname]) rowMap[row]=mediaMap[fname];
+      }
+      if(Object.keys(rowMap).length) out[s.name]=rowMap;
+    }
+    return out;
+  } catch(e) {
+    console.warn('extractImages failed:', e);
+    return {};
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   3. DÉTECTION FUZZY DES COLONNES
+   Retourne { headerRow, colMap, score } ou null si échec
+══════════════════════════════════════════════════════════════ */
+const KW = {
+  ref:   ['料号','material code','material','reference','référence','ref','part number','part no','article','sku','numéro','numero','code article','p/n'],
+  desc:  ['名称','part name','designation','désignation','description','name','配件名称','nom','libelle','libellé','product name'],
+  qty:   ['qty','quantité','quantite','quantity','数量','qte','nb ','nombre'],
+  level: ['等级','level','attribut','备注','repair','niveau','remark','note','repair level'],
+  img:   ['image','photo','picture','img','visuel','illustration'],
+};
+
+function normalize(s){ return String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').trim(); }
+
+function fuzzyDetect(rawData) {
+  let best = { headerRow:-1, colMap:null, score:0 };
+
+  for (let r=0; r<Math.min(30, rawData.length); r++){
+    const row = rawData[r];
+    const cm = { ref:-1, desc1:-1, desc2:-1, qty:-1, level:-1, img:-1 };
+    let score = 0;
+
+    for (let c=0; c<row.length; c++){
+      const v = normalize(row[c]);
+      if (!v || v.length>60) continue;  // les cellules header sont courtes
+
+      for (const [key,kws] of Object.entries(KW)){
+        if (!kws.some(kw=>v.includes(kw))) continue;
+
+        if      (key==='ref'   && cm.ref  ===-1) { cm.ref  =c; score+=4; break; }
+        else if (key==='desc'  && cm.desc1===-1) { cm.desc1=c; score+=3; break; }
+        else if (key==='desc'  && cm.desc2===-1) { cm.desc2=c; score+=1; break; }
+        else if (key==='qty'   && cm.qty  ===-1) { cm.qty  =c; score+=2; break; }
+        else if (key==='level' && cm.level===-1) { cm.level=c; score+=1; break; }
+        else if (key==='img'   && cm.img  ===-1) { cm.img  =c; score+=1; break; }
+      }
+    }
+
+    if (score>best.score && cm.ref!==-1) {
+      best = { headerRow:r, colMap:{...cm}, score };
+    }
+  }
+
+  // Seuil minimal : doit avoir ref + au moins desc OU score>=5
+  if (best.score<5 || best.colMap===null || best.colMap.ref===-1) return null;
+  return best;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   4. RENDERING — Vue normale (tableau + carte)
+══════════════════════════════════════════════════════════════ */
+function buildColHeaders(colMap, rawHeaders) {
+  // Construit les headers affichés dans le tableau
+  const cols = [
+    { id:'thumb', label:'', sortable:false },
+    { id:'ref',   label: colMap.ref!==-1   ? rawHeaders[colMap.ref]||'Référence' : 'Référence', sortable:true },
+    { id:'desc',  label: colMap.desc1!==-1 ? rawHeaders[colMap.desc1]||'Désignation' : 'Désignation', sortable:true },
+  ];
+  if (colMap.qty!==-1)   cols.push({ id:'qty',   label: rawHeaders[colMap.qty]||'Qté',    sortable:true  });
+  if (colMap.level!==-1) cols.push({ id:'level', label: rawHeaders[colMap.level]||'Niv.', sortable:true  });
+  return cols;
+}
+
+function renderTable() {
+  const tbody = document.getElementById('bomTbody');
+  tbody.innerHTML = '';
+  const q = normalize(document.getElementById('bomSearch').value);
+  filteredRows = q ? allRows.filter(r=> normalize(r.ref).includes(q)||normalize(r.desc).includes(q)||normalize(r.desc2||'').includes(q)) : [...allRows];
+  document.getElementById('statsBadge').textContent = `${filteredRows.length} pièce(s) / ${allRows.length}`;
+
+  if (!filteredRows.length) {
+    tbody.innerHTML = `<tr><td class="no-data" colspan="10">Aucun résultat pour "${q}"</td></tr>`;
+    return;
+  }
+
+  filteredRows.forEach((row, i) => {
+    const tr = document.createElement('tr');
+    tr.dataset.idx = i;
+
+    // Miniature
+    const tdThumb = document.createElement('td');
+    tdThumb.className = 'td-thumb';
+    if (row.imgSrc) {
+      const img = document.createElement('img');
+      img.src = row.imgSrc; img.className = 'td-thumb-img';
+      tdThumb.appendChild(img);
+    } else {
+      tdThumb.innerHTML = `<div class="td-thumb-ph"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>`;
+    }
+    tr.appendChild(tdThumb);
+
+    // Référence
+    const tdRef = document.createElement('td');
+    tdRef.className = 'td-ref';
+    tdRef.textContent = row.ref;
+    tr.appendChild(tdRef);
+
+    // Désignation
+    const tdDesc = document.createElement('td');
+    tdDesc.textContent = row.desc;
+    tdDesc.style.cssText = 'max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+    tr.appendChild(tdDesc);
+
+    // Qty
+    if (headers.find(h=>h.id==='qty')) {
+      const tdQ = document.createElement('td');
+      tdQ.className = 'td-qty'; tdQ.textContent = row.qty||'—';
+      tr.appendChild(tdQ);
+    }
+
+    // Level
+    if (headers.find(h=>h.id==='level')) {
+      const tdL = document.createElement('td');
+      tdL.textContent = row.level||'—';
+      tr.appendChild(tdL);
+    }
+
+    tr.addEventListener('click', () => openDetail(i, tr));
+    tbody.appendChild(tr);
+  });
+}
+
+function renderHeaders() {
+  const thead = document.getElementById('bomThead');
+  thead.innerHTML = '';
+  const tr = document.createElement('tr');
+  headers.forEach((h, i) => {
+    const th = document.createElement('th');
+    if (!h.sortable) { th.innerHTML = h.label; tr.appendChild(th); return; }
+    th.innerHTML = `${h.label}<span class="sort-icon"></span>`;
+    th.addEventListener('click', () => {
+      if (sortCol===i){ sortDir*=-1; }
+      else { sortCol=i; sortDir=1; }
+      sortRows();
+      document.querySelectorAll('.bom-table thead th').forEach((t,j)=>{
+        t.classList.remove('sort-asc','sort-desc');
+        if(j===i) t.classList.add(sortDir===1?'sort-asc':'sort-desc');
+      });
+      renderTable();
+    });
+    tr.appendChild(th);
+  });
+  thead.appendChild(tr);
+}
+
+function sortRows() {
+  const key = ['thumb','ref','desc','qty','level'][sortCol] || 'ref';
+  allRows.sort((a,b) => {
+    const va=normalize(a[key]||''), vb=normalize(b[key]||'');
+    if(va<vb) return -1*sortDir; if(va>vb) return 1*sortDir; return 0;
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   5. CARTE DÉTAIL
+══════════════════════════════════════════════════════════════ */
+function openDetail(filteredIdx, clickedTr) {
+  const row = filteredRows[filteredIdx];
+  if (!row) return;
+
+  // Highlight ligne
+  document.querySelectorAll('.bom-table tbody tr.selected').forEach(r=>r.classList.remove('selected'));
+  clickedTr.classList.add('selected');
+
+  // Image
+  const imgEl    = document.getElementById('detailImg');
+  const noImgEl  = document.getElementById('detailNoImg');
+  if (row.imgSrc) {
+    imgEl.src = row.imgSrc; imgEl.style.display='block'; noImgEl.style.display='none';
+  } else {
+    imgEl.style.display='none'; noImgEl.style.display='flex';
+  }
+
+  // Infos
+  const info = document.getElementById('detailInfo');
+  const fields = [
+    ['Référence', row.ref, 'ref full'],
+    ['Désignation', row.desc, 'full'],
+    row.desc2 ? ['Désignation (ZH/EN)', row.desc2, 'full'] : null,
+    ['Quantité', row.qty||'—', ''],
+    row.level ? ['Niveau de réparation', row.level, ''] : null,
+    ...(row.extra||[]).map(([k,v])=>[k,v,''])
+  ].filter(Boolean);
+
+  info.innerHTML = fields.map(([label, value, cls])=>`
+    <div class="info-group ${cls}">
+      <div class="info-label">${label}</div>
+      <div class="info-value ${cls.includes('ref')?'ref':''}">${value||'—'}</div>
+    </div>`).join('');
+
+  // Scroll vers la carte
+  const card = document.getElementById('detailCard');
+  card.classList.add('active');
+  setTimeout(()=>card.scrollIntoView({behavior:'smooth',block:'nearest'}), 50);
+}
+
+function closeDetail() {
+  document.getElementById('detailCard').classList.remove('active');
+  document.querySelectorAll('.bom-table tbody tr.selected').forEach(r=>r.classList.remove('selected'));
+}
+
+/* ══════════════════════════════════════════════════════════════
+   6. RENDERING — Mode Secours (fallback brut)
+══════════════════════════════════════════════════════════════ */
+function renderFallback(rawData) {
+  document.getElementById('fallbackBanner').classList.add('active');
+  document.getElementById('fallbackView').style.display='block';
+  document.getElementById('normalView').style.display='none';
+
+  // En-têtes = première ligne non vide
+  let hRow = 0;
+  for (let r=0; r<rawData.length; r++){ if(rawData[r].some(c=>String(c).trim())){ hRow=r; break; }}
+
+  const thead = document.getElementById('fbThead');
+  const tbody = document.getElementById('fbTbody');
+  const hData = rawData[hRow];
+  thead.innerHTML = '<tr>' + hData.map(h=>`<th>${h||''}</th>`).join('') + '</tr>';
+  tbody.innerHTML = rawData.slice(hRow+1)
+    .filter(r=>r.some(c=>String(c).trim()))
+    .map(r=>'<tr>'+hData.map((_,c)=>`<td title="${String(r[c]||'').replace(/"/g,'')}">${r[c]||''}</td>`).join('')+'</tr>')
+    .join('');
+}
+
+/* ══════════════════════════════════════════════════════════════
+   7. PARSING PRINCIPAL
+══════════════════════════════════════════════════════════════ */
+async function parseBOM(file) {
+  setLoading(true, 'Lecture du fichier Excel…');
+  hideResults();
+
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+
+    setLoading(true, 'Extraction des images embarquées…');
+    const embeddedImages = await extractImages(arrayBuffer);
+
+    setLoading(true, 'Détection intelligente des colonnes…');
+    const workbook  = XLSX.read(arrayBuffer, { type:'array' });
+    const sheetName = workbook.SheetNames[0];
+    const sheet     = workbook.Sheets[sheetName];
+    const rawData   = XLSX.utils.sheet_to_json(sheet, { header:1, defval:'' });
+    const sheetImgs = embeddedImages[sheetName] || {};
+
+    const detection = fuzzyDetect(rawData);
+
+    if (!detection) {
+      // ── MODE SECOURS ──
+      setLoading(false);
+      showDetectBanner(false, `Colonnes non identifiées dans "${file.name}"`);
+      renderFallback(rawData);
+      return;
+    }
+
+    const { headerRow, colMap } = detection;
+    const rawHeaders = rawData[headerRow];
+
+    // Construire les lignes de données
+    allRows = [];
+    for (let r = headerRow+1; r < rawData.length; r++) {
+      const row = rawData[r];
+      if (!row || !row.some(c=>String(c).trim())) continue;
+
+      const ref = String(row[colMap.ref]||'').trim();
+      if (!ref || ref.length<2) continue;
+
+      let desc  = colMap.desc1!==-1 ? String(row[colMap.desc1]||'').trim() : '';
+      let desc2 = colMap.desc2!==-1 ? String(row[colMap.desc2]||'').trim() : '';
+
+      // Permute si desc est en chinois et desc2 en latin
+      if (desc.match(/[㐀-龿]/) && desc2 && !desc2.match(/[㐀-龿]/)) {
+        [desc, desc2] = [desc2, desc];
+      }
+
+      const qty   = colMap.qty  !==-1 ? String(row[colMap.qty  ]||'').trim() : '';
+      const level = colMap.level!==-1 ? String(row[colMap.level]||'').trim() : '';
+
+      // Colonnes supplémentaires
+      const usedCols = new Set([colMap.ref,colMap.desc1,colMap.desc2,colMap.qty,colMap.level,colMap.img].filter(c=>c!==-1));
+      const extra = [];
+      rawHeaders.forEach((h,c)=>{
+        if(!usedCols.has(c) && h && String(row[c]||'').trim()){
+          extra.push([h, String(row[c]).trim()]);
+        }
+      });
+
+      // Image : ancre drawingML → index ligne 0-based = r
+      const imgSrc = sheetImgs[r] || null;
+
+      allRows.push({ ref, desc, desc2, qty, level, imgSrc, extra });
+    }
+
+    // Construire les headers du tableau
+    headers = buildColHeaders(colMap, rawHeaders);
+
+    // Afficher
+    setLoading(false);
+    showDetectBanner(true, `Colonnes détectées dans "${file.name}" — ${allRows.length} pièce(s)`, colMap, rawHeaders);
+    document.getElementById('normalView').style.display = 'block';
+    renderHeaders();
+    renderTable();
+
+  } catch(err) {
+    console.error(err);
+    setLoading(false);
+    alert('Erreur lors de la lecture du fichier : ' + err.message);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   8. HELPERS UI
+══════════════════════════════════════════════════════════════ */
+function setLoading(on, msg='') {
+  const bar = document.getElementById('loadingBar');
+  bar.classList.toggle('active', on);
+  if (msg) document.getElementById('loadingMsg').textContent = msg;
+}
+
+function hideResults() {
+  document.getElementById('normalView').style.display  = 'none';
+  document.getElementById('fallbackView').style.display= 'none';
+  document.getElementById('detectBanner').classList.remove('active');
+  document.getElementById('fallbackBanner').classList.remove('active');
+  document.getElementById('detailCard').classList.remove('active');
+  allRows=[]; filteredRows=[]; sortCol=-1;
+}
+
+function showDetectBanner(ok, title, colMap, rawHeaders) {
+  const banner = document.getElementById('detectBanner');
+  banner.className = 'detect-banner active ' + (ok?'detect-ok':'detect-warn');
+  document.getElementById('detectTitle').textContent = title;
+  const chips = document.getElementById('detectChips');
+  chips.innerHTML = '';
+  if (ok && colMap && rawHeaders) {
+    const colNames = { ref:'Référence', desc1:'Désignation', desc2:'Désig.2', qty:'Quantité', level:'Niveau', img:'Image' };
+    Object.entries(colNames).forEach(([k,label])=>{
+      const idx = colMap[k];
+      if(idx===-1) return;
+      const chip = document.createElement('span');
+      chip.className='chip';
+      chip.textContent=`${label} → col. ${String.fromCharCode(65+idx)} "${rawHeaders[idx]||idx}"`;
+      chips.appendChild(chip);
+    });
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   9. ÉVÉNEMENTS
+══════════════════════════════════════════════════════════════ */
+// Drag & Drop
+const zone = document.getElementById('uploadZone');
+zone.addEventListener('dragover',  e=>{e.preventDefault(); zone.classList.add('drag-over');});
+zone.addEventListener('dragleave', ()=>zone.classList.remove('drag-over'));
+zone.addEventListener('drop', e=>{
+  e.preventDefault(); zone.classList.remove('drag-over');
+  const f=e.dataTransfer.files[0];
+  if(f&&f.name.endsWith('.xlsx')) parseBOM(f);
+  else alert('Merci d\'utiliser un fichier .xlsx');
+});
+
+// Input file
+document.getElementById('bomFile').addEventListener('change', e=>{
+  if(e.target.files[0]) parseBOM(e.target.files[0]);
+  e.target.value='';
+});
+
+// Recherche
+document.getElementById('bomSearch').addEventListener('input', renderTable);
+
+// Fermeture carte
+document.getElementById('closeDetail').addEventListener('click', closeDetail);
+
+// Clavier
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeDetail(); });
+</script>
+</body>
+</html>
