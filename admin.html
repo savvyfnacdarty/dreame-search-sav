@@ -432,17 +432,12 @@
   ═══════════════════════════════════════ -->
   <div id="tabCatalogue">
 
-    <!-- Export / Import -->
-    <div class="export-zone">
-      <p><strong>catalog.json</strong> — fichier à commiter sur GitHub après chaque modification pour que les changements soient visibles par tous.</p>
-      <button class="btn-export" onclick="exportJSON()">
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-        Exporter catalog.json
-      </button>
-      <label class="btn-import" title="Charger un catalog.json existant">
-        📂 Importer
-        <input type="file" accept=".json" style="display:none" onchange="importJSON(event)"/>
-      </label>
+    <!-- Token GitHub -->
+    <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--r-lg);margin-bottom:20px;flex-wrap:wrap;">
+      <span style="font-size:12px;color:var(--muted);flex-shrink:0;">🔑 Token GitHub</span>
+      <input type="password" id="patInput" placeholder="Collez votre Personal Access Token ici (mémorisé automatiquement)"
+        style="flex:1;min-width:220px;height:36px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-md);padding:0 12px;font-family:var(--font-mono);font-size:12px;color:var(--text);transition:border-color var(--tr);"
+        oninput="savePAT(this.value)" onfocus="this.style.borderColor='var(--fd-red)'" onblur="this.style.borderColor='var(--border)'"/>
     </div>
 
     <div class="admin-layout">
@@ -645,6 +640,15 @@ function toggleTheme() {
 })();
 
 /* ══════════════════════════════════════════════════════════════
+   GITHUB CONFIG
+══════════════════════════════════════════════════════════════ */
+const GH_OWNER = 'savvyfnacdarty';
+const GH_REPO  = 'dreame-search-sav';
+const GH_FILE  = 'data/catalog.json';
+const GH_API   = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`;
+const LS_PAT   = 'fd_sav_gh_pat';
+
+/* ══════════════════════════════════════════════════════════════
    ÉTAT
 ══════════════════════════════════════════════════════════════ */
 let catalog = { produits: [] };
@@ -805,7 +809,7 @@ function saveProduct() {
   renderSidebar();
   const p = catalog.produits.find(x => x.id === currentId);
   if (p) renderForm(p);
-  showToast('✓ Produit enregistré — pensez à exporter le catalog.json');
+  pushToGitHub();
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -817,12 +821,89 @@ function deleteProduct(id) {
   currentId = null;
   renderSidebar();
   document.getElementById('formArea').innerHTML = '<div class="form-empty"><div class="big">📦</div><p>Produit supprimé.<br/>Sélectionnez ou créez un produit.</p></div>';
-  showToast('🗑 Produit supprimé');
+  pushToGitHub();
 }
 
 /* ══════════════════════════════════════════════════════════════
    EXPORT / IMPORT
 ══════════════════════════════════════════════════════════════ */
+/* ── Gestion PAT ── */
+function savePAT(val) {
+  try { if (val) localStorage.setItem(LS_PAT, val); else localStorage.removeItem(LS_PAT); } catch(e) {}
+}
+(function loadPAT() {
+  try {
+    const pat = localStorage.getItem(LS_PAT);
+    if (pat) { const el = document.getElementById('patInput'); if (el) el.value = pat; }
+  } catch(e) {}
+})();
+
+/* ── Push vers GitHub ── */
+async function pushToGitHub() {
+  const pat = document.getElementById('patInput').value.trim();
+  if (!pat) {
+    showToast('⚠ Collez votre token GitHub en haut de la page pour activer la synchro automatique');
+    return;
+  }
+
+  showToast('⏳ Envoi vers GitHub…');
+
+  try {
+    // 1. Récupérer le SHA actuel du fichier (nécessaire pour le PUT)
+    const getRes = await fetch(GH_API, {
+      headers: { Authorization: 'Bearer ' + pat, Accept: 'application/vnd.github+json' }
+    });
+    let sha = null;
+    if (getRes.ok) {
+      const data = await getRes.json();
+      sha = data.sha;
+    } else if (getRes.status !== 404) {
+      throw new Error('GitHub API : ' + getRes.status + ' ' + getRes.statusText);
+    }
+
+    // 2. Encoder le contenu en base64
+    const json = JSON.stringify(catalog, null, 2);
+    const b64  = btoa(unescape(encodeURIComponent(json)));
+
+    // 3. Commit
+    const putRes = await fetch(GH_API, {
+      method: 'PUT',
+      headers: {
+        Authorization: 'Bearer ' + pat,
+        Accept: 'application/vnd.github+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ message: 'admin: mise à jour catalog.json', content: b64, ...(sha ? { sha } : {}) })
+    });
+
+    if (!putRes.ok) {
+      const err = await putRes.json().catch(() => ({}));
+      throw new Error(err.message || putRes.statusText);
+    }
+
+    showToast('✓ Publié sur GitHub — site mis à jour dans ~1 min');
+  } catch(e) {
+    showToast('⚠ Erreur GitHub : ' + e.message);
+  }
+}
+
+async function downloadServerJSON() {
+  try {
+    const res = await fetch('data/catalog.json?nocache=' + Date.now());
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const text = await res.text();
+    const blob = new Blob([text], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'catalog.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    showToast('✓ catalog.json du serveur téléchargé');
+  } catch(e) {
+    showToast('⚠ Impossible de récupérer le fichier : ' + e.message);
+  }
+}
+
 function exportJSON() {
   const json = JSON.stringify(catalog, null, 2);
   const blob = new Blob([json], { type: 'application/json' });
