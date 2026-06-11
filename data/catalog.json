@@ -1,21 +1,3 @@
 {
-  "produits": [
-    {
-      "id": "p1781165846570",
-      "dossier": "test test test",
-      "url_dossier": "https://groupefnac.sharepoint.com/:f:/r/sites/SAVVY_FNACDARTY/Documents%20partages/DREAME_Referent/DREAME/Robot_Vacuum/test%20thomas?csf=1&web=1&e=6NQcyn",
-      "fichiers": [
-        {
-          "nom": "TEST EXCEL",
-          "url": "https://groupefnac.sharepoint.com/:x:/r/sites/SAVVY_FNACDARTY/Documents%20partages/DREAME_Referent/DREAME/Robot_Vacuum/test%20thomas/Classeur1.xlsx?d=w1f9f974f29274ec49dd84317805f718b&csf=1&web=1&e=n1XuNy",
-          "type": "xlsx"
-        },
-        {
-          "nom": "image test",
-          "url": "https://groupefnac.sharepoint.com/:i:/r/sites/SAVVY_FNACDARTY/Documents%20partages/DREAME_Referent/DREAME/Robot_Vacuum/test%20thomas/000206862_896x598_c.ico?csf=1&web=1&e=Ga7bHJ",
-          "type": "autre"
-        }
-      ]
-    }
-  ]
+  "produits": []
 }
