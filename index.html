@@ -199,43 +199,14 @@
       Dossier Introuvable
     </div>
     <p class="no-result-desc">
-      La référence <span class="no-result-ref" id="searchTermDisplay"></span> est introuvable dans la base SharePoint actuelle.<br/>
-      Contactez l'un des référents techniques ci-dessous en joignant la photo de la plaque signalétique.
+      La référence <span class="no-result-ref" id="searchTermDisplay"></span> est introuvable dans la base documentaire actuelle.<br/>
+      Vous pouvez faire une demande d'ajout, signaler une erreur ou demander une modification via le formulaire ci-dessous.
     </p>
-
-    <div class="contact-section">
-      <div class="contact-section-title">Référents techniques</div>
-      <div class="contact-grid">
-        <div class="contact-card">
-          <div class="contact-name">Thomas Crastres</div>
-          <div class="contact-email" onclick="copyEmail('thomas.crastres@darty.fr')" title="Cliquer pour copier">
-            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-            thomas.crastres@darty.fr
-          </div>
-        </div>
-        <div class="contact-card">
-          <div class="contact-name">Abdelmalek Tahri</div>
-          <div class="contact-email" onclick="copyEmail('abdelmalek.tahri@darty.fr')" title="Cliquer pour copier">
-            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-            abdelmalek.tahri@darty.fr
-          </div>
-        </div>
-        <div class="contact-card">
-          <div class="contact-name">Ludovic Chauffeteau</div>
-          <div class="contact-email" onclick="copyEmail('ludovic.chauffeteau@darty.fr')" title="Cliquer pour copier">
-            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-            ludovic.chauffeteau@darty.fr
-          </div>
-        </div>
-      </div>
-      <p class="cc-line" style="margin-top:10px;">Copie : <strong>jerome.leconte@fnacdarty.com</strong> (Jérome Leconte)</p>
-    </div>
-
-    <a href="#" id="mailSupportBtn" class="btn-mailto">
-      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-      Ouvrir la messagerie (mail pré-rempli)
+    <a href="https://forms.cloud.microsoft/pages/responsepage.aspx?id=AW5z7n-YqkahRHmBLxnfVod_7jfmRd1NmUWpl89S5hBUNDdOSVU3R1ZNT1hDVDhDQVBWV1VXNUlSSiQlQCN0PWcu&route=shorturl"
+       target="_blank" rel="noopener" class="btn-mailto">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      Faire une demande via le formulaire
     </a>
-    <div class="mail-hint">⚠ Pensez à joindre la photo de la plaque signalétique en pièce jointe</div>
   </div>
 
   <!-- ── Liste des fichiers d'un projet ── -->
@@ -280,15 +251,8 @@ function showToast(msg) {
   _toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
 }
 function copyEmail(email) {
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(email).then(() => showToast('✓ Email copié : ' + email));
-  } else {
-    const ta = document.createElement('textarea'); ta.value = email;
-    ta.style.cssText = 'position:fixed;opacity:0;top:-9999px';
-    document.body.appendChild(ta); ta.select();
-    try { document.execCommand('copy'); showToast('✓ Email copié : ' + email); } catch(e){}
-    document.body.removeChild(ta);
-  }
+  // conservé pour compatibilité — non utilisé
+}
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -403,22 +367,6 @@ searchInput.addEventListener('input', e => {
   if (!found) {
     document.getElementById('searchTermDisplay').textContent = e.target.value.trim();
     noResultBox.classList.add('active');
-    // Mail pré-rempli
-    const subj = encodeURIComponent('[Demande Documentation SAV] - Référence Introuvable');
-    const body = encodeURIComponent(
-`Bonjour,
-
-La référence / projet "${e.target.value.trim()}" est introuvable dans l'outil de recherche SharePoint.
-
-Document souhaité : [précisez : BOM, schéma, procédure...]
-
-Merci de vérifier si ce dossier existe ou peut être ajouté.
-
-⚠ La photo de la plaque signalétique est jointe à ce message.
-
-Cordialement,`);
-    document.getElementById('mailSupportBtn').href =
-      `mailto:thomas.crastres@darty.fr,abdelmalek.tahri@darty.fr,ludovic.chauffeteau@darty.fr?cc=jerome.leconte@fnacdarty.com&subject=${subj}&body=${body}`;
   }
 });
 
