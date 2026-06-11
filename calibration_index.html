@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guide Calibration Dreame</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f0f4f8;color:#1a202c;min-height:100vh}
+header{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);color:white;padding:24px 20px;text-align:center}
+header h1{font-size:1.6rem;font-weight:700}
+header p{font-size:.85rem;opacity:.7;margin-top:4px}
+.search-container{max-width:700px;margin:24px auto 0;padding:0 16px}
+.search-box{display:flex;gap:8px;background:white;border-radius:12px;padding:6px 6px 6px 16px;box-shadow:0 4px 20px rgba(0,0,0,.15)}
+.search-box input{flex:1;border:none;outline:none;font-size:1rem;background:transparent}
+.search-box button{background:#0f3460;color:white;border:none;border-radius:8px;padding:10px 20px;font-size:.9rem;cursor:pointer;font-weight:600;transition:background .2s}
+.search-box button:hover{background:#e94560}
+.search-hint{text-align:center;color:#718096;font-size:.8rem;margin-top:8px}
+.results{max-width:900px;margin:20px auto 40px;padding:0 16px}
+.no-results{text-align:center;padding:60px 20px;color:#718096}
+.no-results .icon{font-size:3rem;margin-bottom:12px}
+.robot-card{background:white;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,.08);margin-bottom:16px;overflow:hidden}
+.robot-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;background:linear-gradient(135deg,#0f3460,#16213e);color:white;flex-wrap:wrap;gap:8px}
+.robot-header .name{font-size:1.2rem;font-weight:700}
+.robot-header .code{background:rgba(255,255,255,.2);padding:3px 10px;border-radius:20px;font-size:.8rem;font-family:monospace}
+.factory-reset-banner{background:#fff3cd;border-left:4px solid #f59e0b;padding:10px 16px;font-size:.85rem;color:#92400e;display:flex;align-items:center;gap:8px}
+.calibrations{padding:12px;display:flex;flex-direction:column;gap:5px}
+.calib-item{border:1px solid #e2e8f0;border-radius:10px;overflow:hidden}
+.calib-btn{width:100%;display:flex;align-items:center;gap:12px;padding:11px 14px;background:white;border:none;cursor:pointer;text-align:left;transition:background .15s;font-size:.88rem}
+.calib-btn:hover{background:#f7fafc}
+.calib-btn.required{background:#f0fff4}
+.calib-btn.required:hover{background:#e6ffed}
+.calib-btn.lds-values{background:#fffbf0}
+.calib-btn.lds-values:hover{background:#fff8e1}
+.calib-icon{font-size:1.1rem;width:24px;text-align:center;flex-shrink:0}
+.calib-name{flex:1;font-weight:600;color:#2d3748}
+.calib-note{font-size:.78rem;color:#718096;flex:2;line-height:1.3}
+.calib-arrow{color:#a0aec0;font-size:.8rem;transition:transform .2s;flex-shrink:0}
+.calib-arrow.open{transform:rotate(90deg);color:#0f3460}
+.calib-content{display:none;padding:16px;background:#f8fafc;border-top:1px solid #e2e8f0;font-size:.875rem;line-height:1.7;color:#4a5568}
+.calib-content.open{display:block}
+.lds-table{width:100%;border-collapse:collapse;margin:10px 0;font-size:.82rem}
+.lds-table th{background:#2d3748;color:white;padding:6px 10px;text-align:left}
+.lds-table td{padding:6px 10px;border:1px solid #e2e8f0;background:white}
+.lds-table tr:nth-child(even) td{background:#f7fafc}
+.proc-step{display:flex;gap:10px;margin-bottom:10px;align-items:flex-start}
+.proc-step-num{background:#0f3460;color:white;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;flex-shrink:0;margin-top:2px}
+.proc-step-text{flex:1}
+.proc-section{margin-bottom:14px}
+.proc-title{font-weight:700;color:#1a202c;margin-bottom:8px;font-size:.9rem;border-bottom:2px solid #0f3460;padding-bottom:4px;display:inline-block}
+.not-required{opacity:.4}
+.tag{display:inline-block;font-size:.7rem;padding:1px 6px;border-radius:4px;margin-left:6px;font-weight:600;vertical-align:middle}
+.tag-req{background:#c6f6d5;color:#276749}
+.tag-val{background:#fefcbf;color:#744210}
+.done-row{display:flex;align-items:center;gap:10px;padding:10px 16px;border-top:1px solid #e2e8f0;background:#f8fafc}
+.done-row label{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.85rem;color:#4a5568}
+.done-row input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:#48bb78}
+
+/* Media gallery */
+.media-section{margin-top:14px;padding-top:12px;border-top:1px solid #e2e8f0}
+.media-section-title{font-size:.8rem;font-weight:700;color:#718096;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.img-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.img-grid img{height:120px;width:auto;max-width:200px;object-fit:cover;border-radius:8px;border:2px solid #e2e8f0;cursor:pointer;transition:transform .15s,border-color .15s}
+.img-grid img:hover{transform:scale(1.03);border-color:#0f3460}
+.video-container{margin-top:8px}
+.video-container video{width:100%;max-width:560px;border-radius:10px;border:2px solid #e2e8f0;display:block}
+.video-label{font-size:.78rem;color:#718096;margin-bottom:6px}
+
+/* Lightbox */
+#lightbox{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);z-index:999;justify-content:center;align-items:center}
+#lightbox.open{display:flex}
+#lightbox img{max-width:90vw;max-height:90vh;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+#lightbox-close{position:fixed;top:20px;right:28px;color:white;font-size:2rem;cursor:pointer;z-index:1000;line-height:1}
+
+@media(max-width:600px){header h1{font-size:1.3rem}.calib-note{display:none}.img-grid img{height:80px}}
+</style>
+</head>
+<body>
+
+<div id="lightbox" onclick="this.classList.remove('open')">
+  <span id="lightbox-close">×</span>
+  <img id="lightbox-img" src="" alt="">
+</div>
+
+<header>
+  <h1>🤖 Guide Calibration Dreame</h1>
+  <p>Recherchez un modèle ou un Project ID pour afficher les calibrages requis</p>
+</header>
+
+<div class="search-container">
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="Ex: X50, P2009, L10 Pro..." autocomplete="off"/>
+    <button onclick="doSearch()">Rechercher</button>
+  </div>
+  <p class="search-hint">✅ = calibrage requis &nbsp;·&nbsp; cliquez pour afficher la procédure + photos</p>
+</div>
+
+<div class="results" id="results">
+  <div class="no-results"><div class="icon">🔍</div><p>Entrez un modèle ou Project ID pour commencer</p></div>
+</div>
+
+<script>
+const DATA = [{"model": "F9", "code": "P2008", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "Without LDS, Optical flow calibration is required to replace the motherboard", "lds_s67": "", "lds_06n": "", "lds_x": "", "lds_y": "", "lds_has_values": true, "linelaser": {"req": false, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "D9", "code": "P2009", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-116.01", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.05", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": false, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "D9 Pro", "code": "P2187", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-116.01", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.05", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": false, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "D9 Max（Old）", "code": "P2259", "imu": {"req": true, "note": "Before calibration, upgrade to 3.5.8_1112"}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-116.01", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.05", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": false, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "L10 Pro", "code": "P2029", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-116.01", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.05", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": true, "note": "，Before calibration, upgrade to 4.3.8_1301"}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "Z10 Pro", "code": "P2028", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-116.01", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.05", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": true, "note": "，Before calibration, upgrade to 4.3.8_1301"}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "W10", "code": "P2027", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "25", "lds_s67": "/", "lds_06n": "", "lds_x": "-0.087", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": false, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": true, "note": "，You need to use a serial port tool for pairing, please refer to the Guide 1."}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "W10 Pro", "code": "R2104", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "√, avant l’étalonnage, mettez à jour vers 4.3.3_1202 Valeur 25", "lds_s67": "/", "lds_06n": "", "lds_x": "-0.087", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": false, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "D10 Plus", "code": "R2205", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-116", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.05", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": false, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "L10s Ultra", "code": "R2228", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-115", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.0595", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": true, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "L10s Pro", "code": "R2216", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-115", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.0595", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": false, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "D10s", "code": "R2243", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-115", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.05", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": false, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "D10s Pro", "code": "R2250", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-115", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.05", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": false, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "D10s Plus", "code": "R2240", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-115", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.05", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": false, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "L10 Ultra", "code": "R2257", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-115", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.0595", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": false, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "L10 Prime", "code": "R2251", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-115", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.0595", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": false, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "D9 Max(White)", "code": "R2312", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-115", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.05", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": false, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "D9 Max", "code": "R2312A", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-115", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.05", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": false, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "D9 Plus", "code": "R2322", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "√,Before calibration, upgrade to 4.3.3_1206", "lds_s67": "", "lds_06n": "", "lds_x": "√", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": false, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "F9 Pro", "code": "R2328", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-115", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.05", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": false, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "L20 Ultra", "code": "R2253", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-115", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.0595", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": true, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": true, "note": "un appariement est obligatoire, veuillez consulter le Guide 1."}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "L20 Ultra Complete", "code": "R2253", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-115", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.0595", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": true, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "L20 Ultra 降本款", "code": "R2394", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-115", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.0595", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": true, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "L20 Ultra Complete 降本款", "code": "R2394", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-115", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.0595", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": true, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "L10s Pro Gen2", "code": "R2364", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-115", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.0595", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": true, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "L10s Plus", "code": "R2363", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-115", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.0595", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": true, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "L10s Pro Ultra(Heat)", "code": "R2338", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-115", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.0595", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": true, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "L10s Pro Ultra", "code": "R9309", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-115", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.0595", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": true, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "Mova M1", "code": "R2380", "imu": {"req": false, "note": "Étalonnez selon le guide d’étalonnage du MOVA M1"}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "", "lds_s67": "", "lds_06n": "", "lds_x": "", "lds_y": "", "lds_has_values": false, "linelaser": {"req": false, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "X30 Ultra", "code": "R9316", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-115", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.0595", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": true, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "X40 Ultra Complete", "code": "R2449", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-115", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.0595", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": true, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "X40 Master", "code": "R2465", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-115", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.0595", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": true, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "MOVA S20 Ultra", "code": "R2385", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-115", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.0595", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": true, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "MOVA S10", "code": "R2382", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-115", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.0595", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": false, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "MOVA S10 Plus", "code": "R2383", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-115", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.0595", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": false, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "D9 Max Gen 2", "code": "R2422", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-115", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.0595", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": false, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "D10 Plus Gen 2", "code": "R2423", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-115", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.0595", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": false, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "Mova S20", "code": "R2413A", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-115", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.0595", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": false, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "Mova S20 Plus", "code": "R2414A", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-115", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.0595", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": false, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "Mova E30 Ultra", "code": "R2427A", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-115", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.0595", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": true, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "MOAV E20", "code": "R2458", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-115", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.0595", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": false, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "MOAV E20 plus", "code": "R2459", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-115", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.0595", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": false, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "MOAV E40 Ultra", "code": "R9504", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-115", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.0595", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": true, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "L40s Pro Ultra", "code": "R9419", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-115", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.0595", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": true, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "L40 Ultra", "code": "R2492", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-115", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.0595", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": true, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "L10s Ultra Gen 2", "code": "R2469", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-115", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.0595", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": true, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "L50 Pro Ultra", "code": "R9445", "imu": {"req": true, "note": ""}, "sacle1": {"req": true, "note": ""}, "lds_hcs": "/", "lds_s67": "/", "lds_06n": "-90", "lds_x": "0.0952", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": true, "note": "， Calibration à une distance de 25cm"}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": true, "note": ""}, "factory_reset": ""}, {"model": "X50 ULTRA", "code": "R9446", "imu": {"req": true, "note": ""}, "sacle1": {"req": true, "note": ""}, "lds_hcs": "/", "lds_s67": "/", "lds_06n": "-90", "lds_x": "0.0952", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": true, "note": "， Calibration à une distance de 25cm"}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": true, "note": ""}, "edgetof": {"req": true, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": true, "note": ""}, "factory_reset": ""}, {"model": "X50 Master", "code": "R9434", "imu": {"req": true, "note": ""}, "sacle1": {"req": true, "note": ""}, "lds_hcs": "/", "lds_s67": "/", "lds_06n": "-90", "lds_x": "0.0952", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": true, "note": "， Calibration à une distance de 25cm"}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": true, "note": ""}, "edgetof": {"req": true, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": true, "note": ""}, "factory_reset": ""}, {"model": "MOVA P50 Pro Ultra", "code": "R2475", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-115", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.0595", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": true, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "MOVA P50 Ultra", "code": "R2519", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-115", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.0595", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": true, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "MOVA P50s Ultra", "code": "R9427", "imu": {"req": true, "note": ""}, "sacle1": {"req": true, "note": ""}, "lds_hcs": "/", "lds_s67": "/", "lds_06n": "-90", "lds_x": "0.0952", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": true, "note": "， Calibration à une distance de 25cm"}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": true, "note": ""}, "edgetof": {"req": true, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": true, "note": ""}, "factory_reset": ""}, {"model": "MOVA Z50 Ultra", "code": "R2430", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-115", "lds_s67": "-115", "lds_06n": "", "lds_x": "0", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": true, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "MOVA V50 Ultra", "code": "R2582", "imu": {"req": true, "note": ""}, "sacle1": {"req": true, "note": ""}, "lds_hcs": "/", "lds_s67": "/", "lds_06n": "-90", "lds_x": "0.0952", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": true, "note": "， Calibration à une distance de 25cm"}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": true, "note": ""}, "edgetof": {"req": true, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": true, "note": ""}, "factory_reset": ""}, {"model": "MOVA Z60 Ultra Roller Complete", "code": "R9544", "imu": {"req": false, "note": ""}, "sacle1": {"req": true, "note": ""}, "lds_hcs": "/", "lds_s67": "/", "lds_06n": "-90", "lds_x": "0.0952", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": true, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": true, "note": ""}, "edgetof": {"req": true, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": true, "note": ""}, "factory_reset": ""}, {"model": "MOVA MOBIUS 60", "code": "R2599", "imu": {"req": true, "note": ""}, "sacle1": {"req": true, "note": ""}, "lds_hcs": "/", "lds_s67": "/", "lds_06n": "-90", "lds_x": "0.0952", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": true, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": true, "note": "，L'appariement est requis, veuillez consulter le guide 2"}, "tof": {"req": true, "note": ""}, "edgetof": {"req": true, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": true, "note": ""}, "factory_reset": ""}, {"model": "Aqua10 Ultra Roller Complete", "code": "R9547", "imu": {"req": true, "note": ""}, "sacle1": {"req": true, "note": ""}, "lds_hcs": "/", "lds_s67": "/", "lds_06n": "-90", "lds_x": "0.0952", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": false, "note": ""}, "dualcam": {"req": true, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": true, "note": ""}, "edgetof": {"req": true, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": true, "note": ""}, "factory_reset": ""}, {"model": "Aqua 10 Ultra Track Complete", "code": "R9528", "imu": {"req": true, "note": ""}, "sacle1": {"req": true, "note": ""}, "lds_hcs": "", "lds_s67": "", "lds_06n": "-90", "lds_x": "0.0952", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": false, "note": ""}, "dualcam": {"req": true, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": true, "note": ""}, "edgetof": {"req": true, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": true, "note": ""}, "factory_reset": ""}, {"model": "Matrix10 Ultra", "code": "R2513", "imu": {"req": true, "note": ""}, "sacle1": {"req": true, "note": ""}, "lds_hcs": "/", "lds_s67": "/", "lds_06n": "-90", "lds_x": "0.0952", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": true, "note": "， Calibration à une distance de 25cm"}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": true, "note": "，L'appariement est requis, veuillez consulter le guide 2"}, "tof": {"req": true, "note": ""}, "edgetof": {"req": true, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": true, "note": ""}, "factory_reset": ""}, {"model": "Aqua10 Roller", "code": "R9533", "imu": {"req": true, "note": ""}, "sacle1": {"req": true, "note": ""}, "lds_hcs": "/", "lds_s67": "/", "lds_06n": "-90", "lds_x": "0.0952", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": true, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": true, "note": ""}, "edgetof": {"req": true, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": true, "note": ""}, "factory_reset": ""}, {"model": "D20", "code": "R2563&R5413", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-115", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.0595", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": false, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "D20 Pro Plus", "code": "R9537", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-115", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.0595", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": false, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "D20 Ultra", "code": "R9507&R5022", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-115", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.0595", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": false, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "D20 Plus", "code": "R5314&R2564", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-115", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.0595", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": false, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}, {"model": "L10s Ultra Gen 2", "code": "R5023", "imu": {"req": true, "note": ""}, "sacle1": {"req": false, "note": ""}, "lds_hcs": "-115", "lds_s67": "-115", "lds_06n": "", "lds_x": "0.0595", "lds_y": "0", "lds_has_values": true, "linelaser": {"req": false, "note": ""}, "dualcam": {"req": false, "note": ""}, "pairing": {"req": false, "note": ""}, "tof": {"req": false, "note": ""}, "edgetof": {"req": false, "note": ""}, "current": {"req": true, "note": ""}, "sacle2": {"req": false, "note": ""}, "factory_reset": ""}];
+
+// Image map: procedure key → images from PPTX slides (relative to Doc_calibration/)
+const IMGS = {
+  imu:       ["image6.png","image7.png","image8.png","image9.png"],
+  sacle1:    ["image6.png","image7.png","image8.png","image9.png"],
+  sacle2:    ["image6.png","image7.png","image8.png","image9.png"],
+  linelaser: ["image10.png","image12.png","image11.png"],
+  tof:       ["image18.png","image17.png","image16.png","image14.png"],
+  current:   ["image19.png"],
+  edgetof:   ["image21.png","image24.png","image23.png","image20.png"],
+  dualcam:   ["image27.png","image25.png","image28.png","image29.png","image31.png","image32.png"],
+  pairing:   ["image15.png"],
+  lds:       ["image6.png","image7.png"]
+};
+
+// Video map
+const VIDEOS = {
+  imu:    "Doc_calibration/SACLE Calibration Guide Video.mp4",
+  sacle1: "Doc_calibration/SACLE Calibration Guide Video.mp4",
+  sacle2: "Doc_calibration/SACLE Calibration Guide Video.mp4",
+  dualcam:"Doc_calibration/Dual camera calibration SOP.mp4"
+};
+
+const PROCEDURES = {
+  imu:{title:"Calibration Gyroscope (IMU) / SCALE",note:"À effectuer après remplacement de la carte mère ou de l'ensemble LDS (modèles avec LDS élévateur).",steps:[{n:1,t:"Placez le robot sur une <strong>surface plane</strong> et cliquez sur <strong>Calibration SCALE</strong>."},{n:2,t:"Le robot annoncera le début de la calibration et tournera dans le sens <strong>antihoraire</strong>."},{n:3,t:"Après la rotation, <strong>replacez-le à l'angle initial</strong> avant le début de la rotation."},{n:4,t:"Cliquez à nouveau sur <strong>Calibration SCALE</strong> et attendez l'annonce de succès."}]},
+  sacle1:{title:"Calibration SCALE (LDS élévateur)",note:"Pour les modèles équipés d'un LDS élévateur — après remplacement carte mère ou ensemble LDS.",steps:[{n:1,t:"Placez le robot sur une <strong>surface plane</strong> et cliquez sur <strong>Calibration SCALE</strong>."},{n:2,t:"Le robot tournera dans le sens <strong>antihoraire</strong>."},{n:3,t:"<strong>Replacez-le à l'angle initial</strong> après la rotation."},{n:4,t:"Cliquez à nouveau sur <strong>Calibration SCALE</strong> et attendez le succès."}]},
+  sacle2:{title:"Calibration SCALE",note:"Applicable aux robots LDS de levage après remplacement de la carte mère ou de l'ensemble LDS.",steps:[{n:1,t:"Placez le robot sur une <strong>surface plane</strong> et cliquez sur <strong>Calibration SCALE</strong>."},{n:2,t:"Le robot tournera dans le sens <strong>antihoraire</strong>."},{n:3,t:"<strong>Replacez-le à l'angle initial</strong> après la rotation."},{n:4,t:"Cliquez à nouveau sur <strong>Calibration SCALE</strong> et attendez le succès."}]},
+  lds:{title:"Calibration LDS",intro:"Après remplacement de la carte mère ou de l'ensemble LDS.",sections:[{title:"LDS Élévateur — sélectionner O6N",steps:[{n:1,t:"Dans l'interface de calibration, sélectionner <strong>O6N</strong>."},{n:2,t:"Entrer les valeurs : <strong>-90</strong> &nbsp;|&nbsp; X : <strong>0.0952</strong> &nbsp;|&nbsp; Y : <strong>0</strong>"}]},{title:"LDS Non-Élévateur",steps:[{n:1,t:"Vérifier la valeur à la fin du LDS et entrer les valeurs ci-dessus."},{n:2,t:"Fin <strong>S40</strong> → choisir <strong>HC_D2M</strong>"},{n:3,t:"Fin <strong>S67</strong> → sélectionner <strong>LD_14</strong>"}]}]},
+  linelaser:{title:"Calibration Laser Linéaire",note:"Pour les robots à LDS élévateur — après remplacement carte mère ou bloc laser linéaire.",steps:[{n:1,t:"<strong>Étape 1 — Calibration IA :</strong> Lancer depuis l'interface (identique au X40)."},{n:2,t:"<strong>Étape 2 — Calibration Damier :</strong> Placer le robot sur l'outil de calibration par damier."},{n:3,t:"<strong>Étape 3 — Plan Lumineux :</strong> Positionner à <strong>25cm d'un mur blanc</strong>."},{n:4,t:"Vérifier que le <strong>premier chiffre est &lt; 5</strong>."}]},
+  dualcam:{title:"Calibration Double Caméra",note:"Après remplacement carte mère ou ensemble double caméra.",steps:[{n:1,t:"Placer le robot sur l'<strong>outil de calibration par damier</strong>."},{n:2,t:'Cliquer sur <strong>"unical calibration"</strong> puis sur <strong>"camera-extrinsic-calib"</strong>.'},{n:3,t:'Attendre <strong>"PASS"</strong> — calibration des paramètres intrinsèques/extrinsèques réussie.'},{n:4,t:"Placer le robot sur le <strong>support double caméra à 20cm</strong>. Hauteur = bas des lignes de grille blanches sous le point noir central."},{n:5,t:'Cliquer sur <strong>"stereo-rectify"</strong> et attendre <strong>"PASS"</strong>.'}]},
+  pairing:{title:"Couplage Station de Base ↔ Robot",note:"Requis après remplacement de la carte mère du robot ou de la station de base. Modèles : Matrix10 Ultra, MOVA MOBIUS 60.",steps:[{n:1,t:"Placer le robot dans la <strong>station de base</strong>."},{n:2,t:"Cliquer sur <strong>« Coupler »</strong> dans l'interface."},{n:3,t:"<strong>Aucune autre station de base à proximité</strong> pour éviter les interférences."},{n:4,t:"Tester les fonctions de la station après couplage (nettoyage serpillière, etc.)."}],info:"ℹ️ La recharge infrarouge fonctionne sans couplage. Le module WIFI est lié en 1-pour-1 (adresse MAC) — sans couplage, les fonctions de la station ne peuvent pas être utilisées."},
+  tof:{title:"Calibration Capteur de Falaise TOF",note:"Capteurs <strong>noirs</strong> = TOF → à calibrer · Capteurs <strong>transparents</strong> = pas de calibration. Modèles : X50 Ultra Complete, X50 Master, Série Aqua10.",steps:[{n:1,t:"Accéder à l'<strong>interface de calibration</strong> via l'app de diagnostic."},{n:2,t:"<strong>Retourner le robot</strong> — s'assurer qu'il n'y a pas d'obstruction à <strong>60cm au-dessus</strong> du capteur TOF."},{n:3,t:"Cliquer sur <strong>« Calibration xtalk »</strong> et attendre <strong>« Réussi »</strong>."},{n:4,t:"Placer sur <strong>surface blanche</strong>, cliquer <strong>« Calibration Offset 1 »</strong>. Le robot soulève ses roues. Attendre <strong>« Réussi »</strong>."}]},
+  edgetof:{title:"Calibration TOF de Bord (Edge TOF)",note:"Après remplacement de la carte mère ou du capteur Edge TOF.",steps:[{n:1,t:"<strong>Xtalk :</strong> Pas d'obstacles dans les <strong>60cm du capteur de bord droit</strong>. Lancer xtalk, attendre succès."},{n:2,t:"<strong>Offset :</strong> Placer le robot <strong>contre un mur perpendiculaire au sol</strong>. Cliquer <strong>« Offset Calibration »</strong>. Tester après."}]},
+  current:{title:"Calibration du Courant",note:"Après remplacement de la carte mère ou des moteurs (brosse, ventilateur, serpillière, pompe à eau...)",sections:[{title:"Méthode 1 — Nouveaux modèles (après X40)",steps:[{n:1,t:"Effectuer la calibration du courant dans l'<strong>APPLICATION</strong>."},{n:2,t:"Après <strong>15 secondes</strong>, le courant est réinitialisé."}]},{title:"Méthode 2 — Anciens modèles",steps:[{n:1,t:"Utiliser l'<strong>outil de port série</strong>."},{n:2,t:"Après <strong>15 secondes</strong>, le courant est réinitialisé."}]}]}
+};
+
+function openLightbox(src){
+  document.getElementById('lightbox-img').src=src;
+  document.getElementById('lightbox').classList.add('open');
+}
+
+function renderSteps(steps){
+  return steps.map(s=>`<div class="proc-step"><div class="proc-step-num">${s.n}</div><div class="proc-step-text">${s.t}</div></div>`).join('');
+}
+
+function renderMedia(key){
+  const imgs = IMGS[key] || [];
+  const videoSrc = VIDEOS[key];
+  if(!imgs.length && !videoSrc) return '';
+  
+  let html = '<div class="media-section">';
+  html += '<div class="media-section-title">📸 Illustrations</div>';
+  
+  if(imgs.length){
+    html += '<div class="img-grid">';
+    imgs.forEach(img=>{
+      const src = `Doc_calibration/${img}`;
+      html += `<img src="${src}" alt="" loading="lazy" onclick="openLightbox('${src}')" title="Cliquer pour agrandir">`;
+    });
+    html += '</div>';
+  }
+  
+  if(videoSrc){
+    html += `<div class="video-container"><div class="video-label">🎬 Guide vidéo</div><video controls preload="none"><source src="${videoSrc}" type="video/mp4">Votre navigateur ne supporte pas la lecture vidéo.</video></div>`;
+  }
+  
+  html += '</div>';
+  return html;
+}
+
+function renderProcedure(key, robot){
+  const p = PROCEDURES[key];
+  if(!p) return '<p>Procédure non disponible.</p>';
+  let html = '';
+  
+  if(p.note) html += `<p style="background:#ebf8ff;border-left:3px solid #63b3ed;padding:8px 12px;border-radius:4px;margin-bottom:12px;font-size:.82rem;color:#2c5282;">${p.note}</p>`;
+  
+  if(key==='lds'){
+    const hasVals = robot.lds_hcs||robot.lds_s67||robot.lds_06n||robot.lds_x||robot.lds_y;
+    if(hasVals){
+      html += `<p style="font-weight:700;margin-bottom:8px;">Valeurs pour ce modèle :</p>`;
+      html += `<table class="lds-table"><thead><tr><th>HC/S40</th><th>S67</th><th>06N</th><th>X</th><th>Y</th></tr></thead><tbody><tr><td>${robot.lds_hcs||'—'}</td><td>${robot.lds_s67||'—'}</td><td>${robot.lds_06n||'—'}</td><td>${robot.lds_x||'—'}</td><td>${robot.lds_y||'—'}</td></tr></tbody></table>`;
+      html += '<div style="margin-top:14px;"></div>';
+    }
+    if(p.intro) html += `<p style="margin-bottom:12px;">${p.intro}</p>`;
+    p.sections.forEach(sec=>{
+      html += `<div class="proc-section"><span class="proc-title">${sec.title}</span>${renderSteps(sec.steps)}</div>`;
+    });
+  } else if(p.sections){
+    p.sections.forEach(sec=>{
+      html += `<div class="proc-section"><span class="proc-title">${sec.title}</span>${renderSteps(sec.steps)}</div>`;
+    });
+  } else if(p.steps){
+    html += renderSteps(p.steps);
+  }
+  
+  if(p.info) html += `<p style="margin-top:12px;background:#f0fff4;border-left:3px solid #68d391;padding:8px 12px;border-radius:4px;font-size:.82rem;color:#276749;">${p.info}</p>`;
+  
+  html += renderMedia(key);
+  return html;
+}
+
+function makeCalibItem(id, icon, label, isRequired, note, robot){
+  const tag = isRequired ? '<span class="tag tag-req">✅ Requis</span>' : '';
+  const noteHtml = note ? `<span class="calib-note">${note}</span>` : '';
+  const proc = renderProcedure(id, robot);
+  const canExpand = isRequired;
+  return `<div class="calib-item ${!isRequired?'not-required':''}">
+    <button class="calib-btn ${isRequired?'required':''}" onclick="${canExpand?'toggleCalib(this)':''}">
+      <span class="calib-icon">${icon}</span>
+      <span class="calib-name">${label}${tag}</span>
+      ${noteHtml}
+      ${canExpand?'<span class="calib-arrow">▶</span>':''}
+    </button>
+    ${canExpand?`<div class="calib-content">${proc}</div>`:''}
+  </div>`;
+}
+
+function makeLdsItem(robot){
+  if(!robot.lds_has_values){
+    return `<div class="calib-item not-required"><button class="calib-btn" style="cursor:default;"><span class="calib-icon">📡</span><span class="calib-name">Calibration LDS</span></button></div>`;
+  }
+  const tag = '<span class="tag tag-val">✅ Valeurs</span>';
+  let vals = [];
+  if(robot.lds_hcs) vals.push(`HC/S40: ${robot.lds_hcs}`);
+  if(robot.lds_s67) vals.push(`S67: ${robot.lds_s67}`);
+  if(robot.lds_06n) vals.push(`06N: ${robot.lds_06n}`);
+  if(robot.lds_x) vals.push(`X: ${robot.lds_x}`);
+  if(robot.lds_y) vals.push(`Y: ${robot.lds_y}`);
+  const noteHtml = vals.length ? `<span class="calib-note">${vals.join(' · ')}</span>` : '';
+  const proc = renderProcedure('lds', robot);
+  return `<div class="calib-item">
+    <button class="calib-btn lds-values" onclick="toggleCalib(this)">
+      <span class="calib-icon">📡</span>
+      <span class="calib-name">Calibration LDS${tag}</span>
+      ${noteHtml}
+      <span class="calib-arrow">▶</span>
+    </button>
+    <div class="calib-content">${proc}</div>
+  </div>`;
+}
+
+function renderRobot(robot, idx){
+  const id = `r${idx}`;
+  const factoryBanner = (robot.factory_reset || robot.sacle1.req || robot.sacle2.req || robot.imu.req) ?
+    '<div class="factory-reset-banner"><span>⚠️</span>Après avoir terminé la calibration, vous devez restaurer les paramètres d\'usine.</div>' : '';
+  
+  const saved = localStorage.getItem(`done_${robot.model}_${robot.code}`) === '1';
+  const doneBadge = saved ? '<span style="background:#48bb78;padding:3px 10px;border-radius:20px;font-size:.78rem;font-weight:700;">✓ Terminé</span>' : '';
+  
+  const calibs = [
+    makeCalibItem('imu','🔄','Gyroscope (IMU)',robot.imu.req,robot.imu.note,robot),
+    makeCalibItem('sacle1','⚖️','SCALE (LDS élévateur)',robot.sacle1.req,robot.sacle1.note,robot),
+    makeLdsItem(robot),
+    makeCalibItem('linelaser','🔴','Laser Linéaire',robot.linelaser.req,robot.linelaser.note,robot),
+    makeCalibItem('dualcam','📷','Double Caméra',robot.dualcam.req,robot.dualcam.note,robot),
+    makeCalibItem('pairing','🔗','Couplage Station/Robot',robot.pairing.req,robot.pairing.note,robot),
+    makeCalibItem('tof','🌊','Capteur Falaise TOF',robot.tof.req,robot.tof.note,robot),
+    makeCalibItem('edgetof','📐','TOF de Bord (Edge TOF)',robot.edgetof.req,robot.edgetof.note,robot),
+    makeCalibItem('current','⚡','Calibration du Courant',robot.current.req,robot.current.note,robot),
+    makeCalibItem('sacle2','⚖️','SCALE (2)',robot.sacle2.req,robot.sacle2.note,robot),
+  ];
+  
+  return `<div class="robot-card" id="${id}">
+    <div class="robot-header">
+      <span class="name">🤖 ${robot.model}</span>
+      <span class="code">${robot.code}</span>
+      ${doneBadge}
+    </div>
+    ${factoryBanner}
+    <div class="calibrations">${calibs.join('')}</div>
+    <div class="done-row">
+      <label><input type="checkbox" onchange="saveDone('${robot.model}','${robot.code}',this,'${id}')" ${saved?'checked':''}> Marquer comme terminé</label>
+    </div>
+  </div>`;
+}
+
+function toggleCalib(btn){
+  const content = btn.nextElementSibling;
+  const arrow = btn.querySelector('.calib-arrow');
+  if(!content||!content.classList.contains('calib-content')) return;
+  const isOpen = content.classList.contains('open');
+  content.classList.toggle('open',!isOpen);
+  if(arrow) arrow.classList.toggle('open',!isOpen);
+}
+
+function saveDone(model, code, cb, cardId){
+  localStorage.setItem(`done_${model}_${code}`, cb.checked?'1':'0');
+  const card = document.getElementById(cardId);
+  const header = card.querySelector('.robot-header');
+  const badge = cb.checked ? '<span style="background:#48bb78;padding:3px 10px;border-radius:20px;font-size:.78rem;font-weight:700;">✓ Terminé</span>' : '';
+  header.innerHTML = `<span class="name">🤖 ${model}</span><span class="code">${code}</span>${badge}`;
+}
+
+function doSearch(){
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const container = document.getElementById('results');
+  if(!q){ container.innerHTML = '<div class="no-results"><div class="icon">🔍</div><p>Entrez un modèle ou Project ID pour commencer</p></div>'; return; }
+  const matches = DATA.filter(r => r.model.toLowerCase().includes(q) || r.code.toLowerCase().includes(q));
+  if(!matches.length){ container.innerHTML = `<div class="no-results"><div class="icon">😕</div><p>Aucun résultat pour "<strong>${q}</strong>"</p></div>`; return; }
+  container.innerHTML = matches.map((r,i) => renderRobot(r,i)).join('');
+}
+
+document.getElementById('searchInput').addEventListener('keydown', e => { if(e.key==='Enter') doSearch(); });
+</script>
+</body>
+</html>
