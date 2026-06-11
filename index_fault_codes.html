@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="description" content="Codes Erreurs SAV — module de consultation rapide bilingue EN/FR avec actions atelier."/>
+<title>Codes Erreurs SAV — DREAME · Fnac Darty</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90' font-family='Arial Black,Arial,sans-serif' font-weight='900'><tspan fill='%23F5A623'>F</tspan><tspan fill='%23E62E2E'>D</tspan></text></svg>"/>
+<link rel="stylesheet" href="assets/shared.css"/>
+<style>
+/* ══════════════════════════════════════════════════════════════
+   CODES ERREURS — styles spécifiques
+══════════════════════════════════════════════════════════════ */
+
+/* Toolbar recherche (collé sous le header) */
+.toolbar-codes {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 20px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  position: sticky;
+  top: 64px; /* hauteur header unifié */
+  z-index: 100;
+  box-shadow: 0 1px 4px rgba(0,0,0,.05);
+}
+
+.search-wrap-codes {
+  flex: 1;
+  min-width: 240px;
+  position: relative;
+}
+
+.search-wrap-codes::before {
+  content: "⌕";
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.search-input-codes {
+  width: 100%;
+  padding: 9px 14px 9px 38px;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--text);
+  transition: border-color var(--tr);
+}
+
+.search-input-codes:focus {
+  outline: none;
+  border-color: var(--fd-red);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.chips-codes { display: flex; gap: 6px; }
+
+.chip-code {
+  background: var(--surface-3);
+  color: var(--text-2);
+  border: 1.5px solid var(--border);
+  padding: 7px 14px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: var(--r-md);
+  transition: all var(--tr);
+}
+
+.chip-code:hover { border-color: var(--border-strong); color: var(--text); }
+
+.chip-code.active {
+  background: var(--fd-navy);
+  color: var(--fd-yellow);
+  border-color: var(--fd-navy);
+}
+
+[data-theme="dark"] .chip-code.active {
+  background: var(--fd-yellow);
+  color: var(--fd-navy);
+  border-color: var(--fd-yellow);
+}
+
+.stats-codes {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  padding: 6px 12px;
+  border-radius: var(--r-md);
+  white-space: nowrap;
+  font-family: var(--font-mono);
+}
+
+.print-btn {
+  padding: 7px 14px;
+  border-radius: var(--r-md);
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text-2);
+  font-size: 12px;
+  font-weight: 600;
+  transition: all var(--tr);
+  white-space: nowrap;
+}
+.print-btn:hover { border-color: var(--fd-navy); color: var(--fd-navy); background: var(--surface-2); }
+
+/* ── Section bands ── */
+.section-band {
+  background: var(--fd-navy);
+  color: #fff;
+  padding: 10px 20px;
+  font-family: var(--font-cond);
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  border-left: 4px solid var(--fd-yellow);
+  margin-top: 16px;
+}
+.section-band:first-of-type { margin-top: 0; }
+
+/* ── Table ── */
+.table-wrap-codes { padding: 0 20px 40px; }
+
+table { width: 100%; border-collapse: collapse; background: var(--surface); box-shadow: var(--shadow-sm); font-size: 14px; }
+
+thead th {
+  background: var(--fd-navy);
+  color: #fff;
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 700;
+  font-family: var(--font-cond);
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  font-size: 12px;
+  border-bottom: 2px solid var(--fd-yellow);
+  position: sticky;
+  top: 120px; /* 64px header + ~56px toolbar */
+  z-index: 10;
+}
+
+thead th.col-code { text-align: center; width: 70px; }
+thead th.col-en   { width: 24%; }
+thead th.col-fr   { width: 26%; }
+
+tbody tr { border-bottom: 1px solid var(--rule); transition: background var(--tr); }
+
+tbody tr:nth-child(even) td.cell-en,
+tbody tr:nth-child(even) td.cell-fr { background: var(--surface-2); }
+
+tbody tr:hover td.cell-en,
+tbody tr:hover td.cell-fr { background: var(--surface-3); }
+
+td { padding: 8px 12px; vertical-align: middle; }
+
+.cell-code {
+  background: var(--fd-yellow);
+  color: var(--fd-navy);
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 15px;
+  text-align: center;
+  cursor: pointer;
+  width: 70px;
+  user-select: none;
+  border-right: 1px solid var(--border);
+  transition: filter var(--tr);
+}
+.cell-code:hover { filter: brightness(.9); }
+.cell-code.copied { background: var(--green); color: white; }
+
+[data-theme="dark"] .cell-code { background: #d4920a; color: #fff; }
+
+.cell-en  { color: var(--text-2); }
+.cell-fr  { color: var(--text); font-weight: 600; }
+.cell-action {
+  background: var(--green-bg);
+  color: var(--green);
+  font-weight: 500;
+  border-left: 1px solid var(--border);
+  font-size: 13px;
+}
+[data-theme="dark"] .cell-action { color: #6ee7b7; }
+
+mark {
+  background: var(--fd-red);
+  color: white;
+  padding: 0 3px;
+  border-radius: 2px;
+  font-weight: 600;
+}
+
+.empty {
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 16px;
+  background: var(--surface);
+  margin: 0 20px;
+  border-radius: var(--r-md);
+}
+
+/* ── Footer ── */
+.footer-codes {
+  padding: 14px 20px;
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  letter-spacing: 0.3px;
+}
+.footer-codes .accent { color: var(--fd-red); font-weight: 700; }
+
+/* ── Toast codes ── */
+.toast-codes {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--green);
+  color: white;
+  padding: 10px 20px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  letter-spacing: 0.5px;
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-lg);
+  opacity: 0;
+  transition: opacity .2s, transform .2s;
+  pointer-events: none;
+  z-index: 3000;
+}
+.toast-codes.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ══ Print ══ */
+@media print {
+  @page { size: A4 landscape; margin: 10mm; }
+  body { background: white !important; color: black !important; font-size: 9pt; }
+  .hdr, .toolbar-codes, .footer-codes { display: none !important; }
+  .section-band { background: #1a2744 !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; margin-top: 8px; padding: 6px 10px; font-size: 11pt; }
+  .table-wrap-codes { padding: 0; }
+  table { box-shadow: none; font-size: 8.5pt; page-break-inside: auto; }
+  thead th { background: #1a2744 !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; position: static; padding: 5px 8px; }
+  .cell-code { background: #F5A623 !important; color: #1A2744 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; cursor: default; }
+  .cell-action { background: #ECFDF5 !important; color: #065F46 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  tbody tr:nth-child(even) td.cell-en, tbody tr:nth-child(even) td.cell-fr { background: #F3F4F6 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  tr { page-break-inside: avoid; }
+  thead { display: table-header-group; }
+  td { padding: 4px 6px; }
+}
+
+@media (max-width: 700px) {
+  .toolbar-codes { padding: 10px 12px; top: 64px; }
+  .table-wrap-codes { padding: 0 10px 30px; }
+  td, thead th { padding: 6px 8px; font-size: 12px; }
+  thead th { top: 130px; }
+  .section-band { margin-left: -10px; margin-right: -10px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════ HEADER ══════════ -->
+<header class="hdr">
+  <div class="hdr-in">
+    <a href="index.html" class="hdr-logo" title="Accueil SAV Dreame">
+      <span class="hdr-logo-brand"><span class="fnac">FNAC</span> <span class="darty">DARTY</span></span>
+    </a>
+    <nav class="hdr-nav">
+      <a href="index.html">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        Recherche
+      </a>
+      <a href="bom_manager.html">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        Lecteur BOM
+      </a>
+      <a href="index_fault_codes.html" class="active">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        Codes Erreurs
+      </a>
+      <a href="calibrage_dreame.html" class="nav-calibrage">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        Calibrage
+      </a>
+    </nav>
+    <div class="hdr-right">
+      <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Mode nuit / jour">☀</button>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════ TOOLBAR ══════════ -->
+<div class="toolbar-codes">
+  <div class="search-wrap-codes">
+    <input type="text" class="search-input-codes" id="search" placeholder="Recherche : code, mot anglais/français, geste atelier…" autocomplete="off"/>
+  </div>
+  <div class="chips-codes">
+    <button class="chip-code active" data-section="all"   onclick="setFilter(this)">Tous</button>
+    <button class="chip-code"        data-section="robot" onclick="setFilter(this)">Robot</button>
+    <button class="chip-code"        data-section="base"  onclick="setFilter(this)">Base</button>
+  </div>
+  <div class="stats-codes" id="stats">116 / 116</div>
+  <button class="print-btn" onclick="window.print()" title="Imprimer">⎙ Imprimer</button>
+</div>
+
+<!-- ══════════ CONTENU ══════════ -->
+<main id="content"></main>
+
+<footer class="footer-codes">
+  Module de consultation rapide SAV PEM.
+  Astuce&nbsp;: <span class="accent">cliquer sur un code</span> pour le copier dans le presse-papier.
+</footer>
+
+<div class="toast-codes" id="toast">Code copié</div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   DARK MODE
+══════════════════════════════════════════════════════════════ */
+const LS_THEME = 'fd_sav_theme';
+function toggleTheme() {
+  const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = next;
+  document.getElementById('themeToggle').textContent = next === 'dark' ? '☾' : '☀';
+  try { localStorage.setItem(LS_THEME, next); } catch(e) {}
+}
+(function(){
+  try {
+    const s = localStorage.getItem(LS_THEME);
+    if (s) {
+      document.documentElement.dataset.theme = s;
+      const btn = document.getElementById('themeToggle');
+      if (btn) btn.textContent = s === 'dark' ? '☾' : '☀';
+    }
+  } catch(e) {}
+})();
+
+/* ══════════════════════════════════════════════════════════════
+   DONNÉES — Codes Erreurs robots + base
+══════════════════════════════════════════════════════════════ */
+const DATA = {
+  robot: [
+    [0,  "Health status indicators", "Indicateurs d'état de santé", "RAS — informatif. Vérifier état général du robot."],
+    [1,  "Fall detection", "Détection de chute", "Nettoyer capteurs anti-chute. Vérifier roulettes folles et roues motrices."],
+    [2,  "Please try cleaning the cliff sensor", "Veuillez nettoyer le capteur de vide", "Nettoyer capteurs falaise (chiffon microfibre + alcool isopropylique)."],
+    [3,  "Bumper detection", "Détection du pare-chocs", "Vérifier libre course du pare-chocs (appuyer/relâcher). Nettoyer interstices."],
+    [4,  "Attitude detection", "Détection d'inclinaison", "Reposer le robot à plat. Si persiste : recalibrer IMU ou remplacer carte."],
+    [5,  "Bumper repeatedly triggered", "Pare-chocs déclenché de façon répétée", "Démonter pare-chocs, vérifier contacteurs et ressorts. Nettoyer."],
+    [6,  "Repeated falls triggered", "Chutes répétées détectées", "Vérifier 4 capteurs falaise. Tester sur sol uni clair (verre/noir = faux positif)."],
+    [7,  "Optical flow abnormal", "Flux optique anormal", "Nettoyer capteur de flux optique (lentille sous châssis)."],
+    [8,  "Dust box installed check", "Vérification présence du bac à poussière", "Réinsérer le bac. Vérifier contacteur de présence (micro-switch)."],
+    [9,  "Water tank installed check", "Vérification présence du réservoir d'eau", "Réinsérer le réservoir. Vérifier contacts et joint."],
+    [10, "No water", "Manque d'eau", "Remplir le réservoir. Vérifier circuit/pompe si plein."],
+    [11, "Dust box full", "Bac à poussière plein", "Vider le bac, nettoyer filtre HEPA et grille d'aspiration."],
+    [12, "Main brush abnormal", "Anomalie brosse principale", "Démonter brosse principale, retirer cheveux/débris. Tester moteur."],
+    [13, "Side brush overcurrent detection", "Surintensité brosse latérale", "Démonter brosse latérale, libérer axe. Remplacer si moteur HS."],
+    [14, "Blower overcurrent detection", "Surintensité du ventilateur d'aspiration", "Contrôler filtre HEPA, conduits d'aspiration. Remplacer ventilateur si nécessaire."],
+    [15, "Left drive wheel detection", "Détection roue motrice gauche", "Démonter roue gauche, vérifier moteur et encodeur. Nettoyer suspension."],
+    [16, "Right drive wheel detection", "Détection roue motrice droite", "Démonter roue droite. Mêmes vérifications que roue gauche."],
+    [17, "Rotation jam detection", "Blocage en rotation détecté", "Libérer brosses et roues. Retirer obstructions (câbles, tapis)."],
+    [18, "Forward jam detection", "Blocage en avance détecté", "Libérer pare-chocs et capteurs frontaux. Tester sur surface dégagée."],
+    [19, "Charging signal acquisition", "Acquisition du signal de charge", "Nettoyer contacts de charge (robot + base) à l'alcool isopropylique."],
+    [20, "Low battery", "Batterie faible", "Recharger. Si autonomie < 50% nominale : tester puis remplacer batterie."],
+    [21, "Charging anomaly detection", "Anomalie de charge détectée", "Tester base, câble, contacts. Mesurer tension de charge."],
+    [22, "Battery percentage", "Niveau de batterie (%)", "RAS — informatif."],
+    [23, "Heartbeat abnormality", "Anomalie de communication interne (heartbeat)", "Redémarrer. Mise à jour firmware. Si persiste : carte mère."],
+    [24, "Camera occlusion detection", "Caméra obstruée", "Nettoyer la caméra (chiffon microfibre sec)."],
+    [25, "Robot was moved or lifted", "Robot déplacé ou soulevé", "Reposer au sol, redémarrer cycle. Informatif si manipulation utilisateur."],
+    [26, "Optical flow is blocked", "Flux optique obstrué", "Nettoyer capteur flux optique sous le robot."],
+    [27, "Infrared is blocked", "Capteur infrarouge obstrué", "Nettoyer capteurs IR (anti-collision, bordure)."],
+    [28, "Charging dock is out of power", "Base de charge sans alimentation", "Vérifier prise, câble d'alim, transformateur. Mesurer sortie DC."],
+    [29, "Battery error", "Erreur batterie", "Tester capacité batterie. Remplacer si défaillante."],
+    [30, "Abnormal blower speed", "Vitesse ventilateur anormale", "Libérer rotor ventilateur. Vérifier filtres. Remplacement si HS."],
+    [31, "Abnormal left wheel speed", "Vitesse roue gauche anormale", "Démonter et tester moteur roue gauche (encodeur, balais)."],
+    [32, "Abnormal right wheel speed", "Vitesse roue droite anormale", "Idem — côté droit."],
+    [33, "Accelerometer abnormality (BMI055)", "Anomalie accéléromètre (BMI055)", "Recalibrer IMU (procédure constructeur). Sinon remplacer carte principale."],
+    [34, "Gyroscope error (BMI055)", "Erreur gyroscope (BMI055)", "Recalibrer IMU. Sinon remplacer carte principale."],
+    [35, "Gyroscope error (XV7001)", "Erreur gyroscope (XV7001)", "Recalibrer IMU. Sinon remplacer carte principale."],
+    [36, "Left geomagnetic anomaly", "Anomalie magnétique côté gauche", "Éloigner sources magnétiques (haut-parleurs, aimants). Recalibrer."],
+    [37, "Right geomagnetic anomaly", "Anomalie magnétique côté droit", "Idem — côté droit."],
+    [38, "Optical flow anomaly", "Anomalie du flux optique", "Nettoyer capteur optique. Remplacer module si défaillant."],
+    [39, "Infrared anomaly", "Anomalie infrarouge", "Nettoyer capteurs IR. Vérifier connecteurs nappe."],
+    [40, "Camera error", "Erreur caméra", "Vérifier connecteur nappe caméra. Remplacer module si HS."],
+    [41, "Strong magnetic field detected", "Champ magnétique fort détecté", "Éloigner le robot de la source magnétique. Tester ailleurs."],
+    [42, "Water pump error", "Erreur pompe à eau", "Vérifier pompe, conduits, connecteur. Remplacer pompe si HS."],
+    [43, "RTC inconsistency", "Incohérence horloge temps réel (RTC)", "Mise à jour firmware. Vérifier pile RTC sur carte mère."],
+    [44, "Press and hold the AUTO button", "Touche AUTO maintenue enfoncée", "Vérifier mécanisme bouton (collé/coincé). Démonter coque si nécessaire."],
+    [45, "3.3V power supply error", "Erreur alimentation 3,3 V", "Mesurer tensions sur carte principale. Remplacer si régulateur HS."],
+    [46, "Camera does not process images", "La caméra ne traite pas les images", "Redémarrer / MAJ firmware. Vérifier connecteur nappe caméra."],
+    [47, "Partition out of bounds", "Partition hors limites de la carte", "Réinitialiser carte dans l'application. Refaire cartographie."],
+    [48, "LDS sensor error", "Erreur capteur LDS (LiDAR)", "Vérifier rotation LDS libre. Nettoyer. Remplacer module si HS."],
+    [49, "LDS bumper stuck", "Pare-chocs LDS bloqué", "Libérer le pare-chocs LDS. Retirer cheveux/poussière autour."],
+    [50, "Water pump error", "Erreur pompe à eau", "Vérifier pompe et circuit d'eau. Remplacer pompe si HS."],
+    [51, "HEPA filter blocked", "Filtre HEPA bouché", "Nettoyer ou remplacer le filtre HEPA."],
+    [52, "Stuck while moving", "Bloqué en déplacement", "Libérer le robot, dégager environnement. Vérifier capteurs."],
+    [53, "TOF camera offline", "Caméra TOF hors ligne", "Vérifier connecteur TOF. Remplacer module si pas de réponse."],
+    [54, "Edge sensor error", "Erreur capteur de bordure", "Nettoyer capteur latéral de bordure. Vérifier connecteur."],
+    [55, "Carpet water tank start", "Démarrage réservoir mode tapis", "Vérifier détection tapis. Retirer réservoir d'eau en mode tapis."],
+    [56, "Line laser sensor error", "Erreur capteur laser linéaire", "Nettoyer laser linéaire frontal. Vérifier connecteur."],
+    [57, "Camera or laser blocked", "Caméra ou laser obstrué", "Nettoyer caméra et laser frontal. Retirer obstacle."],
+    [58, "Ultrasonic sensor error", "Erreur capteur ultrasonique", "Nettoyer capteur ultrasonique frontal. Vérifier connecteur."],
+    [59, "Restricted area or virtual wall detected", "Zone interdite ou mur virtuel détecté", "Repositionner le robot hors de la zone interdite."],
+    [60, "SLAM detected a failure requiring escape", "SLAM : échec de localisation", "Repositionner manuellement. Relancer cartographie."],
+    [61, "Unable to reach the designated area", "Zone inaccessible — vérifier porte/obstacles", "Vérifier portes fermées, dégager passages."],
+    [62, "Unable to reach — remove no-go zones", "Zone inaccessible — supprimer zones interdites", "Réviser les zones interdites dans l'app."],
+    [63, "Cleaning path blocked", "Trajet de nettoyage bloqué", "Dégager le passage, vérifier portes."],
+    [64, "Area outside map", "Zone hors de la carte", "Refaire une cartographie complète."],
+    [65, "Warning if leaving / returning to dock", "Avertissement départ/retour base", "Repositionner robot hors zone interdite près de la base."],
+    [66, "/", "/", "—"],
+    [67, "Stuck in a loop, returning to charge", "Boucle détectée, retour à la charge", "Réinitialiser cartographie. Redémarrer robot et base."],
+    [68, "Reminder to retrieve mop from dock", "Rappel : récupérer la serpillière", "Retirer la serpillière de la base avant aspiration."],
+    [69, "Mop holder inspection", "Vérification support de serpillière", "Vérifier fixation, propreté et état du support."],
+    [70, "Quick mapping — install mop prompt", "Mode cartographie rapide — installer serpillière", "Installer ou retirer la serpillière selon mode sélectionné."],
+    [71, "Mop motor error", "Erreur moteur serpillière", "Vérifier connecteur moteur serpillière. Remplacer moteur si HS."],
+    [72, "Mop motor overcurrent", "Surintensité moteur serpillière", "Libérer mécanisme. Retirer débris bloquant la rotation."],
+    [73, "AI camera error", "Erreur caméra IA", "Vérifier connecteur. Remplacer module caméra IA si HS."],
+    [74, "Mop installation failed", "Échec installation serpillière", "Réinstaller correctement la serpillière (alignement aimants/clips)."],
+    [75, "Low battery automatic shutdown", "Arrêt automatique batterie faible", "Recharger. Informatif."],
+    [76, "Wastewater tank presence detection", "Détection présence réservoir eaux usées", "Vérifier insertion réservoir eaux usées et contacts."],
+    [77, "Mop stuck", "Serpillière bloquée", "Libérer la serpillière. Retirer débris coincés."],
+    [78, "Trapped in hidden map area", "Bloqué dans zone masquée", "Sortir robot manuellement. Ajuster zones masquées dans l'app."],
+    [79, "LDS lift failure", "Échec levage LDS", "Vérifier mécanisme de levage LDS. Lubrifier glissières."],
+    [80, "LDS rise — robot under furniture", "LDS doit se relever sous meuble", "Sortir robot manuellement de sous le meuble."],
+    [81, "Lifting LDS trapped under furniture", "Robot LDS rétractable coincé", "Sortir manuellement. Délimiter zone interdite dans l'app."],
+    [82, "Mop wet/slippery — wait", "Serpillière humide — attendre", "Patienter / suivre indication de l'application."],
+    [83, "Side brush lift failure", "Échec levage brosse latérale", "Vérifier mécanisme de levage brosse latérale."],
+    [84, "Side brush stuck", "Brosse latérale bloquée", "Démonter brosse latérale, retirer cheveux/débris."],
+    [85, "Mop installation notice", "Notification installation serpillière", "Installer la serpillière selon notice."],
+    [86, "Wastewater tank water level alarm", "Alarme niveau réservoir eaux usées", "Vider le réservoir d'eaux usées."],
+    [87, "Triggering entry into obstacle-crossing wait", "Entrée en attente de franchissement", "Patienter. Vérifier obstacle si attente prolongée."],
+    [88, "Obstacle-crossing motor error", "Erreur moteur de franchissement", "Vérifier moteur suspension/franchissement. Remplacer si HS."],
+    [89, "TOF sensor error (cliff sensor)", "Erreur capteur TOF (vide)", "Nettoyer capteur TOF. Remplacer module si HS."],
+  ],
+  base: [
+    [100, "Base station health status indicator", "Indicateur d'état de santé base", "RAS — informatif."],
+    [101, "Dust bag full (warning)", "Sac à poussière plein (avertissement)", "Remplacer le sac à poussière."],
+    [102, "Dust bag not installed (error)", "Sac à poussière non installé", "Installer un sac à poussière dans la base."],
+    [103, "Dust cover open (error)", "Couvercle bac collecteur ouvert", "Fermer le couvercle. Vérifier capteur si reste actif."],
+    [104, "Dust bin/bag clogged", "Bac ou sac obstrué", "Débourrer conduit aspiration. Remplacer sac."],
+    [105, "No clean water tank installed", "Réservoir d'eau propre non installé", "Insérer le réservoir d'eau propre."],
+    [106, "Wastewater tank not installed", "Réservoir d'eaux usées non installé", "Insérer le réservoir d'eaux usées."],
+    [107, "Clean water tank detected empty", "Réservoir d'eau propre vide", "Remplir le réservoir d'eau propre."],
+    [108, "Wastewater tank detected full", "Réservoir d'eaux usées plein", "Vider le réservoir d'eaux usées."],
+    [109, "Sewage pipe blockage detected", "Obstruction tuyau d'évacuation", "Désobstruer le tuyau d'évacuation. Rincer à l'eau claire."],
+    [110, "Wastewater pump damage detected", "Pompe d'évacuation endommagée", "Remplacer la pompe d'évacuation."],
+    [111, "Cleaning tray not installed", "Bac de nettoyage non installé", "Installer/repositionner le bac de lavage."],
+    [112, "Abnormal water level in cleaning tray", "Niveau d'eau anormal bac lavage", "Vider et nettoyer le bac. Vérifier capteur de niveau."],
+    [113, "Dust bin locks up frequently", "Blocages fréquents bac collecteur", "Vérifier mécanisme bac collecteur. Nettoyer joints."],
+    [114, "Cleaning tray cleaning instructions", "Instructions nettoyage bac", "Nettoyer le bac de lavage selon notice."],
+    [115, "Mopping complete — refill/empty", "Lavage terminé — remplir/vider", "Vider eaux usées, remplir eau propre."],
+    [116, "Insufficient clean water", "Eau propre insuffisante", "Remplir le réservoir d'eau propre."],
+    [117, "Base station disconnection", "Déconnexion de la base", "Vérifier Wi-Fi, alimentation et connexion base."],
+    [118, "Wastewater tank full (water in/out)", "Réservoir eaux usées plein (alim/évac)", "Vider le réservoir d'eaux usées."],
+    [119, "Cleaning tray level too high (water in/out)", "Niveau bac de lavage trop haut", "Évacuer l'eau. Vérifier pompe d'évacuation."],
+    [120, "Auto mop removal — mop not at dock", "Démontage auto — serpillière absente", "Replacer la serpillière sur la base."],
+    [121, "Warning after 60 dust collection cycles", "Un avertissement sera émis après 60 cycles de collecte de poussière.", "Vérifier/remplacer sac. Conseil entretien client."],
+    [122, "Water supply/drainage tasks completed", "Alim/évac terminée", "RAS — informatif."],
+    [123, "Empty water tank for supply/drainage", "Réservoirs alim/évac vides", "Remplir ou vider les réservoirs selon besoin."],
+    [124, "Scraper motor error", "Erreur moteur racloir", "Vérifier moteur racloir. Remplacer si HS."],
+    [125, "Sewage pump lock-up", "Pompe d'évacuation bloquée", "Désobstruer pompe d'évacuation. Remplacer si HS."],
+  ]
+};
+
+/* ══════════════════════════════════════════════════════════════
+   ÉTAT
+══════════════════════════════════════════════════════════════ */
+const STATE = { filter: "all", query: "" };
+
+/* ══════════════════════════════════════════════════════════════
+   HELPERS
+══════════════════════════════════════════════════════════════ */
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function highlight(text, query) {
+  const safe = escapeHtml(text);
+  if (!query) return safe;
+  const re = new RegExp("(" + query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ")", "gi");
+  return safe.replace(re, "<mark>$1</mark>");
+}
+function rowMatches(row, query) {
+  if (!query) return true;
+  return (String(row[0]) + " " + row[1] + " " + row[2] + " " + row[3]).toLowerCase().includes(query);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   RENDU
+══════════════════════════════════════════════════════════════ */
+function buildSectionHTML(title, rows, query) {
+  if (!rows.length) return "";
+  const tbody = rows.map(r => `
+    <tr>
+      <td class="cell-code" onclick="copyCode(this, ${r[0]})" title="Cliquer pour copier">${r[0]}</td>
+      <td class="cell-en">${highlight(r[1], query)}</td>
+      <td class="cell-fr">${highlight(r[2], query)}</td>
+      <td class="cell-action">${highlight(r[3], query)}</td>
+    </tr>`).join("");
+  return `
+    <div class="section-band">${title} — ${rows.length} code${rows.length > 1 ? "s" : ""}</div>
+    <div class="table-wrap-codes">
+      <table>
+        <thead>
+          <tr>
+            <th class="col-code">Code</th>
+            <th class="col-en">English</th>
+            <th class="col-fr">Français</th>
+            <th class="col-action">Action SAV — Geste atelier</th>
+          </tr>
+        </thead>
+        <tbody>${tbody}</tbody>
+      </table>
+    </div>`;
+}
+
+function render() {
+  const q = STATE.query.trim().toLowerCase();
+  const robot = STATE.filter === "base"  ? [] : DATA.robot.filter(r => rowMatches(r, q));
+  const base  = STATE.filter === "robot" ? [] : DATA.base.filter(r => rowMatches(r, q));
+  const total = robot.length + base.length;
+  document.getElementById("stats").textContent = `${total} / ${DATA.robot.length + DATA.base.length}`;
+  const content = document.getElementById("content");
+  if (total === 0) {
+    content.innerHTML = `<div class="empty">Aucun résultat pour <strong>«&nbsp;${escapeHtml(STATE.query)}&nbsp;»</strong></div>`;
+    return;
+  }
+  content.innerHTML =
+    buildSectionHTML("Robot — Codes 0 à 89", robot, q) +
+    buildSectionHTML("Station de base — Codes 100 à 125", base, q);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   INTERACTIONS
+══════════════════════════════════════════════════════════════ */
+function setFilter(btn) {
+  document.querySelectorAll(".chip-code").forEach(c => c.classList.remove("active"));
+  btn.classList.add("active");
+  STATE.filter = btn.dataset.section;
+  render();
+}
+
+function copyCode(cell, code) {
+  navigator.clipboard.writeText(String(code))
+    .then(() => { cell.classList.add("copied"); showToast(`Code ${code} copié`); setTimeout(() => cell.classList.remove("copied"), 700); })
+    .catch(() => showToast("Copie impossible"));
+}
+
+let _toastTimer;
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => t.classList.remove("show"), 1500);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════════════════════ */
+document.getElementById("search").addEventListener("input", e => {
+  STATE.query = e.target.value; render();
+});
+document.addEventListener("keydown", e => {
+  if (e.target.tagName === "INPUT") return;
+  if (e.key === "/") { e.preventDefault(); document.getElementById("search").focus(); }
+});
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 56" width="220" height="56">
+  <rect width="220" height="44" rx="3" fill="#000000"/>
+  <text x="12" y="31" font-family="'Arial Black','Arial',sans-serif" font-weight="900" font-size="22" fill="#FFFFFF" letter-spacing="1.5">FNAC DARTY</text>
+  <rect x="52" y="47" width="58" height="5" rx="1" fill="#F5A623"/>
+  <rect x="110" y="47" width="58" height="5" rx="1" fill="#E62E2E"/>
+</svg>

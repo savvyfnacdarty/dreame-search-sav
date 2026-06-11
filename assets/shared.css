@@ -1,0 +1,289 @@
+/* ══════════════════════════════════════════════════════════════
+   SHARED.CSS — SAV DREAME · FNAC DARTY
+   Tokens communs + Header + Dark mode + Utilitaires
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Imports ── */
+@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+/* ══════════════════════════════════════════════════════════════
+   TOKENS — MODE JOUR (défaut)
+══════════════════════════════════════════════════════════════ */
+:root {
+  /* ── Marque Fnac Darty ── */
+  --fd-yellow:   #F5A623;
+  --fd-red:      #E62E2E;
+  --fd-navy:     #1A2744;
+  --fd-yellow-2: #FDD57E;
+  --fd-red-2:    #FF7070;
+
+  /* ── Surfaces ── */
+  --bg:          #F1F3F6;
+  --surface:     #FFFFFF;
+  --surface-2:   #F8F9FA;
+  --surface-3:   #EEF0F3;
+  --border:      #DDE1E8;
+  --border-strong:#C0C6D2;
+  --rule:        #E8EBF0;
+
+  /* ── Typographie ── */
+  --text:        #1A1E2A;
+  --text-2:      #4A5068;
+  --muted:       #8891A8;
+  --muted-2:     #C0C8D8;
+
+  /* ── Accents ── */
+  --accent:      var(--fd-red);
+  --accent-warm: var(--fd-yellow);
+  --accent-glow: rgba(229,46,46,0.09);
+  --accent-yellow-glow: rgba(245,166,35,0.12);
+
+  /* ── Statuts ── */
+  --green:       #16A34A;
+  --green-bg:    #F0FDF4;
+  --green-border:#BBF7D0;
+  --orange:      #D97706;
+  --orange-bg:   #FFFBEB;
+  --orange-border:#FDE68A;
+
+  /* ── Ombres ── */
+  --shadow-sm:   0 1px 3px rgba(0,0,0,.07), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:   0 4px 16px rgba(0,0,0,.09), 0 1px 4px rgba(0,0,0,.05);
+  --shadow-lg:   0 12px 40px rgba(0,0,0,.12), 0 2px 8px rgba(0,0,0,.06);
+  --shadow-modal:0 24px 70px rgba(0,0,0,.22), 0 0 0 1px rgba(0,0,0,.06);
+
+  /* ── Typo ── */
+  --font-ui:   'Barlow', sans-serif;
+  --font-cond: 'Barlow Condensed', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* ── Rayons ── */
+  --r-sm: 3px;
+  --r-md: 7px;
+  --r-lg: 12px;
+  --r-xl: 18px;
+
+  /* ── Transitions ── */
+  --tr: 0.16s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   TOKENS — MODE NUIT
+══════════════════════════════════════════════════════════════ */
+[data-theme="dark"] {
+  --bg:          #0F172A;
+  --surface:     #1E293B;
+  --surface-2:   #263045;
+  --surface-3:   #334155;
+  --border:      #334155;
+  --border-strong:#475569;
+  --rule:        #2A3A52;
+
+  --text:        #F1F5F9;
+  --text-2:      #CBD5E1;
+  --muted:       #64748B;
+  --muted-2:     #475569;
+
+  --accent:      #FF4D4D;
+  --accent-glow: rgba(255,77,77,0.12);
+  --accent-yellow-glow: rgba(245,166,35,0.15);
+
+  --green-bg:    #064E3B;
+  --green-border:#065F46;
+  --orange-bg:   #431407;
+  --orange-border:#78350F;
+
+  --shadow-sm:   0 1px 3px rgba(0,0,0,.3), 0 1px 2px rgba(0,0,0,.2);
+  --shadow-md:   0 4px 16px rgba(0,0,0,.4), 0 1px 4px rgba(0,0,0,.2);
+  --shadow-lg:   0 12px 40px rgba(0,0,0,.5), 0 2px 8px rgba(0,0,0,.3);
+  --shadow-modal:0 24px 70px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.06);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   RESET
+══════════════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; scroll-behavior: smooth; }
+body {
+  font-family: var(--font-ui);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  line-height: 1.6;
+  transition: background var(--tr), color var(--tr);
+}
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; }
+input { font-family: inherit; }
+
+/* ══════════════════════════════════════════════════════════════
+   HEADER UNIFIÉ
+══════════════════════════════════════════════════════════════ */
+.hdr {
+  position: sticky; top: 0; z-index: 200;
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 2px solid transparent;
+  border-image: linear-gradient(90deg, var(--fd-yellow) 50%, var(--fd-red) 50%) 1;
+  box-shadow: var(--shadow-sm);
+  padding: 0 24px;
+  transition: background var(--tr);
+}
+[data-theme="dark"] .hdr {
+  background: rgba(15,23,42,0.96);
+}
+.hdr-in {
+  max-width: 1440px; margin: 0 auto;
+  display: flex; align-items: center; gap: 20px; height: 64px;
+}
+
+/* Logo */
+.hdr-logo {
+  flex-shrink: 0; display: flex; align-items: center; gap: 10px;
+  text-decoration: none;
+}
+.hdr-logo-brand {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-size: 24px;
+  letter-spacing: 1.5px;
+  line-height: 1;
+  text-transform: uppercase;
+  user-select: none;
+}
+.hdr-logo-brand .fnac  { color: #F5A623; }
+.hdr-logo-brand .darty { color: #E62E2E; }
+
+/* Navigation */
+.hdr-nav {
+  display: flex; align-items: center; gap: 4px;
+  margin-left: 24px;
+}
+.hdr-nav a {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 7px 14px;
+  border-radius: var(--r-md);
+  font-size: 13px; font-weight: 600;
+  color: var(--text-2);
+  transition: all var(--tr);
+  white-space: nowrap;
+  border: 1.5px solid transparent;
+  text-decoration: none;
+}
+.hdr-nav a:hover {
+  color: var(--text);
+  background: var(--surface-2);
+  border-color: var(--border);
+}
+.hdr-nav a.active {
+  color: var(--fd-red);
+  background: rgba(229,46,46,0.07);
+  border-color: rgba(229,46,46,0.2);
+}
+[data-theme="dark"] .hdr-nav a.active {
+  color: var(--fd-yellow);
+  background: rgba(245,166,35,0.1);
+  border-color: rgba(245,166,35,0.25);
+}
+.hdr-nav a.nav-calibrage {
+  background: var(--fd-navy);
+  color: white;
+  border-color: var(--fd-navy);
+}
+.hdr-nav a.nav-calibrage:hover {
+  background: #0f1e3a;
+  border-color: #0f1e3a;
+  color: white;
+}
+[data-theme="dark"] .hdr-nav a.nav-calibrage {
+  background: var(--fd-yellow);
+  color: var(--fd-navy);
+  border-color: var(--fd-yellow);
+}
+[data-theme="dark"] .hdr-nav a.nav-calibrage:hover {
+  background: #e09400;
+  border-color: #e09400;
+}
+
+/* Droite du header */
+.hdr-right {
+  margin-left: auto; display: flex; align-items: center; gap: 10px;
+}
+
+/* Bouton theme toggle */
+.theme-toggle {
+  width: 40px; height: 40px;
+  border-radius: var(--r-md);
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text-2);
+  font-size: 17px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all var(--tr);
+}
+.theme-toggle:hover {
+  border-color: var(--fd-yellow);
+  background: var(--accent-yellow-glow);
+  color: var(--fd-yellow);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   BOUTONS COMMUNS
+══════════════════════════════════════════════════════════════ */
+.btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 18px; border-radius: var(--r-md);
+  font-size: 13px; font-weight: 600;
+  transition: all var(--tr); cursor: pointer;
+  white-space: nowrap; border: 1.5px solid transparent;
+  text-decoration: none;
+}
+.btn-ghost {
+  background: var(--surface); border-color: var(--border); color: var(--text-2);
+}
+.btn-ghost:hover { border-color: var(--border-strong); color: var(--text); background: var(--surface-2); }
+
+.btn-download {
+  background: var(--fd-red); color: white; border-color: var(--fd-red);
+  font-weight: 700;
+}
+.btn-download:hover { background: #c41e1e; border-color: #c41e1e; box-shadow: var(--shadow-md); }
+
+.btn-preview {
+  background: transparent; border-color: var(--border); color: var(--muted);
+  font-size: 12px; padding: 6px 12px;
+}
+.btn-preview:hover { border-color: var(--border-strong); color: var(--text-2); background: var(--surface-2); }
+
+/* ══════════════════════════════════════════════════════════════
+   SPINNER
+══════════════════════════════════════════════════════════════ */
+.spinner {
+  width: 16px; height: 16px; flex-shrink: 0;
+  border: 2px solid var(--border); border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ══════════════════════════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════════════════════════ */
+#toast {
+  position: fixed; bottom: 28px; right: 28px; z-index: 3000;
+  background: var(--text); color: var(--surface);
+  padding: 10px 18px; border-radius: var(--r-md);
+  font-size: 13px; font-weight: 600;
+  box-shadow: var(--shadow-lg);
+  opacity: 0; transform: translateY(8px);
+  transition: opacity .2s, transform .2s;
+  pointer-events: none;
+}
+#toast.show { opacity: 1; transform: translateY(0); }
+
+/* ══════════════════════════════════════════════════════════════
+   MAIN WRAPPER
+══════════════════════════════════════════════════════════════ */
+.main-wrap { max-width: 1440px; margin: 28px auto; padding: 0 24px; }
