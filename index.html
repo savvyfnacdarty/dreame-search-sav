@@ -439,15 +439,22 @@ function showProjectDetails(project) {
   } else {
     project.files.forEach(file => {
       const isBOM = /bom|part.?list|pi[eè]ces/i.test(file.name);
-      let cleanPath = file.path;
-      if (cleanPath.startsWith('sites/')) cleanPath = cleanPath.substring(6);
-      const encodedPath = cleanPath.split('/').map(p => encodeURIComponent(p)).join('/');
-      const encodedName = encodeURIComponent(file.name);
 
-      // Aperçu SharePoint (web=1)
-      const linkOpen = `https://groupefnac.sharepoint.com/:x:/r/sites/${encodedPath}/${encodedName}?csf=1&web=1`;
-      // Téléchargement forcé (download=1 remplace web=1 — compatible Edge/Chrome)
-      const linkDl   = `https://groupefnac.sharepoint.com/sites/${encodedPath}/${encodedName}?download=1`;
+      let linkOpen, linkDl;
+      if (file.fromCatalog && file.path && file.path.startsWith('http')) {
+        // URL complète fournie via catalog.json — utiliser directement
+        const base = file.path.split('?')[0];
+        linkOpen = file.path.includes('?') ? file.path + '&web=1' : file.path + '?web=1';
+        linkDl   = base + '?download=1';
+      } else {
+        // Chemin relatif issu du xlsx SharePoint — construire l'URL
+        let cleanPath = file.path;
+        if (cleanPath.startsWith('sites/')) cleanPath = cleanPath.substring(6);
+        const encodedPath = cleanPath.split('/').map(p => encodeURIComponent(p)).join('/');
+        const encodedName = encodeURIComponent(file.name);
+        linkOpen = `https://groupefnac.sharepoint.com/:x:/r/sites/${encodedPath}/${encodedName}?csf=1&web=1`;
+        linkDl   = `https://groupefnac.sharepoint.com/sites/${encodedPath}/${encodedName}?download=1`;
+      }
 
       const item = document.createElement('div');
       item.className = 'file-item';
