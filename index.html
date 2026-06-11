@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>SAV DREAME — Recherche Technique · Fnac Darty</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90' font-family='Arial Black,Arial,sans-serif' font-weight='900'><tspan fill='%23F5A623'>F</tspan><tspan fill='%23E62E2E'>D</tspan></text></svg>"/>
+<link rel="stylesheet" href="assets/shared.css"/>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+/* ══════════════════════════════════════════════════════════════
+   PAGE — RECHERCHE SHAREPOINT
+══════════════════════════════════════════════════════════════ */
+.search-wrapper { position:relative; margin-bottom:24px; }
+.search-input {
+  width:100%; height:54px;
+  background:var(--surface); border:2px solid var(--border); border-radius:var(--r-md);
+  padding:0 52px 0 18px;
+  font-family:var(--font-ui); font-size:15px; font-weight:500; color:var(--text);
+  box-shadow:var(--shadow-sm); transition:all var(--tr);
+}
+.search-input:focus { outline:none; border-color:var(--fd-red); box-shadow:0 0 0 4px var(--accent-glow); }
+.search-input:disabled { opacity:.5; cursor:not-allowed; }
+.search-icon { position:absolute; right:16px; top:50%; transform:translateY(-50%); color:var(--muted); pointer-events:none; }
+
+/* Loading */
+.loading-bar {
+  display:none; align-items:center; gap:12px;
+  padding:14px 18px; background:var(--surface);
+  border:1px solid var(--border); border-radius:var(--r-md);
+  margin-bottom:20px; font-size:13px; font-weight:600; color:var(--text-2);
+}
+.loading-bar.active { display:flex; }
+
+/* Results grid */
+.results-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:16px; }
+.project-card {
+  background:var(--surface); border:1.5px solid var(--border); border-radius:var(--r-lg);
+  padding:18px; transition:all var(--tr); box-shadow:var(--shadow-sm); cursor:pointer;
+}
+.project-card:hover { border-color:var(--fd-red); box-shadow:var(--shadow-md); transform:translateY(-2px); }
+.project-family { font-size:11px; color:var(--muted); text-transform:uppercase; font-weight:700; letter-spacing:.5px; margin-bottom:4px; }
+.project-title { font-family:var(--font-cond); font-size:20px; font-weight:700; color:var(--text); }
+.project-count { font-size:12px; color:var(--muted); margin-top:6px; }
+
+/* ── Bloc Dossier Introuvable ── */
+.no-result-box {
+  display:none; padding:32px 28px;
+  background:var(--surface);
+  border:2px solid var(--fd-red);
+  border-radius:var(--r-lg);
+  box-shadow:0 0 0 4px rgba(229,46,46,0.07);
+}
+.no-result-box.active { display:block; }
+.no-result-title {
+  display:flex; align-items:center; gap:10px;
+  font-family:var(--font-cond); font-size:24px; font-weight:700; color:var(--fd-red);
+  margin-bottom:10px;
+}
+.no-result-desc {
+  font-size:14px; color:var(--text-2); line-height:1.7; margin-bottom:20px;
+}
+.no-result-ref {
+  font-family:var(--font-mono); font-weight:700; color:var(--text);
+  background:var(--surface-3); padding:2px 8px; border-radius:var(--r-sm);
+}
+
+/* Contacts */
+.contact-section { margin:16px 0 20px; }
+.contact-section-title {
+  font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.5px;
+  color:var(--muted); margin-bottom:10px;
+}
+.contact-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:10px; }
+.contact-card {
+  background:var(--surface-2); border:1px solid var(--border); border-radius:var(--r-md);
+  padding:12px 14px; transition:border-color var(--tr);
+}
+.contact-card:hover { border-color:var(--border-strong); }
+.contact-name { font-size:13px; font-weight:700; color:var(--text); margin-bottom:4px; }
+.contact-email {
+  font-size:12px; font-family:var(--font-mono); color:var(--fd-red);
+  cursor:pointer; word-break:break-all;
+  display:flex; align-items:center; gap:6px;
+}
+.contact-email:hover { text-decoration:underline; }
+.cc-line {
+  font-size:12px; color:var(--muted); margin-bottom:18px;
+  font-family:var(--font-mono);
+}
+.cc-line strong { color:var(--text-2); }
+
+.btn-mailto {
+  display:inline-flex; align-items:center; gap:8px;
+  background:var(--fd-red); color:white; border:none;
+  padding:11px 24px; border-radius:var(--r-md);
+  font-size:14px; font-weight:700;
+  transition:all var(--tr); text-decoration:none; cursor:pointer;
+  box-shadow:0 2px 8px rgba(229,46,46,0.25);
+}
+.btn-mailto:hover { background:#c41e1e; box-shadow:var(--shadow-md); transform:translateY(-1px); }
+.mail-hint {
+  font-size:12px; color:var(--muted); margin-top:10px;
+  padding:8px 12px; background:var(--orange-bg); border:1px solid var(--orange-border);
+  border-radius:var(--r-sm); display:inline-block;
+}
+
+/* Fichiers d'un projet */
+.files-container {
+  display:none; background:var(--surface);
+  border:1.5px solid var(--border); border-radius:var(--r-lg);
+  padding:22px; box-shadow:var(--shadow-sm); margin-top:20px;
+}
+.files-container.active { display:block; }
+.files-header {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:16px; flex-wrap:wrap; gap:10px;
+}
+.files-title { font-family:var(--font-cond); font-size:22px; font-weight:700; color:var(--text); }
+.btn-back {
+  padding:7px 14px; border-radius:var(--r-md);
+  border:1.5px solid var(--border); background:var(--surface-2);
+  color:var(--text-2); font-size:13px; font-weight:600;
+  transition:all var(--tr); cursor:pointer;
+}
+.btn-back:hover { border-color:var(--border-strong); color:var(--text); }
+.file-item {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:13px 0; border-bottom:1px solid var(--rule); gap:16px;
+}
+.file-item:last-child { border-bottom:none; padding-bottom:0; }
+.file-info { display:flex; align-items:center; gap:12px; min-width:0; }
+.file-icon { flex-shrink:0; color:var(--muted); }
+.file-icon.bom { color:var(--fd-red); }
+.file-name { font-size:14px; font-weight:600; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.badge-bom {
+  flex-shrink:0;
+  background:var(--fd-red); color:white;
+  padding:2px 8px; border-radius:var(--r-sm);
+  font-size:10px; font-weight:700; font-family:var(--font-mono);
+}
+.file-actions { display:flex; gap:8px; flex-shrink:0; }
+</style>
+</head>
+<body>
+
+<!-- ══════════ HEADER ══════════ -->
+<header class="hdr">
+  <div class="hdr-in">
+    <a href="index.html" class="hdr-logo" title="Accueil SAV Dreame">
+      <span class="hdr-logo-brand"><span class="fnac">FNAC</span> <span class="darty">DARTY</span></span>
+    </a>
+    <nav class="hdr-nav">
+      <a href="index.html" class="active">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        Recherche
+      </a>
+      <a href="bom_manager.html">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        Lecteur BOM
+      </a>
+      <a href="index_fault_codes.html">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        Codes Erreurs
+      </a>
+      <a href="calibrage_dreame.html" class="nav-calibrage">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        Calibrage
+      </a>
+    </nav>
+    <div class="hdr-right">
+      <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Mode nuit / jour">☀</button>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════ MAIN ══════════ -->
+<main class="main-wrap">
+
+  <div class="loading-bar active" id="loadingBar">
+    <div class="spinner"></div>
+    <span>Synchronisation de l'arborescence (extraction_sharepoint.xlsx)…</span>
+  </div>
+
+  <div class="search-wrapper">
+    <input type="text" id="searchInput" class="search-input"
+      placeholder="Référence commerciale ou code projet (ex: P20, X40 Master, R2432)…" disabled/>
+    <div class="search-icon">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+    </div>
+  </div>
+
+  <div class="results-grid" id="resultsGrid"></div>
+
+  <!-- ── Dossier Introuvable ── -->
+  <div id="noResultBox" class="no-result-box">
+    <div class="no-result-title">
+      <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Dossier Introuvable
+    </div>
+    <p class="no-result-desc">
+      La référence <span class="no-result-ref" id="searchTermDisplay"></span> est introuvable dans la base SharePoint actuelle.<br/>
+      Contactez l'un des référents techniques ci-dessous en joignant la photo de la plaque signalétique.
+    </p>
+
+    <div class="contact-section">
+      <div class="contact-section-title">Référents techniques</div>
+      <div class="contact-grid">
+        <div class="contact-card">
+          <div class="contact-name">Thomas Crastres</div>
+          <div class="contact-email" onclick="copyEmail('thomas.crastres@darty.fr')" title="Cliquer pour copier">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+            thomas.crastres@darty.fr
+          </div>
+        </div>
+        <div class="contact-card">
+          <div class="contact-name">Abdelmalek Tahri</div>
+          <div class="contact-email" onclick="copyEmail('abdelmalek.tahri@darty.fr')" title="Cliquer pour copier">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+            abdelmalek.tahri@darty.fr
+          </div>
+        </div>
+        <div class="contact-card">
+          <div class="contact-name">Ludovic Chauffeteau</div>
+          <div class="contact-email" onclick="copyEmail('ludovic.chauffeteau@darty.fr')" title="Cliquer pour copier">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+            ludovic.chauffeteau@darty.fr
+          </div>
+        </div>
+      </div>
+      <p class="cc-line" style="margin-top:10px;">Copie : <strong>jerome.leconte@fnacdarty.com</strong> (Jérome Leconte)</p>
+    </div>
+
+    <a href="#" id="mailSupportBtn" class="btn-mailto">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+      Ouvrir la messagerie (mail pré-rempli)
+    </a>
+    <div class="mail-hint">⚠ Pensez à joindre la photo de la plaque signalétique en pièce jointe</div>
+  </div>
+
+  <!-- ── Liste des fichiers d'un projet ── -->
+  <div class="files-container" id="filesContainer">
+    <div class="files-header">
+      <div class="files-title" id="selectedProjectTitle"></div>
+      <button class="btn-back" onclick="clearProject()">← Retour à la recherche</button>
+    </div>
+    <div id="filesList"></div>
+  </div>
+
+</main>
+
+<div id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   DARK MODE
+══════════════════════════════════════════════════════════════ */
+const LS_THEME = 'fd_sav_theme';
+function toggleTheme() {
+  const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  applyTheme(next);
+  try { localStorage.setItem(LS_THEME, next); } catch(e){}
+}
+function applyTheme(t) {
+  document.documentElement.dataset.theme = t;
+  document.getElementById('themeToggle').textContent = t === 'dark' ? '☾' : '☀';
+}
+(function() {
+  try { const s = localStorage.getItem(LS_THEME); if (s) applyTheme(s); } catch(e){}
+})();
+
+/* ══════════════════════════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════════════════════════ */
+let _toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+function copyEmail(email) {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(email).then(() => showToast('✓ Email copié : ' + email));
+  } else {
+    const ta = document.createElement('textarea'); ta.value = email;
+    ta.style.cssText = 'position:fixed;opacity:0;top:-9999px';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); showToast('✓ Email copié : ' + email); } catch(e){}
+    document.body.removeChild(ta);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   CHARGEMENT SHAREPOINT
+══════════════════════════════════════════════════════════════ */
+let foldersMap = new Map();
+
+document.addEventListener('DOMContentLoaded', async () => {
+  // Chargement parallèle : xlsx SharePoint + catalog.json
+  const [xlsxResult, catalogResult] = await Promise.allSettled([
+    fetch('extraction_sharepoint.xlsx').then(r => { if (!r.ok) throw new Error('xlsx introuvable'); return r.arrayBuffer(); }),
+    fetch('data/catalog.json?nocache=' + Date.now()).then(r => r.ok ? r.json() : { produits: [] })
+  ]);
+
+  if (xlsxResult.status === 'fulfilled') {
+    try {
+      const wb = XLSX.read(xlsxResult.value, { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      processSharepointData(XLSX.utils.sheet_to_json(ws, { defval: '' }));
+    } catch(e) { console.warn('Erreur lecture xlsx:', e); }
+  } else {
+    console.warn('extraction_sharepoint.xlsx introuvable.', xlsxResult.reason);
+    document.getElementById('loadingBar').innerHTML =
+      '<span style="color:var(--fd-red);font-weight:700;">⚠ extraction_sharepoint.xlsx introuvable sur le serveur.</span>';
+  }
+
+  if (catalogResult.status === 'fulfilled') {
+    mergeCatalog(catalogResult.value);
+  }
+
+  document.getElementById('loadingBar').classList.remove('active');
+  const si = document.getElementById('searchInput');
+  si.disabled = false; si.focus();
+});
+
+/* Fusionner catalog.json dans foldersMap */
+function mergeCatalog(catalog) {
+  if (!catalog || !Array.isArray(catalog.produits)) return;
+  catalog.produits.forEach(p => {
+    const key = p.dossier;
+    if (!key) return;
+    if (!foldersMap.has(key)) {
+      foldersMap.set(key, { name: key, path: p.url_dossier || '', files: [] });
+    }
+    const entry = foldersMap.get(key);
+    // Surcharger l'url dossier si non définie depuis le xlsx
+    if (p.url_dossier && !entry.path) entry.path = p.url_dossier;
+    // Ajouter les fichiers du catalog (éviter les doublons par nom)
+    (p.fichiers || []).forEach(f => {
+      const already = entry.files.some(x => x.name === f.nom);
+      if (!already) entry.files.push({ name: f.nom, path: f.url, type: f.type, date: '', fromCatalog: true });
+    });
+  });
+}
+
+function processSharepointData(data) {
+  foldersMap.clear();
+  data.forEach(row => {
+    const path = row["Chemin d'accès"] || row["Chemin daccès"] || '';
+    if (!path) return;
+    const parts = path.split('/');
+    let projectName = '';
+    for (let i = parts.length - 1; i >= 0; i--) {
+      if (parts[i].includes('-') || parts[i].match(/^[A-Z][0-9]{3,4}/)) {
+        projectName = parts[i]; break;
+      }
+    }
+    if (!projectName) projectName = parts[parts.length - 1];
+    if (!foldersMap.has(projectName))
+      foldersMap.set(projectName, { name: projectName, path, files: [] });
+    const type = (row["Type d'élément"] || '').toLowerCase();
+    if (type !== 'dossier' && type !== 'folder') {
+      foldersMap.get(projectName).files.push({
+        name: row['Nom'] || 'Fichier sans nom',
+        path, type, date: row['Modifié'] || ''
+      });
+    }
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   RECHERCHE
+══════════════════════════════════════════════════════════════ */
+const searchInput = document.getElementById('searchInput');
+const resultsGrid = document.getElementById('resultsGrid');
+const noResultBox = document.getElementById('noResultBox');
+const filesContainer = document.getElementById('filesContainer');
+
+searchInput.addEventListener('input', e => {
+  const q = e.target.value.trim().toLowerCase();
+  resultsGrid.innerHTML = '';
+  filesContainer.classList.remove('active');
+  noResultBox.classList.remove('active');
+  if (!q) return;
+
+  let found = false;
+  Array.from(foldersMap.values()).forEach(project => {
+    if (!project.name.toLowerCase().includes(q)) return;
+    found = true;
+    const card = document.createElement('div');
+    card.className = 'project-card';
+    const fm = project.path.match(/DREAME\/([^\/]+)/);
+    const family = fm ? fm[1].replace(/_/g, ' ') : 'PROJET';
+    card.innerHTML = `
+      <div class="project-family">${escHtml(family)}</div>
+      <div class="project-title">${escHtml(project.name)}</div>
+      <div class="project-count">${project.files.length} document(s)</div>`;
+    card.onclick = () => showProjectDetails(project);
+    resultsGrid.appendChild(card);
+  });
+
+  if (!found) {
+    document.getElementById('searchTermDisplay').textContent = e.target.value.trim();
+    noResultBox.classList.add('active');
+    // Mail pré-rempli
+    const subj = encodeURIComponent('[Demande Documentation SAV] - Référence Introuvable');
+    const body = encodeURIComponent(
+`Bonjour,
+
+La référence / projet "${e.target.value.trim()}" est introuvable dans l'outil de recherche SharePoint.
+
+Document souhaité : [précisez : BOM, schéma, procédure...]
+
+Merci de vérifier si ce dossier existe ou peut être ajouté.
+
+⚠ La photo de la plaque signalétique est jointe à ce message.
+
+Cordialement,`);
+    document.getElementById('mailSupportBtn').href =
+      `mailto:thomas.crastres@darty.fr,abdelmalek.tahri@darty.fr,ludovic.chauffeteau@darty.fr?cc=jerome.leconte@fnacdarty.com&subject=${subj}&body=${body}`;
+  }
+});
+
+/* ══════════════════════════════════════════════════════════════
+   DÉTAIL PROJET + LIENS TÉLÉCHARGEMENT
+══════════════════════════════════════════════════════════════ */
+function showProjectDetails(project) {
+  resultsGrid.innerHTML = '';
+  noResultBox.classList.remove('active');
+  searchInput.value = '';
+
+  document.getElementById('selectedProjectTitle').textContent = project.name;
+  const filesList = document.getElementById('filesList');
+  filesList.innerHTML = '';
+
+  if (!project.files.length) {
+    filesList.innerHTML = '<div style="padding:24px;text-align:center;color:var(--muted);">Aucun fichier dans ce dossier.</div>';
+  } else {
+    project.files.forEach(file => {
+      const isBOM = /bom|part.?list|pi[eè]ces/i.test(file.name);
+      let cleanPath = file.path;
+      if (cleanPath.startsWith('sites/')) cleanPath = cleanPath.substring(6);
+      const encodedPath = cleanPath.split('/').map(p => encodeURIComponent(p)).join('/');
+      const encodedName = encodeURIComponent(file.name);
+
+      // Aperçu SharePoint (web=1)
+      const linkOpen = `https://groupefnac.sharepoint.com/:x:/r/sites/${encodedPath}/${encodedName}?csf=1&web=1`;
+      // Téléchargement forcé (download=1 remplace web=1 — compatible Edge/Chrome)
+      const linkDl   = `https://groupefnac.sharepoint.com/sites/${encodedPath}/${encodedName}?download=1`;
+
+      const item = document.createElement('div');
+      item.className = 'file-item';
+      item.innerHTML = `
+        <div class="file-info">
+          <svg class="file-icon${isBOM?' bom':''}" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+          <div class="file-name" title="${escHtml(file.name)}">${escHtml(file.name)}</div>
+          ${isBOM ? '<span class="badge-bom">BOM</span>' : ''}
+        </div>
+        <div class="file-actions">
+          ${!isBOM ? `<a href="${escHtml(linkOpen)}" target="_blank" rel="noopener" class="btn btn-preview">Aperçu</a>` : ''}
+          <a href="${escHtml(linkDl)}" download="${escHtml(file.name)}" target="_blank" rel="noopener" class="btn btn-download">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Télécharger
+          </a>
+        </div>`;
+      filesList.appendChild(item);
+    });
+  }
+  filesContainer.classList.add('active');
+  filesContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function clearProject() {
+  filesContainer.classList.remove('active');
+  searchInput.focus();
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>

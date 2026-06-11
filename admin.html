@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Administration — SAV DREAME · Fnac Darty</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90' font-family='Arial Black,Arial,sans-serif' font-weight='900'><tspan fill='%23F5A623'>F</tspan><tspan fill='%23E62E2E'>D</tspan></text></svg>"/>
+<link rel="stylesheet" href="assets/shared.css"/>
+<style>
+/* ══════════════════════════════════════════════════════════════
+   ADMIN — styles spécifiques
+══════════════════════════════════════════════════════════════ */
+
+/* ── Layout 2 colonnes ── */
+.admin-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+@media(max-width:800px){ .admin-layout { grid-template-columns: 1fr; } }
+
+/* ── Sidebar produits ── */
+.sidebar {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  position: sticky;
+  top: 92px;
+}
+.sidebar-header {
+  padding: 14px 16px;
+  background: var(--fd-navy);
+  color: #fff;
+  font-family: var(--font-cond);
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: .5px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.sidebar-count {
+  background: var(--fd-yellow);
+  color: var(--fd-navy);
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+.sidebar-list { list-style: none; padding: 8px; max-height: 60vh; overflow-y: auto; }
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: background var(--tr);
+  font-size: 13px;
+  color: var(--text-2);
+  border: 1.5px solid transparent;
+}
+.sidebar-item:hover { background: var(--surface-2); color: var(--text); }
+.sidebar-item.active { background: var(--accent-glow); border-color: var(--fd-red); color: var(--fd-red); font-weight: 700; }
+.sidebar-item .item-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sidebar-item .item-count { font-size: 10px; color: var(--muted); background: var(--surface-3); padding: 1px 6px; border-radius: 8px; flex-shrink: 0; }
+.sidebar-new {
+  margin: 8px;
+  width: calc(100% - 16px);
+  padding: 9px;
+  border-radius: var(--r-md);
+  border: 1.5px dashed var(--border-strong);
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  transition: all var(--tr);
+  cursor: pointer;
+}
+.sidebar-new:hover { border-color: var(--fd-red); color: var(--fd-red); background: var(--accent-glow); }
+.sidebar-empty { padding: 20px 16px; font-size: 12px; color: var(--muted); text-align: center; }
+
+/* ── Onglets ── */
+.tabs {
+  display: flex;
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 24px;
+  gap: 2px;
+}
+.tab-btn {
+  padding: 10px 18px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--font-ui);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  cursor: pointer;
+  transition: all var(--tr);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active { color: var(--fd-red); border-bottom-color: var(--fd-red); }
+
+/* ── Card principale ── */
+.card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+}
+.card-title {
+  font-family: var(--font-cond);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.card-title span { font-size: 13px; font-family: var(--font-ui); font-weight: 500; color: var(--muted); }
+
+/* ── Formulaire ── */
+.form-group { margin-bottom: 18px; }
+.form-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.form-label .required { color: var(--fd-red); }
+.form-input, .form-select {
+  width: 100%;
+  height: 40px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 0 12px;
+  font-size: 13px;
+  font-family: var(--font-ui);
+  color: var(--text);
+  transition: all var(--tr);
+}
+.form-input:focus, .form-select:focus {
+  outline: none;
+  border-color: var(--fd-red);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+.form-hint { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+/* ── Liste de fichiers dans le formulaire ── */
+.files-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+.file-row {
+  display: grid;
+  grid-template-columns: 160px 1fr 90px 36px;
+  gap: 8px;
+  align-items: center;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 8px 10px;
+}
+.file-row input {
+  height: 32px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 0 8px;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--text);
+  width: 100%;
+  transition: border-color var(--tr);
+}
+.file-row input:focus { outline: none; border-color: var(--fd-red); }
+.file-row select {
+  height: 32px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 0 6px;
+  font-size: 12px;
+  font-family: var(--font-ui);
+  color: var(--text);
+  width: 100%;
+}
+.file-row .del-file {
+  width: 32px; height: 32px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all var(--tr);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.file-row .del-file:hover { border-color: var(--fd-red); color: var(--fd-red); background: var(--accent-glow); }
+.files-empty { font-size: 12px; color: var(--muted); text-align: center; padding: 12px; background: var(--surface-2); border-radius: var(--r-md); border: 1px dashed var(--border); }
+.btn-add-file {
+  padding: 7px 14px;
+  border: 1.5px dashed var(--border-strong);
+  border-radius: var(--r-md);
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--tr);
+  width: 100%;
+}
+.btn-add-file:hover { border-color: var(--fd-red); color: var(--fd-red); background: var(--accent-glow); }
+
+/* ── Boutons formulaire ── */
+.form-actions { display: flex; gap: 10px; align-items: center; margin-top: 24px; flex-wrap: wrap; }
+.btn-save {
+  padding: 10px 22px;
+  background: var(--fd-red);
+  color: #fff;
+  border: none;
+  border-radius: var(--r-md);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--tr);
+}
+.btn-save:hover { background: #c41e1e; box-shadow: var(--shadow-md); }
+.btn-delete {
+  padding: 10px 18px;
+  background: transparent;
+  color: var(--muted);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-md);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--tr);
+  margin-left: auto;
+}
+.btn-delete:hover { border-color: var(--fd-red); color: var(--fd-red); background: var(--accent-glow); }
+
+/* ── Export / Import ── */
+.export-zone {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 16px 20px;
+  background: var(--surface-2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-lg);
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.export-zone p { font-size: 13px; color: var(--text-2); margin: 0; flex: 1; min-width: 200px; }
+.btn-export {
+  padding: 10px 20px;
+  background: var(--fd-navy);
+  color: #fff;
+  border: none;
+  border-radius: var(--r-md);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--tr);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn-export:hover { background: #0f1e3a; box-shadow: var(--shadow-md); }
+.btn-import {
+  padding: 10px 16px;
+  background: transparent;
+  color: var(--text-2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-md);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--tr);
+  white-space: nowrap;
+}
+.btn-import:hover { border-color: var(--border-strong); color: var(--text); background: var(--surface-2); }
+
+/* ── Tutoriel ── */
+.tuto-steps { display: flex; flex-direction: column; gap: 0; }
+.tuto-step {
+  display: flex;
+  gap: 16px;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--rule);
+}
+.tuto-step:last-child { border-bottom: none; }
+.step-num {
+  flex-shrink: 0;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--fd-red);
+  color: #fff;
+  font-family: var(--font-cond);
+  font-size: 15px;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+.step-num.yellow { background: var(--fd-yellow); color: var(--fd-navy); }
+.step-content { flex: 1; }
+.step-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+.step-desc { font-size: 13px; color: var(--text-2); line-height: 1.6; }
+.step-code {
+  display: block;
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: var(--surface-3);
+  border-radius: var(--r-sm);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text);
+  border-left: 3px solid var(--fd-red);
+  word-break: break-all;
+}
+.tuto-method {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+.tuto-method-header {
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.tuto-method-badge {
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+.badge-red { background: var(--fd-red); color: #fff; }
+.badge-blue { background: var(--fd-navy); color: #fff; }
+.tuto-method-title { font-size: 15px; font-weight: 700; color: var(--text); }
+.tuto-method-sub { font-size: 12px; color: var(--muted); }
+.tuto-method-body { padding: 0 18px; }
+
+/* ── Alerte ── */
+.alert {
+  display: flex;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: var(--r-md);
+  font-size: 13px;
+  margin-bottom: 20px;
+  align-items: flex-start;
+}
+.alert-info { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; }
+.alert-warn { background: var(--orange-bg); border: 1px solid var(--orange-border); color: var(--orange); }
+[data-theme="dark"] .alert-info { background: #172554; border-color: #1e3a8a; color: #93c5fd; }
+
+/* ── Toast ── */
+#adminToast {
+  position: fixed; bottom: 24px; right: 24px; z-index: 3000;
+  background: var(--text); color: var(--surface);
+  padding: 10px 18px; border-radius: var(--r-md);
+  font-size: 13px; font-weight: 600; box-shadow: var(--shadow-lg);
+  opacity: 0; transform: translateY(8px);
+  transition: opacity .2s, transform .2s; pointer-events: none;
+}
+#adminToast.show { opacity: 1; transform: translateY(0); }
+
+/* ── Empty state formulaire ── */
+.form-empty {
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--muted);
+}
+.form-empty .big { font-size: 40px; margin-bottom: 12px; }
+.form-empty p { font-size: 14px; }
+</style>
+</head>
+<body>
+
+<!-- ══════════ HEADER ══════════ -->
+<header class="hdr">
+  <div class="hdr-in">
+    <a href="index.html" class="hdr-logo" title="Retour au site">
+      <span class="hdr-logo-brand"><span class="fnac">FNAC</span> <span class="darty">DARTY</span></span>
+    </a>
+    <nav class="hdr-nav">
+      <a href="index.html">← Retour au site SAV</a>
+    </nav>
+    <div class="hdr-right">
+      <span style="font-size:12px;font-weight:700;color:var(--muted);background:var(--surface-2);border:1px solid var(--border);padding:5px 12px;border-radius:var(--r-md);">
+        🔒 MODE ADMIN
+      </span>
+      <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Mode nuit / jour">☀</button>
+    </div>
+  </div>
+</header>
+
+<main class="main-wrap">
+
+  <!-- Onglets principaux -->
+  <div class="tabs" id="mainTabs">
+    <button class="tab-btn active" onclick="switchTab('catalogue')">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+      Catalogue produits
+    </button>
+    <button class="tab-btn" onclick="switchTab('tuto')">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+      Guide de mise à jour
+    </button>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       ONGLET 1 — CATALOGUE
+  ═══════════════════════════════════════ -->
+  <div id="tabCatalogue">
+
+    <!-- Export / Import -->
+    <div class="export-zone">
+      <p><strong>catalog.json</strong> — fichier à commiter sur GitHub après chaque modification pour que les changements soient visibles par tous.</p>
+      <button class="btn-export" onclick="exportJSON()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        Exporter catalog.json
+      </button>
+      <label class="btn-import" title="Charger un catalog.json existant">
+        📂 Importer
+        <input type="file" accept=".json" style="display:none" onchange="importJSON(event)"/>
+      </label>
+    </div>
+
+    <div class="admin-layout">
+
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <span>Produits</span>
+          <span class="sidebar-count" id="sidebarCount">0</span>
+        </div>
+        <ul class="sidebar-list" id="sidebarList">
+          <li class="sidebar-empty">Aucun produit.<br/>Cliquez sur + pour en ajouter un.</li>
+        </ul>
+        <button class="sidebar-new" onclick="newProduct()">＋ Nouveau produit</button>
+      </aside>
+
+      <!-- Formulaire -->
+      <div id="formArea">
+        <div class="form-empty">
+          <div class="big">📦</div>
+          <p>Sélectionnez un produit dans la liste<br/>ou créez-en un nouveau.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       ONGLET 2 — GUIDE DE MISE À JOUR
+  ═══════════════════════════════════════ -->
+  <div id="tabTuto" style="display:none;">
+
+    <div class="alert alert-info">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:1px"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <div>Ce guide explique comment mettre à jour le catalogue de deux façons : en ajoutant des produits manuellement ici, ou en mettant à jour le fichier SharePoint automatique. Dans les deux cas, un commit GitHub est nécessaire pour que les changements soient visibles par tous les utilisateurs.</div>
+    </div>
+
+    <!-- MÉTHODE 1 -->
+    <div class="tuto-method">
+      <div class="tuto-method-header">
+        <span class="tuto-method-badge badge-red">Méthode 1</span>
+        <div>
+          <div class="tuto-method-title">Ajout manuel d'un produit</div>
+          <div class="tuto-method-sub">Idéal pour un ou deux produits — tout se fait ici, pas besoin de SharePoint</div>
+        </div>
+      </div>
+      <div class="tuto-method-body">
+        <div class="tuto-steps">
+          <div class="tuto-step">
+            <div class="step-num">1</div>
+            <div class="step-content">
+              <div class="step-title">Créer le produit dans l'onglet Catalogue</div>
+              <div class="step-desc">Cliquez sur <strong>+ Nouveau produit</strong>, saisissez le nom du dossier exactement comme il apparaît dans SharePoint (ex : <code>P001 - Dreame P70 Pro Ultra</code>), puis collez l'URL du dossier SharePoint.</div>
+            </div>
+          </div>
+          <div class="tuto-step">
+            <div class="step-num">2</div>
+            <div class="step-content">
+              <div class="step-title">Trouver le lien d'un fichier SharePoint</div>
+              <div class="step-desc">
+                Dans SharePoint, faites un clic droit sur le fichier → <strong>Copier le lien</strong>. Le lien ressemble à :
+                <code class="step-code">https://fnacdarty.sharepoint.com/:x:/r/sites/…/BOM_P70.xlsx?…</code>
+                Collez-le tel quel dans le champ URL — le site ajoutera automatiquement <code>?download=1</code> pour forcer le téléchargement.
+              </div>
+            </div>
+          </div>
+          <div class="tuto-step">
+            <div class="step-num">3</div>
+            <div class="step-content">
+              <div class="step-title">Ajouter les fichiers et sauvegarder</div>
+              <div class="step-desc">Ajoutez autant de fichiers que nécessaire (BOM, PDF, Word…), choisissez le type dans le menu déroulant, puis cliquez sur <strong>Enregistrer</strong>.</div>
+            </div>
+          </div>
+          <div class="tuto-step">
+            <div class="step-num">4</div>
+            <div class="step-content">
+              <div class="step-title">Exporter catalog.json</div>
+              <div class="step-desc">Cliquez sur <strong>Exporter catalog.json</strong> en haut de la page. Un fichier se télécharge dans votre dossier Téléchargements.</div>
+            </div>
+          </div>
+          <div class="tuto-step">
+            <div class="step-num">5</div>
+            <div class="step-content">
+              <div class="step-title">Commiter le fichier sur GitHub</div>
+              <div class="step-desc">
+                Allez sur <a href="https://github.com" target="_blank">github.com</a> → votre repo → dossier <strong>data/</strong> → cliquez sur <strong>catalog.json</strong> → icône crayon ✏️ → <em>Upload files</em> ou collez le contenu → cliquez <strong>Commit changes</strong>.
+                <br/><br/>
+                ⏱ Dans 1 à 2 minutes, le site est mis à jour pour tous les utilisateurs.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MÉTHODE 2 -->
+    <div class="tuto-method">
+      <div class="tuto-method-header">
+        <span class="tuto-method-badge badge-blue">Méthode 2</span>
+        <div>
+          <div class="tuto-method-title">Mise à jour automatique via SharePoint</div>
+          <div class="tuto-method-sub">Idéal pour mettre à jour tout le catalogue d'un coup — export direct depuis SharePoint</div>
+        </div>
+      </div>
+      <div class="tuto-method-body">
+        <div class="tuto-steps">
+          <div class="tuto-step">
+            <div class="step-num yellow">1</div>
+            <div class="step-content">
+              <div class="step-title">Exporter l'arborescence SharePoint</div>
+              <div class="step-desc">
+                Dans SharePoint, naviguez vers le dossier racine des documents SAV DREAME → cliquez sur <strong>⚙ Exporter vers Excel</strong> (ou <em>Export to Excel</em>) dans la barre d'outils SharePoint.<br/>
+                Un fichier <code>.xlsx</code> se télécharge avec toutes les colonnes Nom, Chemin d'accès, Type d'élément, Modifié.
+              </div>
+            </div>
+          </div>
+          <div class="tuto-step">
+            <div class="step-num yellow">2</div>
+            <div class="step-content">
+              <div class="step-title">Renommer le fichier</div>
+              <div class="step-desc">Renommez le fichier téléchargé exactement :
+                <code class="step-code">extraction_sharepoint.xlsx</code>
+              </div>
+            </div>
+          </div>
+          <div class="tuto-step">
+            <div class="step-num yellow">3</div>
+            <div class="step-content">
+              <div class="step-title">Commiter sur GitHub à la racine du repo</div>
+              <div class="step-desc">
+                Sur GitHub → votre repo → racine → <strong>Add file → Upload files</strong> → déposez <code>extraction_sharepoint.xlsx</code> → <strong>Commit changes</strong>.<br/>
+                Le fichier doit être à la <strong>racine</strong> du repo, pas dans un sous-dossier.
+              </div>
+            </div>
+          </div>
+          <div class="tuto-step">
+            <div class="step-num yellow">4</div>
+            <div class="step-content">
+              <div class="step-title">Vérifier sur le site</div>
+              <div class="step-desc">Attendez 1-2 minutes puis testez une recherche sur <strong>index.html</strong>. Si un dossier n'apparaît pas, vérifiez que son chemin contient bien un identifiant projet (ex: <code>P001</code>) ou un tiret.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Structure JSON -->
+    <div class="card">
+      <div class="card-title">📋 Structure du catalog.json <span>Pour référence technique</span></div>
+      <div class="step-desc" style="margin-bottom:12px;">Le fichier catalog.json suit cette structure. Vous pouvez aussi l'éditer manuellement dans un éditeur de texte si besoin.</div>
+      <pre style="background:var(--surface-3);border-radius:var(--r-md);padding:16px;font-family:var(--font-mono);font-size:12px;overflow-x:auto;line-height:1.7;color:var(--text);">{
+  "produits": [
+    {
+      "id": "p001",
+      "dossier": "P001 - Dreame P70 Pro Ultra",
+      "url_dossier": "https://fnacdarty.sharepoint.com/sites/.../P001",
+      "fichiers": [
+        {
+          "nom": "BOM Pièces détachées",
+          "url": "https://fnacdarty.sharepoint.com/.../BOM_P70.xlsx",
+          "type": "xlsx"
+        },
+        {
+          "nom": "Guide SAV",
+          "url": "https://fnacdarty.sharepoint.com/.../Guide_P70.pdf",
+          "type": "pdf"
+        }
+      ]
+    }
+  ]
+}</pre>
+    </div>
+
+  </div><!-- /tabTuto -->
+
+</main>
+
+<div id="adminToast"></div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   DARK MODE
+══════════════════════════════════════════════════════════════ */
+const LS_THEME = 'fd_sav_theme';
+function toggleTheme() {
+  const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = next;
+  document.getElementById('themeToggle').textContent = next === 'dark' ? '☾' : '☀';
+  try { localStorage.setItem(LS_THEME, next); } catch(e) {}
+}
+(function(){
+  try {
+    const s = localStorage.getItem(LS_THEME);
+    if (s) {
+      document.documentElement.dataset.theme = s;
+      const btn = document.getElementById('themeToggle');
+      if (btn) btn.textContent = s === 'dark' ? '☾' : '☀';
+    }
+  } catch(e) {}
+})();
+
+/* ══════════════════════════════════════════════════════════════
+   ÉTAT
+══════════════════════════════════════════════════════════════ */
+let catalog = { produits: [] };
+let currentId = null;
+let toastTimer = null;
+
+/* ══════════════════════════════════════════════════════════════
+   INIT — charger catalog.json existant
+══════════════════════════════════════════════════════════════ */
+(async function init() {
+  try {
+    const res = await fetch('data/catalog.json?nocache=' + Date.now());
+    if (res.ok) catalog = await res.json();
+    if (!catalog.produits) catalog.produits = [];
+  } catch(e) {
+    catalog = { produits: [] };
+  }
+  renderSidebar();
+})();
+
+/* ══════════════════════════════════════════════════════════════
+   ONGLETS
+══════════════════════════════════════════════════════════════ */
+function switchTab(tab) {
+  document.getElementById('tabCatalogue').style.display = tab === 'catalogue' ? '' : 'none';
+  document.getElementById('tabTuto').style.display      = tab === 'tuto'      ? '' : 'none';
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', (i===0&&tab==='catalogue')||(i===1&&tab==='tuto')));
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SIDEBAR
+══════════════════════════════════════════════════════════════ */
+function renderSidebar() {
+  const list = document.getElementById('sidebarList');
+  document.getElementById('sidebarCount').textContent = catalog.produits.length;
+  if (!catalog.produits.length) {
+    list.innerHTML = '<li class="sidebar-empty">Aucun produit.<br/>Cliquez sur + pour en ajouter un.</li>';
+    return;
+  }
+  list.innerHTML = catalog.produits.map(p => `
+    <li class="sidebar-item ${p.id === currentId ? 'active' : ''}" onclick="editProduct('${p.id}')">
+      <span class="item-name">${escHtml(p.dossier)}</span>
+      <span class="item-count">${p.fichiers ? p.fichiers.length : 0} fichier(s)</span>
+    </li>`).join('');
+}
+
+/* ══════════════════════════════════════════════════════════════
+   NOUVEAU PRODUIT
+══════════════════════════════════════════════════════════════ */
+function newProduct() {
+  currentId = null;
+  renderForm(null);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ÉDITER UN PRODUIT
+══════════════════════════════════════════════════════════════ */
+function editProduct(id) {
+  currentId = id;
+  renderSidebar();
+  const p = catalog.produits.find(x => x.id === id);
+  renderForm(p);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   FORMULAIRE
+══════════════════════════════════════════════════════════════ */
+function renderForm(p) {
+  const isNew = !p;
+  const fichiers = p ? (p.fichiers || []) : [];
+  document.getElementById('formArea').innerHTML = `
+    <div class="card">
+      <div class="card-title">
+        ${isNew ? '➕ Nouveau produit' : '✏️ Modifier le produit'}
+        ${!isNew ? `<span>${escHtml(p.dossier)}</span>` : ''}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Nom du dossier <span class="required">*</span></label>
+        <input class="form-input" id="fDossier" value="${escHtml(p ? p.dossier : '')}" placeholder="ex : P001 - Dreame P70 Pro Ultra"/>
+        <div class="form-hint">Exactement comme dans SharePoint : <em>Numéro projet - Ref commerciale</em></div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">URL du dossier SharePoint</label>
+        <input class="form-input" id="fUrlDossier" value="${escHtml(p ? (p.url_dossier || '') : '')}" placeholder="https://fnacdarty.sharepoint.com/…"/>
+        <div class="form-hint">Lien pour ouvrir le dossier dans SharePoint — bouton "Voir le dossier" sur la fiche produit</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Fichiers téléchargeables</label>
+        <div class="files-list" id="filesList">
+          ${fichiers.length === 0 ? '<div class="files-empty">Aucun fichier — ajoutez-en ci-dessous</div>' : fichiers.map((f,i) => fileRowHTML(i, f)).join('')}
+        </div>
+        <button class="btn-add-file" onclick="addFileRow()">＋ Ajouter un fichier</button>
+        <div class="form-hint" style="margin-top:8px;">Copiez le lien SharePoint du fichier (clic droit → Copier le lien). Le téléchargement direct sera automatique.</div>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn-save" onclick="saveProduct()">💾 Enregistrer</button>
+        ${!isNew ? `<button class="btn-delete" onclick="deleteProduct('${p.id}')">🗑 Supprimer ce produit</button>` : ''}
+      </div>
+    </div>`;
+}
+
+function fileRowHTML(i, f) {
+  const types = ['xlsx','pdf','docx','pptx','zip','autre'];
+  const opts = types.map(t => `<option value="${t}" ${f && f.type===t?'selected':''}>${t.toUpperCase()}</option>`).join('');
+  return `<div class="file-row" data-idx="${i}">
+    <input type="text" placeholder="Nom affiché" value="${escHtml(f ? f.nom : '')}" data-field="nom"/>
+    <input type="text" placeholder="URL SharePoint" value="${escHtml(f ? f.url : '')}" data-field="url" style="font-size:11px;"/>
+    <select data-field="type">${opts}</select>
+    <button class="del-file" onclick="removeFileRow(this)" title="Supprimer">✕</button>
+  </div>`;
+}
+
+function addFileRow() {
+  const list = document.getElementById('filesList');
+  const empties = list.querySelectorAll('.files-empty');
+  empties.forEach(e => e.remove());
+  const idx = list.querySelectorAll('.file-row').length;
+  list.insertAdjacentHTML('beforeend', fileRowHTML(idx, null));
+}
+
+function removeFileRow(btn) {
+  btn.closest('.file-row').remove();
+  const list = document.getElementById('filesList');
+  if (!list.querySelectorAll('.file-row').length)
+    list.innerHTML = '<div class="files-empty">Aucun fichier — ajoutez-en ci-dessous</div>';
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SAUVEGARDER
+══════════════════════════════════════════════════════════════ */
+function saveProduct() {
+  const dossier = document.getElementById('fDossier').value.trim();
+  if (!dossier) { showToast('⚠ Le nom du dossier est obligatoire'); return; }
+
+  const url_dossier = document.getElementById('fUrlDossier').value.trim();
+  const rows = document.querySelectorAll('#filesList .file-row');
+  const fichiers = [];
+  rows.forEach(row => {
+    const nom = row.querySelector('[data-field="nom"]').value.trim();
+    const url = row.querySelector('[data-field="url"]').value.trim();
+    const type = row.querySelector('[data-field="type"]').value;
+    if (nom && url) fichiers.push({ nom, url, type });
+  });
+
+  if (currentId) {
+    const idx = catalog.produits.findIndex(p => p.id === currentId);
+    if (idx !== -1) { catalog.produits[idx] = { ...catalog.produits[idx], dossier, url_dossier, fichiers }; }
+  } else {
+    const id = 'p' + Date.now();
+    catalog.produits.push({ id, dossier, url_dossier, fichiers });
+    currentId = id;
+  }
+
+  renderSidebar();
+  const p = catalog.produits.find(x => x.id === currentId);
+  if (p) renderForm(p);
+  showToast('✓ Produit enregistré — pensez à exporter le catalog.json');
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SUPPRIMER
+══════════════════════════════════════════════════════════════ */
+function deleteProduct(id) {
+  if (!confirm('Supprimer ce produit du catalogue ?')) return;
+  catalog.produits = catalog.produits.filter(p => p.id !== id);
+  currentId = null;
+  renderSidebar();
+  document.getElementById('formArea').innerHTML = '<div class="form-empty"><div class="big">📦</div><p>Produit supprimé.<br/>Sélectionnez ou créez un produit.</p></div>';
+  showToast('🗑 Produit supprimé');
+}
+
+/* ══════════════════════════════════════════════════════════════
+   EXPORT / IMPORT
+══════════════════════════════════════════════════════════════ */
+function exportJSON() {
+  const json = JSON.stringify(catalog, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'catalog.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast('✓ catalog.json téléchargé — commitez-le sur GitHub dans data/');
+}
+
+function importJSON(event) {
+  const file = event.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const imported = JSON.parse(e.target.result);
+      if (!imported.produits) throw new Error('Format invalide');
+      catalog = imported;
+      currentId = null;
+      renderSidebar();
+      document.getElementById('formArea').innerHTML = '<div class="form-empty"><div class="big">✅</div><p>Catalogue importé — ' + catalog.produits.length + ' produit(s) chargé(s).</p></div>';
+      showToast('✓ ' + catalog.produits.length + ' produit(s) importé(s)');
+    } catch(err) { showToast('⚠ Fichier JSON invalide'); }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+/* ══════════════════════════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════════════════════════ */
+function showToast(msg) {
+  const t = document.getElementById('adminToast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
