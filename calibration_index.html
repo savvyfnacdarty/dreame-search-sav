@@ -118,10 +118,10 @@ const IMGS = {
 
 // Video map
 const VIDEOS = {
-  imu:    "Doc_calibration/SACLE Calibration Guide Video.mp4",
-  sacle1: "Doc_calibration/SACLE Calibration Guide Video.mp4",
-  sacle2: "Doc_calibration/SACLE Calibration Guide Video.mp4",
-  dualcam:"Doc_calibration/Dual camera calibration SOP.mp4"
+  imu:    "https://player.vimeo.com/video/1200505157?badge=0&autopause=0&player_id=0&app_id=58479",
+  sacle1: "https://player.vimeo.com/video/1200505157?badge=0&autopause=0&player_id=0&app_id=58479",
+  sacle2: "https://player.vimeo.com/video/1200505157?badge=0&autopause=0&player_id=0&app_id=58479",
+  dualcam:"https://player.vimeo.com/video/1200505158?badge=0&autopause=0&player_id=0&app_id=58479"
 };
 
 const PROCEDURES = {
@@ -164,7 +164,7 @@ function renderMedia(key){
   }
   
   if(videoSrc){
-    html += `<div class="video-container"><div class="video-label">🎬 Guide vidéo</div><video controls preload="none"><source src="${videoSrc}" type="video/mp4">Votre navigateur ne supporte pas la lecture vidéo.</video></div>`;
+    html += `<div class="video-container"><div class="video-label">🎬 Guide vidéo</div><div style="padding:56.25% 0 0 0;position:relative;border-radius:10px;overflow:hidden;"><iframe src="${videoSrc}" frameborder="0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media" style="position:absolute;top:0;left:0;width:100%;height:100%;" title="Guide vidéo"></iframe></div></div>`;
   }
   
   html += '</div>';
@@ -306,5 +306,6 @@ function doSearch(){
 
 document.getElementById('searchInput').addEventListener('keydown', e => { if(e.key==='Enter') doSearch(); });
 </script>
+<script src="https://player.vimeo.com/api/player.js"></script>
 </body>
 </html>
