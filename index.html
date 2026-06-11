@@ -261,65 +261,23 @@ function copyEmail(email) {
 let foldersMap = new Map();
 
 document.addEventListener('DOMContentLoaded', async () => {
-  const loadingBar = document.getElementById('loadingBar');
-  const si = document.getElementById('searchInput');
-
   try {
-    // Chargement parallèle avec timeout de 10s pour catalog.json
-    const catalogFetch = Promise.race([
-      fetch('data/catalog.json').then(r => r.ok ? r.json() : { produits: [] }).catch(() => ({ produits: [] })),
-      new Promise(resolve => setTimeout(() => resolve({ produits: [] }), 10000))
-    ]);
-
-    const [xlsxResult, catalogResult] = await Promise.allSettled([
-      fetch('extraction_sharepoint.xlsx').then(r => { if (!r.ok) throw new Error('xlsx introuvable'); return r.arrayBuffer(); }),
-      catalogFetch
-    ]);
-
-    if (xlsxResult.status === 'fulfilled') {
-      try {
-        const wb = XLSX.read(xlsxResult.value, { type: 'array' });
-        const ws = wb.Sheets[wb.SheetNames[0]];
-        processSharepointData(XLSX.utils.sheet_to_json(ws, { defval: '' }));
-      } catch(e) { console.warn('Erreur lecture xlsx:', e); }
-    } else {
-      console.warn('extraction_sharepoint.xlsx introuvable.', xlsxResult.reason);
-      loadingBar.innerHTML = '<span style="color:var(--fd-red);font-weight:700;">⚠ extraction_sharepoint.xlsx introuvable sur le serveur.</span>';
-    }
-
-    if (catalogResult.status === 'fulfilled') {
-      try { mergeCatalog(catalogResult.value); } catch(e) { console.warn('Erreur catalog.json:', e); }
-    }
-
-  } catch(e) {
-    console.error('Erreur chargement:', e);
-  } finally {
-    // Toujours retirer le spinner, quoi qu'il arrive
-    loadingBar.classList.remove('active');
-    si.disabled = false;
-    si.focus();
+    const res = await fetch('extraction_sharepoint.xlsx');
+    if (!res.ok) throw new Error('Fichier introuvable.');
+    const buf = await res.arrayBuffer();
+    const wb = XLSX.read(buf, { type: 'array' });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    processSharepointData(XLSX.utils.sheet_to_json(ws, { defval: '' }));
+    document.getElementById('loadingBar').classList.remove('active');
+    const si = document.getElementById('searchInput');
+    si.disabled = false; si.focus();
+  } catch(err) {
+    console.warn('extraction_sharepoint.xlsx introuvable.', err);
+    document.getElementById('loadingBar').innerHTML =
+      '<span style="color:var(--fd-red);font-weight:700;">⚠ extraction_sharepoint.xlsx introuvable sur le serveur.</span>';
+    document.getElementById('searchInput').disabled = false;
   }
 });
-
-/* Fusionner catalog.json dans foldersMap */
-function mergeCatalog(catalog) {
-  if (!catalog || !Array.isArray(catalog.produits)) return;
-  catalog.produits.forEach(p => {
-    const key = p.dossier;
-    if (!key) return;
-    if (!foldersMap.has(key)) {
-      foldersMap.set(key, { name: key, path: p.url_dossier || '', files: [] });
-    }
-    const entry = foldersMap.get(key);
-    // Surcharger l'url dossier si non définie depuis le xlsx
-    if (p.url_dossier && !entry.path) entry.path = p.url_dossier;
-    // Ajouter les fichiers du catalog (éviter les doublons par nom)
-    (p.fichiers || []).forEach(f => {
-      const already = entry.files.some(x => x.name === f.nom);
-      if (!already) entry.files.push({ name: f.nom, path: f.url, type: f.type, date: '', fromCatalog: true });
-    });
-  });
-}
 
 function processSharepointData(data) {
   foldersMap.clear();
@@ -401,21 +359,12 @@ function showProjectDetails(project) {
     project.files.forEach(file => {
       const isBOM = /bom|part.?list|pi[eè]ces/i.test(file.name);
 
-      let linkOpen, linkDl;
-      if (file.fromCatalog && file.path && file.path.startsWith('http')) {
-        // URL complète fournie via catalog.json — utiliser directement
-        const base = file.path.split('?')[0];
-        linkOpen = file.path.includes('?') ? file.path + '&web=1' : file.path + '?web=1';
-        linkDl   = base + '?download=1';
-      } else {
-        // Chemin relatif issu du xlsx SharePoint — construire l'URL
-        let cleanPath = file.path;
-        if (cleanPath.startsWith('sites/')) cleanPath = cleanPath.substring(6);
-        const encodedPath = cleanPath.split('/').map(p => encodeURIComponent(p)).join('/');
-        const encodedName = encodeURIComponent(file.name);
-        linkOpen = `https://groupefnac.sharepoint.com/:x:/r/sites/${encodedPath}/${encodedName}?csf=1&web=1`;
-        linkDl   = `https://groupefnac.sharepoint.com/sites/${encodedPath}/${encodedName}?download=1`;
-      }
+      let cleanPath = file.path;
+      if (cleanPath.startsWith('sites/')) cleanPath = cleanPath.substring(6);
+      const encodedPath = cleanPath.split('/').map(p => encodeURIComponent(p)).join('/');
+      const encodedName = encodeURIComponent(file.name);
+      const linkOpen = `https://groupefnac.sharepoint.com/:x:/r/sites/${encodedPath}/${encodedName}?csf=1&web=1`;
+      const linkDl   = `https://groupefnac.sharepoint.com/sites/${encodedPath}/${encodedName}?download=1`;
 
       const item = document.createElement('div');
       item.className = 'file-item';
