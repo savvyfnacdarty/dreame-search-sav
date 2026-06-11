@@ -1,3 +1,10 @@
 {
-  "produits": []
+  "produits": [
+    {
+      "id": "p1781168477602",
+      "dossier": "test thomas",
+      "url_dossier": "",
+      "fichiers": []
+    }
+  ]
 }
