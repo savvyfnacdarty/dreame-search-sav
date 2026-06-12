@@ -99,6 +99,12 @@
 .file-name { font-size:14px; font-weight:600; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .badge-bom { flex-shrink:0; background:var(--fd-red); color:white; padding:2px 8px; border-radius:var(--r-sm); font-size:10px; font-weight:700; font-family:var(--font-mono); }
 .file-actions { display:flex; gap:8px; flex-shrink:0; }
+.btn-bomreader {
+  display:inline-flex; align-items:center; gap:6px;
+  background:var(--fd-red); color:#fff !important; border:1.5px solid var(--fd-red);
+  text-decoration:none;
+}
+.btn-bomreader:hover { background:#c41e1e; border-color:#c41e1e; }
 </style>
 </head>
 <body>
@@ -339,6 +345,18 @@ function showProjectDetails(project) {
         aPreview.href = linkOpen; aPreview.target = '_blank'; aPreview.rel = 'noopener';
         aPreview.className = 'btn btn-preview'; aPreview.textContent = 'Aperçu';
         fileActions.appendChild(aPreview);
+      }
+
+      // Fichier BOM -> ouverture directe dans le lecteur (chargement automatique via ?src=)
+      if (isBOM && /\.(xlsx|xlsm)$/i.test(file.name)) {
+        const aReader = document.createElement('a');
+        aReader.className = 'btn btn-bomreader';
+        aReader.href = 'bom_manager2.html?src=' + encodeURIComponent(linkDl) + '&name=' + encodeURIComponent(file.name);
+        aReader.title = 'Ouvrir directement dans le lecteur BOM';
+        aReader.innerHTML =
+          '<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>' +
+          ' Lecteur BOM';
+        fileActions.appendChild(aReader);
       }
 
       // Bouton download : utilise data attributes pour eviter les problemes

@@ -6,7 +6,7 @@
 <title>Lecteur BOM — SAV DREAME · Fnac Darty</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90' font-family='Arial Black,Arial,sans-serif' font-weight='900'><tspan fill='%23F5A623'>F</tspan><tspan fill='%23E62E2E'>D</tspan></text></svg>"/>
 <link rel="stylesheet" href="assets/shared.css"/>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" onerror="var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';document.head.appendChild(s);"></script>
 <style>
 /* ── Upload — FIX CHROME : input cache hors ecran au lieu d'overlay ── */
 .upload-zone {
@@ -47,6 +47,8 @@
   background:var(--surface-2); color:var(--text); font-size:13px; font-weight:600; transition:all var(--tr);
 }
 .sheet-btn:hover { border-color:var(--fd-red); background:var(--accent-glow); color:var(--fd-red); }
+.sheet-btn.is-bom { border-color:var(--green-border); background:var(--green-bg); color:var(--green); font-weight:700; }
+.sheet-btn.is-bom:hover { border-color:var(--green); }
 
 /* ── Bannières détection ── */
 .detect-banner { display:none; padding:14px 18px; border-radius:var(--r-md); margin:16px 0; font-size:13px; font-weight:600; gap:10px; align-items:flex-start; }
@@ -213,7 +215,11 @@
 @keyframes fadeUp { from{opacity:0;transform:scale(0.96) translateY(10px);}to{opacity:1;transform:scale(1) translateY(0);} }
 .modal-close-btn { position:absolute; top:14px; right:14px; width:32px; height:32px; border-radius:50%; border:1.5px solid var(--border); background:var(--surface-2); color:var(--text-2); font-size:15px; display:flex; align-items:center; justify-content:center; transition:all var(--tr); z-index:10; }
 .modal-close-btn:hover { background:var(--border); color:var(--text); }
-.modal-img-side { width:260px; flex-shrink:0; background:var(--surface-2); display:flex; align-items:center; justify-content:center; padding:32px 20px; border-right:1px solid var(--border); }
+.modal-img-side { width:260px; flex-shrink:0; background:var(--surface-2); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:32px 20px; border-right:1px solid var(--border); }
+.modal-thumbs { display:flex; gap:6px; flex-wrap:wrap; justify-content:center; }
+.modal-thumbs img { width:44px; height:44px; object-fit:contain; border:1.5px solid var(--border); border-radius:var(--r-sm); cursor:pointer; background:#fff; transition:border-color var(--tr); }
+.modal-thumbs img:hover { border-color:var(--border-strong); }
+.modal-thumbs img.sel { border-color:var(--fd-red); }
 .modal-img-side img { max-width:100%; max-height:280px; object-fit:contain; cursor:zoom-in; transition:opacity .15s,transform .15s; border-radius:var(--r-sm); }
 .modal-img-side img:hover { opacity:.88; transform:scale(1.02); }
 .modal-no-img { display:flex; flex-direction:column; align-items:center; gap:10px; color:var(--muted-2); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; }
@@ -282,7 +288,7 @@
 
   <!-- Upload — clic sur la zone appelle explicitement l'input (fix Chrome) -->
   <div class="upload-zone" id="uploadZone">
-    <input type="file" id="bomFile" accept=".xlsx"/>
+    <input type="file" id="bomFile" accept=".xlsx,.xlsm"/>
     <svg class="upload-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
     </svg>
@@ -375,7 +381,7 @@
     <div class="raw-toolbar">
       <div class="raw-search-wrap">
         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-        <input type="text" class="raw-search" id="rawSearch" placeholder="Recherche globale dans tout le tableau…" oninput="renderRawTable(this.value)"/>
+        <input type="text" class="raw-search" id="rawSearch" placeholder="Recherche globale dans tout le tableau…"/>
       </div>
       <div class="raw-stats" id="rawStats">&#8212;</div>
       <button class="raw-back" onclick="hideRawView()">&#8592; Retour a la vue analysee</button>
@@ -400,6 +406,7 @@
         Aucune image
       </div>
       <img id="modalImg" src="" alt="" style="display:none;" title="Cliquer pour agrandir"/>
+      <div class="modal-thumbs" id="modalThumbs"></div>
     </div>
     <div class="modal-body">
       <div class="modal-ref-row">
@@ -468,7 +475,8 @@ var currentSort = 'photo';
 var viewMode = 'tiles';
 var currentWorkbook = null, currentEmbedded = {}, currentFileName = '';
 var toastTimer = null;
-var fbRawData = [], fbRawHeaders = [], fbRawImgs = {};
+var fbRawData = [], fbRawHeaders = [], fbRawImgs = {}, fbHeaderIdx = 0;
+var rawHeadersCache = null;
 var rawSheetData = [], rawSheetImgs = {}, rawSheetName = '';
 var colFilters = [];
 var resizeTh = null, resizeStartX = 0, resizeStartW = 0;
@@ -543,7 +551,8 @@ async function extractImages(arrayBuffer) {
         var blipM=inner.match(/(?:r|relationships):embed="([^"]+)"/);
         if(!rowM||!blipM) continue;
         var row=parseInt(rowM[1],10), fname=drRels[blipM[1]];
-        if(fname&&mediaMap[fname]) rowMap[row]=mediaMap[fname];
+        /* Toutes les images d'une ligne sont conservees (tableau) — avant, la derniere ecrasait les autres */
+        if(fname&&mediaMap[fname]){ if(!rowMap[row]) rowMap[row]=[]; rowMap[row].push(mediaMap[fname]); }
       }
       if(Object.keys(rowMap).length) out[s.name]=rowMap;
     }
@@ -665,7 +674,7 @@ function renderFullTable() {
       var td=document.createElement('td');
       if (col.type==='img') {
         td.className='td-img';
-        if(row.imgSrc){ var img=document.createElement('img'); img.src=row.imgSrc; img.alt=row.ref; img.addEventListener('click',function(e){ e.stopPropagation(); openLightbox(row.imgSrc); }); td.appendChild(img); }
+        if(row.imgSrc){ var img=document.createElement('img'); img.src=row.imgSrc; img.alt=row.ref; img.loading='lazy'; img.addEventListener('click',function(e){ e.stopPropagation(); openLightbox(row.imgSrc); }); td.appendChild(img); }
         else td.innerHTML='<div class="ph"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>';
       } else if(col.key==='__extra__'){ var ex=(row.extra||[]).find(function(e){ return e[0]===col.extraKey; }); td.textContent=ex?ex[1]:'—'; td.title=td.textContent; }
       else { td.textContent=row[col.key]||'—'; td.title=td.textContent; if(col.type==='ref') td.className='td-ref'; }
@@ -717,6 +726,7 @@ function renderRawTable(globalQuery) {
   var hRowIdx=0;
   for(var r=0;r<rawSheetData.length;r++){ if(rawSheetData[r].some(function(c){ return String(c||'').trim(); })){ hRowIdx=r; break; } }
   var headers=rawSheetData[hRowIdx];
+  rawHeadersCache=headers;
 
   if (!colFilters.length) colFilters=new Array(headers.length).fill('');
 
@@ -742,10 +752,10 @@ function renderRawTable(globalQuery) {
     var input=document.createElement('input');
     input.type='text'; input.placeholder='🔍'; input.value=colFilters[c]||'';
     input.dataset.col=c;
-    input.addEventListener('input',function(e){
+    input.addEventListener('input',debounce(function(e){
       colFilters[e.target.dataset.col]=e.target.value.toLowerCase();
-      renderRawBodyOnly(headers, globalQuery||document.getElementById('rawSearch').value);
-    });
+      renderRawBodyOnly(headers, document.getElementById('rawSearch').value);
+    },150));
     th.appendChild(input); trFilters.appendChild(th);
   });
 
@@ -780,9 +790,9 @@ function renderRawBodyOnly(headers, globalQuery) {
     var tdN=document.createElement('td'); tdN.className='raw-num'; tdN.textContent=displayIdx+1; tr.appendChild(tdN);
     headers.forEach(function(_,c){
       var td=document.createElement('td');
-      if(c===imgColIdx&&rawSheetImgs[absIdx]){
-        var img=document.createElement('img'); img.src=rawSheetImgs[absIdx]; img.alt='';
-        (function(src){ img.addEventListener('click',function(){ openLightbox(src); }); })(rawSheetImgs[absIdx]);
+      if(c===imgColIdx&&rawSheetImgs[absIdx]&&rawSheetImgs[absIdx].length){
+        var img=document.createElement('img'); img.src=rawSheetImgs[absIdx][0]; img.alt=''; img.loading='lazy';
+        (function(src){ img.addEventListener('click',function(){ openLightbox(src); }); })(rawSheetImgs[absIdx][0]);
         td.appendChild(img);
       } else {
         var v=String(row[c]||''); td.textContent=v; td.title=v;
@@ -815,6 +825,19 @@ function openModal(filteredIdx) {
   var imgEl=document.getElementById('modalImg'); var noImgEl=document.getElementById('modalNoImg');
   if(row.imgSrc){ imgEl.src=row.imgSrc; imgEl.style.display='block'; (function(src){ imgEl.onclick=function(){ openLightbox(src); }; })(row.imgSrc); noImgEl.style.display='none'; }
   else{ imgEl.style.display='none'; imgEl.onclick=null; noImgEl.style.display='flex'; }
+  /* Galerie si plusieurs photos sur la meme ligne Excel */
+  var thumbs=document.getElementById('modalThumbs'); thumbs.innerHTML='';
+  if(row.imgs&&row.imgs.length>1){
+    row.imgs.forEach(function(src,k){
+      var t=document.createElement('img'); t.src=src; t.alt=''; if(k===0) t.className='sel';
+      t.addEventListener('click',function(){
+        imgEl.src=src; imgEl.onclick=function(){ openLightbox(src); };
+        Array.prototype.forEach.call(thumbs.children,function(c){ c.className=''; });
+        t.className='sel';
+      });
+      thumbs.appendChild(t);
+    });
+  }
   document.getElementById('modalRef').textContent=row.ref;
   (function(ref){ document.getElementById('modalCopyBtn').onclick=function(){ copyToClipboard(ref); }; })(row.ref);
   var items=[
@@ -866,6 +889,7 @@ function renderFallback(rawData, sheetImgs) {
   fbRawData=rawData; fbRawImgs=sheetImgs||{};
   var hRow=0;
   for(var r=0;r<rawData.length;r++){ if(rawData[r].some(function(c){ return String(c).trim(); })){ hRow=r; break; } }
+  fbHeaderIdx=hRow;
   fbRawHeaders=rawData[hRow];
   renderFallbackTable('');
   document.getElementById('fallbackView').style.display='block';
@@ -874,19 +898,21 @@ function renderFallbackTable(query){
   var thead=document.getElementById('fbThead'); var tbody=document.getElementById('fbTbody');
   thead.innerHTML='<tr>'+fbRawHeaders.map(function(h){ return '<th>'+escHtml(String(h||''))+'</th>'; }).join('')+'</tr>';
   var imgColIdx=fbRawHeaders.findIndex(function(h){ return normalize(String(h||'')).match(/图片|photo|picture|image|img/); });
-  var hIdx=fbRawData.indexOf(fbRawHeaders);
-  var dataRows=fbRawData.slice(hIdx+1).filter(function(r){ return r.some(function(c){ return String(c).trim(); }); });
-  if(query){ var qq=normalize(query); dataRows=dataRows.filter(function(row){ return row.some(function(c){ return normalize(String(c||'')).includes(qq); }); }); }
+  /* Index absolu conserve via map — corrige l'association photo/ligne (indexOf renvoyait la 1re ligne identique) */
+  var dataRows=fbRawData.slice(fbHeaderIdx+1)
+    .map(function(row,i){ return {row:row,absIdx:fbHeaderIdx+1+i}; })
+    .filter(function(o){ return o.row.some(function(c){ return String(c).trim(); }); });
+  if(query){ var qq=normalize(query); dataRows=dataRows.filter(function(o){ return o.row.some(function(c){ return normalize(String(c||'')).includes(qq); }); }); }
   document.getElementById('fallbackStats').textContent=dataRows.length+' ligne(s)';
   tbody.innerHTML='';
-  dataRows.forEach(function(row){
+  dataRows.forEach(function(o){
+    var row=o.row, rowIdx=o.absIdx;
     var tr=document.createElement('tr');
-    var rowIdx=fbRawData.indexOf(row);
     fbRawHeaders.forEach(function(_,c){
       var td=document.createElement('td');
-      if(c===imgColIdx&&fbRawImgs[rowIdx]){
-        var img=document.createElement('img'); img.src=fbRawImgs[rowIdx]; img.alt='';
-        (function(src){ img.addEventListener('click',function(e){ e.stopPropagation(); openLightbox(src); }); })(fbRawImgs[rowIdx]);
+      if(c===imgColIdx&&fbRawImgs[rowIdx]&&fbRawImgs[rowIdx].length){
+        var img=document.createElement('img'); img.src=fbRawImgs[rowIdx][0]; img.alt=''; img.loading='lazy';
+        (function(src){ img.addEventListener('click',function(e){ e.stopPropagation(); openLightbox(src); }); })(fbRawImgs[rowIdx][0]);
         td.appendChild(img);
       } else{ var val=String(row[c]||''); td.textContent=val; td.title=val; }
       tr.appendChild(td);
@@ -898,12 +924,37 @@ function renderFallbackTable(query){
 /* ══════════════════════════════════════════════════════════════
    SELECTEUR DE FEUILLE
 ══════════════════════════════════════════════════════════════ */
-function showSheetPicker(sheetNames){
+/* Pre-analyse rapide d'une feuille : est-ce une BOM, et combien de pieces ? */
+function sheetQuickInfo(name){
+  try{
+    var data=XLSX.utils.sheet_to_json(currentWorkbook.Sheets[name],{header:1,defval:''});
+    var det=fuzzyDetect(data);
+    if(!det) return {bom:false,count:0};
+    var hr=det.headerRow, cm=det.colMap, n=0;
+    for(var r=hr+1;r<data.length;r++){
+      var row=data[r];
+      if(!row||!row.some(function(c){ return String(c).trim(); })) continue;
+      var segs=String(row[cm.ref]||'').split(/[\r\n]+/).map(function(s){ return s.trim(); }).filter(Boolean);
+      if((segs[0]||'').length>=2) n++;
+    }
+    return {bom:true,count:n};
+  } catch(e){ return {bom:false,count:0}; }
+}
+
+function showSheetPicker(sheetNames, infos){
+  infos=infos||{};
   var picker=document.getElementById('sheetPicker'); var buttons=document.getElementById('sheetButtons');
   document.getElementById('sheetPickerSub').textContent='"'+currentFileName+'" contient '+sheetNames.length+' feuilles :';
+  /* Feuilles BOM en premier, triees par nombre de pieces */
+  var sorted=sheetNames.slice().sort(function(a,b){
+    return ((infos[b]&&infos[b].count)||0)-((infos[a]&&infos[a].count)||0);
+  });
   buttons.innerHTML='';
-  sheetNames.forEach(function(name){
-    var btn=document.createElement('button'); btn.className='sheet-btn'; btn.textContent='📄 '+name;
+  sorted.forEach(function(name){
+    var info=infos[name]||{};
+    var isBom=info.bom&&info.count>0;
+    var btn=document.createElement('button'); btn.className='sheet-btn'+(isBom?' is-bom':'');
+    btn.textContent=(isBom?'✔ ':'📄 ')+name+(isBom?' · '+info.count+' piece(s)':'');
     (function(n){ btn.addEventListener('click',function(){ picker.style.display='none'; parseSheet(n); }); })(name);
     buttons.appendChild(btn);
   });
@@ -937,8 +988,9 @@ function parseSheet(sheetName){
     for(var r=headerRow+1;r<rawData.length;r++){
       var row=rawData[r];
       if(!row||!row.some(function(c){ return String(c).trim(); })) continue;
-      var refRaw=String(row[colMap.ref]||'').split(/[\r\n]+/)[0].trim();
-      var ref=refRaw; if(!ref||ref.length<2) continue;
+      /* 1er segment NON vide — certaines BOM Dreame ont des refs commencant par un saut de ligne ("\n20020100006899") */
+      var refSegs=String(row[colMap.ref]||'').split(/[\r\n]+/).map(function(s){ return s.trim(); }).filter(Boolean);
+      var ref=refSegs[0]||''; if(ref.length<2) continue;
       var desc=colMap.desc1!==-1?String(row[colMap.desc1]||'').trim():'';
       var desc2=colMap.desc2!==-1?String(row[colMap.desc2]||'').trim():'';
       if(desc.match(/[一-鿿]/)&&desc2&&!desc2.match(/[一-鿿]/)) { var tmp=desc; desc=desc2; desc2=tmp; }
@@ -948,7 +1000,8 @@ function parseSheet(sheetName){
       [colMap.ref,colMap.desc1,colMap.desc2,colMap.qty,colMap.level,colMap.img].filter(function(c){ return c!==-1; }).forEach(function(c){ usedCols[c]=true; });
       var extra=[];
       rawHeaders.forEach(function(h,c){ if(!usedCols[c]&&h&&String(row[c]||'').trim()) extra.push([String(h).trim(),String(row[c]).trim()]); });
-      allRows.push({ref:ref,desc:desc,desc2:desc2,qty:qty,level:level,imgSrc:sheetImgs[r]||null,extra:extra});
+      var rowImgs=sheetImgs[r]||[];
+      allRows.push({ref:ref,desc:desc,desc2:desc2,qty:qty,level:level,imgSrc:rowImgs[0]||null,imgs:rowImgs,extra:extra});
     }
     currentSort='photo'; document.getElementById('sortSelect').value='photo';
     allRows.sort(function(a,b){ return (b.imgSrc?1:0)-(a.imgSrc?1:0); });
@@ -1014,8 +1067,18 @@ async function parseBOM(file) {
     currentWorkbook = XLSX.read(ab, { type: 'array' });
 
     setLoading(false);
-    if (currentWorkbook.SheetNames.length > 1) showSheetPicker(currentWorkbook.SheetNames);
-    else parseSheet(currentWorkbook.SheetNames[0]);
+    /* Feuilles techniques WPS Office masquees ; feuille BOM unique ouverte automatiquement */
+    var visibleSheets = currentWorkbook.SheetNames.filter(function(n){ return !/^WpsReserved/i.test(n); });
+    if (!visibleSheets.length) visibleSheets = currentWorkbook.SheetNames.slice();
+    if (visibleSheets.length === 1) { parseSheet(visibleSheets[0]); }
+    else {
+      var sheetInfos = {};
+      visibleSheets.forEach(function(n){ sheetInfos[n] = sheetQuickInfo(n); });
+      var bomSheets = visibleSheets.filter(function(n){ return sheetInfos[n].bom && sheetInfos[n].count > 0; });
+      showSheetPicker(visibleSheets, sheetInfos);
+      /* Une seule vraie BOM -> on l'ouvre directement, le selecteur reste affiche pour changer */
+      if (bomSheets.length === 1) parseSheet(bomSheets[0]);
+    }
 
   } catch(err) {
     console.error('parseBOM error:', err);
@@ -1049,12 +1112,25 @@ function showDetectBanner(ok,title,colMap,rawHeaders){
     Object.keys(colNames).forEach(function(k){
       var idx=colMap[k]; if(idx===-1||idx===undefined) return;
       var chip=document.createElement('span'); chip.className='chip-col';
-      chip.textContent=colNames[k]+' → '+String.fromCharCode(65+idx)+' "'+String(rawHeaders[idx]||idx).slice(0,28)+'"';
+      chip.textContent=colNames[k]+' → '+colLetter(idx)+' "'+String(rawHeaders[idx]||idx).slice(0,28)+'"';
       chips.appendChild(chip);
     });
   }
 }
 function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+/* Lettre de colonne Excel : 0→A, 25→Z, 26→AA, 27→AB… */
+function colLetter(idx){
+  var s=''; idx=idx+1;
+  while(idx>0){ var m=(idx-1)%26; s=String.fromCharCode(65+m)+s; idx=Math.floor((idx-1)/26); }
+  return s;
+}
+
+/* Debounce — limite les re-rendus pendant la frappe */
+function debounce(fn, ms){
+  var t;
+  return function(){ var args=arguments, ctx=this; clearTimeout(t); t=setTimeout(function(){ fn.apply(ctx,args); }, ms); };
+}
 
 /* ══════════════════════════════════════════════════════════════
    EVENEMENTS — FIX CHROME
@@ -1077,8 +1153,8 @@ zone.addEventListener('dragleave', function() { zone.classList.remove('drag-over
 zone.addEventListener('drop', function(e) {
   e.preventDefault(); zone.classList.remove('drag-over');
   var f = e.dataTransfer.files[0];
-  if (f && f.name.endsWith('.xlsx')) parseBOM(f);
-  else alert('Merci d\'utiliser un fichier .xlsx');
+  if (f && /\.(xlsx|xlsm)$/i.test(f.name)) parseBOM(f);
+  else alert('Merci d\'utiliser un fichier .xlsx ou .xlsm');
 });
 
 /* Changement via l'input */
@@ -1091,9 +1167,13 @@ bomFileInput.addEventListener('change', function(e) {
   }
 });
 
-document.getElementById('bomSearch').addEventListener('input', function() {
+document.getElementById('bomSearch').addEventListener('input', debounce(function() {
   if (viewMode === 'tiles') renderTiles(); else renderFullTable();
-});
+}, 200));
+/* Recherche globale du mode secours : ne re-rend que le corps (conserve largeurs de colonnes + focus) */
+document.getElementById('rawSearch').addEventListener('input', debounce(function(e) {
+  if (rawHeadersCache) renderRawBodyOnly(rawHeadersCache, e.target.value);
+}, 200));
 document.getElementById('sortSelect').addEventListener('change', function(e) {
   currentSort = e.target.value; sortRows();
   if (viewMode === 'tiles') renderTiles(); else renderFullTable();
@@ -1104,13 +1184,62 @@ document.getElementById('partModal').addEventListener('click', function(e) {
   if (e.target === document.getElementById('partModal')) closeModal();
 });
 document.getElementById('modalClose').addEventListener('click', closeModal);
-document.getElementById('fallbackSearch').addEventListener('input', function(e) { renderFallbackTable(e.target.value); });
+document.getElementById('fallbackSearch').addEventListener('input', debounce(function(e) { renderFallbackTable(e.target.value); }, 200));
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') {
     if (document.getElementById('lightbox').classList.contains('active')) closeLightbox();
     else closeModal();
   }
 });
+
+/* ══════════════════════════════════════════════════════════════
+   OUVERTURE AUTOMATIQUE DEPUIS LA RECHERCHE (?src=...&name=...)
+   Le fichier est recupere par fetch et parse en memoire :
+   la visionneuse Office d'Edge ne peut pas l'intercepter.
+══════════════════════════════════════════════════════════════ */
+(async function autoLoadFromUrl() {
+  var params = new URLSearchParams(location.search);
+  var src = params.get('src');
+  if (!src) return;
+  var name = params.get('name') || 'BOM.xlsx';
+
+  setLoading(true, 'Récupération de "' + name + '" depuis SharePoint…');
+  var ab = null;
+
+  /* Tentative 1 : URL directe (fonctionne si la page est servie sur le meme domaine SharePoint) */
+  try {
+    var r = await fetch(src, { credentials: 'include' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    ab = await r.arrayBuffer();
+  } catch (e1) {
+    /* Tentative 2 : API REST SharePoint (renvoie les octets bruts, jamais interceptee par Edge) */
+    try {
+      var u = new URL(src, location.href);
+      var rel = decodeURIComponent(u.pathname).replace(/'/g, "''");
+      var api = u.origin + "/_api/web/GetFileByServerRelativeUrl('" + rel + "')/$value";
+      var r2 = await fetch(api, { credentials: 'include' });
+      if (!r2.ok) throw new Error('HTTP ' + r2.status);
+      ab = await r2.arrayBuffer();
+    } catch (e2) {
+      console.warn('autoLoad: fetch impossible', e1, e2);
+      ab = null;
+    }
+  }
+
+  /* Verification signature ZIP ("PK") — une page de login SharePoint renverrait du HTML avec un statut 200 */
+  if (ab) {
+    var sig = new Uint8Array(ab.slice(0, 2));
+    if (sig[0] !== 0x50 || sig[1] !== 0x4B) { console.warn('autoLoad: reponse non-xlsx (login SharePoint ?)'); ab = null; }
+  }
+
+  setLoading(false);
+  if (ab) {
+    parseBOM(new File([ab], name, { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+  } else {
+    showDetectBanner(false, 'Impossible de récupérer "' + name + '" automatiquement (authentification SharePoint requise). Téléchargez le fichier depuis la recherche, puis glissez-le dans la zone ci-dessus.');
+    showToast('⚠ Récupération automatique impossible');
+  }
+})();
 </script>
 </body>
 </html>
