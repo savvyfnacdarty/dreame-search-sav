@@ -413,28 +413,27 @@ async function downloadFile(url, filename) {
     console.warn('downloadFile: fetch bloque :', err.message);
   }
 
-  /* ── Tentative 2 : URL REST API SharePoint dans un iframe ──
-     /_api/web/GetFileByServerRelativeUrl(...)/$value
-     retourne application/octet-stream. Le viewer Office d'Edge
-     n'intercepte pas les URLs /_api/ contrairement aux URLs
-     directes de fichiers .xlsx SharePoint.                     */
+  /* ── Tentative 2 : URL REST API SharePoint via window.open ──
+     /_api/web/GetFileByServerRelativeUrl(...)/$value renvoie
+     Content-Disposition:attachment + application/octet-stream.
+     Edge ne reconnait pas les URLs /_api/ comme des fichiers
+     Office, donc pas d'interception par le viewer.
+     On utilise window.open (pas un iframe invisible) car les
+     navigateurs modernes bloquent les downloads depuis iframes
+     caches pour raisons de securite.                           */
   try {
     var urlObj      = new URL(url);
     var relPath     = urlObj.pathname.replace(/\?.*$/, '');
     var escapedPath = relPath.replace(/'/g, "''");
     var apiUrl      = urlObj.origin + "/_api/web/GetFileByServerRelativeUrl('" + escapedPath + "')/$value";
-    var iframe      = document.createElement('iframe');
-    iframe.style.cssText = 'display:none;position:fixed;width:0;height:0;border:0;';
-    iframe.src = apiUrl;
-    document.body.appendChild(iframe);
+    window.open(apiUrl, '_blank', 'noopener');
     showToast('⬇ Téléchargement en cours…');
-    setTimeout(function() { try { document.body.removeChild(iframe); } catch(_){} }, 30000);
     return;
   } catch(err2) {
     console.warn('downloadFile: fallback API echoue :', err2.message);
   }
 
-  /* ── Fallback final : nouvel onglet ── */
+  /* ── Fallback final : URL directe en nouvel onglet ── */
   window.open(url, '_blank', 'noopener');
   showToast('ℹ Fichier ouvert — Fichier > Télécharger dans la visionneuse Edge');
 }
