@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Lecteur BOM — SAV DREAME · Fnac Darty</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90' font-family='Arial Black,Arial,sans-serif' font-weight='900'><tspan fill='%23F5A623'>F</tspan><tspan fill='%23E62E2E'>D</tspan></text></svg>"/>
+<link rel="stylesheet" href="assets/shared.css"/>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+/* ── Upload — FIX CHROME : input cache hors ecran au lieu d'overlay ── */
+.upload-zone {
+  border:2px dashed var(--border-strong); border-radius:var(--r-lg);
+  background:var(--surface); padding:48px 24px;
+  text-align:center; cursor:pointer; transition:all var(--tr); position:relative;
+}
+.upload-zone:hover,.upload-zone.drag-over {
+  border-color:var(--fd-red); background:var(--accent-glow);
+}
+/* Input cache hors ecran — plus fiable sur Chrome que l'overlay */
+.upload-zone input[type=file] {
+  position:fixed; left:-9999px; top:-9999px; width:0; height:0; opacity:0; pointer-events:none;
+}
+.upload-icon { width:48px; height:48px; margin:0 auto 16px; color:var(--muted); }
+.upload-title { font-family:var(--font-cond); font-size:22px; font-weight:700; color:var(--text); margin-bottom:6px; }
+.upload-sub { font-size:13px; color:var(--muted); }
+.upload-sub span { color:var(--fd-red); font-weight:700; }
+
+/* ── Loading ── */
+.loading-bar {
+  display:none; align-items:center; gap:12px;
+  padding:14px 18px; background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r-md); margin:16px 0; font-size:13px; font-weight:600; color:var(--text-2);
+}
+.loading-bar.active { display:flex; }
+
+/* ── Sheet picker ── */
+.sheet-picker {
+  display:none; background:var(--surface); border:2px solid var(--fd-red);
+  border-radius:var(--r-lg); padding:22px 24px; margin:16px 0; animation:fadeUp .22s ease;
+}
+.sheet-picker-title { font-family:var(--font-cond); font-size:18px; font-weight:700; color:var(--text); margin-bottom:4px; }
+.sheet-picker-sub { font-size:13px; color:var(--text-2); margin-bottom:14px; }
+.sheet-buttons { display:flex; flex-wrap:wrap; gap:8px; }
+.sheet-btn {
+  padding:8px 18px; border-radius:var(--r-md); border:1.5px solid var(--border);
+  background:var(--surface-2); color:var(--text); font-size:13px; font-weight:600; transition:all var(--tr);
+}
+.sheet-btn:hover { border-color:var(--fd-red); background:var(--accent-glow); color:var(--fd-red); }
+
+/* ── Bannières détection ── */
+.detect-banner { display:none; padding:14px 18px; border-radius:var(--r-md); margin:16px 0; font-size:13px; font-weight:600; gap:10px; align-items:flex-start; }
+.detect-banner.active { display:flex; }
+.detect-ok { background:var(--green-bg); border:1px solid var(--green-border); color:var(--green); }
+.detect-warn { background:var(--orange-bg); border:1px solid var(--orange-border); color:var(--orange); }
+.detect-banner .col-chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+.chip-col {
+  display:inline-block; padding:2px 8px; border-radius:12px;
+  font-size:11px; font-weight:700; font-family:var(--font-mono); background:rgba(0,0,0,0.07);
+}
+[data-theme="dark"] .chip-col { background:rgba(255,255,255,0.1); }
+
+/* ── Toolbar vue normale ── */
+.toolbar { display:flex; align-items:center; gap:10px; margin:20px 0 16px; flex-wrap:wrap; }
+.search-wrap { position:relative; flex:1; min-width:200px; }
+.search-wrap svg { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--muted); pointer-events:none; }
+.search-bom {
+  width:100%; height:42px; background:var(--surface);
+  border:1.5px solid var(--border); border-radius:var(--r-md);
+  padding:0 16px 0 40px; font-size:14px; font-family:var(--font-ui); color:var(--text); transition:all var(--tr);
+}
+.search-bom:focus { outline:none; border-color:var(--fd-red); box-shadow:0 0 0 3px var(--accent-glow); }
+.sort-select {
+  height:42px; background:var(--surface); border:1.5px solid var(--border);
+  border-radius:var(--r-md); padding:0 12px; font-size:13px; font-family:var(--font-ui);
+  color:var(--text); cursor:pointer; transition:border-color var(--tr);
+}
+.sort-select:focus { outline:none; border-color:var(--fd-red); }
+.stats-badge {
+  font-size:12px; font-weight:600; color:var(--muted); white-space:nowrap;
+  background:var(--surface); border:1px solid var(--border); padding:6px 12px; border-radius:var(--r-md);
+}
+.view-switcher { display:flex; border:1.5px solid var(--border); border-radius:var(--r-md); overflow:hidden; flex-shrink:0; }
+.view-btn {
+  padding:0 14px; height:42px; border:none; background:var(--surface);
+  color:var(--muted); font-size:13px; font-weight:600;
+  transition:all var(--tr); display:flex; align-items:center; gap:6px;
+  border-right:1px solid var(--border);
+}
+.view-btn:last-child { border-right:none; }
+.view-btn:hover { background:var(--surface-2); color:var(--text); }
+.view-btn.active { background:var(--text); color:var(--surface); }
+
+/* ── Grille de tuiles ── */
+.tiles-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:16px; }
+.tile-card {
+  background:var(--surface); border:1.5px solid var(--border); border-radius:var(--r-lg);
+  overflow:hidden; cursor:pointer; transition:transform var(--tr),box-shadow var(--tr),border-color var(--tr);
+  box-shadow:var(--shadow-sm); display:flex; flex-direction:column;
+}
+.tile-card:hover { transform:translateY(-3px); box-shadow:var(--shadow-md); border-color:var(--fd-red); }
+.tile-card.has-photo { border-color:var(--border-strong); }
+.tile-img-wrap {
+  aspect-ratio:1/1; background:var(--surface-2); display:flex; align-items:center;
+  justify-content:center; padding:14px; border-bottom:1px solid var(--rule); flex-shrink:0; overflow:hidden;
+}
+.tile-card.has-photo .tile-img-wrap { background:#fff; }
+.tile-img { max-width:100%; max-height:100%; object-fit:contain; transition:transform .2s; }
+.tile-card:hover .tile-img { transform:scale(1.04); }
+.tile-ph-icon { display:flex; flex-direction:column; align-items:center; gap:8px; color:var(--muted-2); font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; }
+.tile-body { padding:12px 14px 14px; display:flex; flex-direction:column; gap:4px; flex:1; }
+.tile-ref { font-family:var(--font-mono); font-weight:700; font-size:11.5px; color:var(--fd-red); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tile-desc { font-size:12.5px; color:var(--text-2); line-height:1.4; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; flex:1; }
+.tile-qty { display:inline-block; margin-top:6px; padding:2px 9px; border-radius:10px; background:var(--surface-3); border:1px solid var(--border); font-size:11px; font-weight:700; color:var(--muted); align-self:flex-start; }
+.no-tiles-msg { grid-column:1/-1; padding:56px 24px; text-align:center; color:var(--muted); font-size:13px; }
+
+/* ── Vue tableau (parsed) ── */
+.full-table-wrap { overflow-x:auto; border-radius:var(--r-md); box-shadow:var(--shadow-sm); border:1px solid var(--border); max-height:70vh; overflow-y:auto; }
+.full-table { width:100%; border-collapse:collapse; background:var(--surface); font-size:13px; }
+.full-table thead th {
+  background:var(--surface-3); padding:10px 14px; text-align:left;
+  font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.5px;
+  color:var(--muted); border-bottom:2px solid var(--border); white-space:nowrap; position:sticky; top:0; z-index:1;
+}
+.full-table tbody tr { border-bottom:1px solid var(--rule); cursor:pointer; transition:background var(--tr); }
+.full-table tbody tr:last-child { border-bottom:none; }
+.full-table tbody tr:hover { background:var(--surface-2); }
+.full-table td { padding:8px 14px; vertical-align:middle; max-width:280px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.full-table td.td-ref { font-family:var(--font-mono); font-weight:700; font-size:12px; color:var(--fd-red); white-space:nowrap; }
+.full-table td.td-img { width:52px; padding:5px 10px; text-align:center; }
+.full-table td.td-img img { width:40px; height:40px; object-fit:contain; border-radius:var(--r-sm); background:var(--surface-2); cursor:zoom-in; transition:transform .15s; }
+.full-table td.td-img img:hover { transform:scale(1.1); }
+.full-table td.td-img .ph { width:40px; height:40px; background:var(--surface-3); border-radius:var(--r-sm); display:inline-flex; align-items:center; justify-content:center; color:var(--muted-2); }
+
+/* ── MODE SECOURS ── */
+.raw-hint {
+  display:none; align-items:center; gap:12px;
+  padding:12px 16px; background:var(--orange-bg); border:1.5px solid var(--orange-border);
+  border-radius:var(--r-md); margin:14px 0; font-size:13px; color:var(--orange);
+}
+.raw-hint.active { display:flex; }
+.raw-hint strong { font-weight:700; }
+.btn-raw {
+  flex-shrink:0; padding:8px 16px; border-radius:var(--r-md);
+  border:1.5px solid #f97316; background:var(--surface); color:#ea580c;
+  font-size:13px; font-weight:700; transition:all var(--tr); white-space:nowrap;
+}
+.btn-raw:hover { background:var(--orange-bg); border-color:#ea580c; }
+.btn-raw.active-raw { background:#ea580c; color:#fff; border-color:#ea580c; }
+[data-theme="dark"] .btn-raw { background:var(--surface-2); }
+
+#rawView { display:none; margin-top:4px; }
+.raw-toolbar { display:flex; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap; }
+.raw-search-wrap { position:relative; flex:1; min-width:200px; }
+.raw-search-wrap svg { position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--muted); pointer-events:none; }
+.raw-search {
+  width:100%; height:40px; background:var(--surface); border:1.5px solid var(--border);
+  border-radius:var(--r-md); padding:0 14px 0 36px; font-size:13px; font-family:var(--font-ui);
+  color:var(--text); transition:all var(--tr);
+}
+.raw-search:focus { outline:none; border-color:var(--fd-red); box-shadow:0 0 0 3px var(--accent-glow); }
+.raw-stats { font-size:12px; font-weight:600; color:var(--muted); background:var(--surface); border:1px solid var(--border); padding:5px 11px; border-radius:var(--r-md); white-space:nowrap; }
+.raw-back { padding:7px 14px; border-radius:var(--r-md); border:1.5px solid var(--border); background:var(--surface); color:var(--text-2); font-size:13px; font-weight:600; transition:all var(--tr); }
+.raw-back:hover { border-color:var(--border-strong); color:var(--text); }
+.raw-table-wrap { overflow:auto; max-height:72vh; border-radius:var(--r-md); border:1px solid var(--border); box-shadow:var(--shadow-sm); }
+.raw-table { width:max-content; min-width:100%; border-collapse:collapse; background:var(--surface); font-size:12.5px; table-layout:fixed; }
+.raw-table thead { position:sticky; top:0; z-index:10; }
+.raw-table thead tr.thead-labels th {
+  background:var(--fd-navy); color:#fff;
+  padding:9px 28px 9px 10px; text-align:left; font-size:11px; font-weight:700; letter-spacing:.4px;
+  border-bottom:1px solid rgba(255,255,255,.1);
+  white-space:nowrap; position:relative; min-width:80px; user-select:none;
+  overflow:hidden; text-overflow:ellipsis;
+}
+[data-theme="dark"] .raw-table thead tr.thead-labels th { background:#0f172a; }
+.raw-table thead tr.thead-filters th { background:var(--surface-2); padding:4px 6px; border-bottom:2px solid var(--border); }
+.raw-table thead tr.thead-filters th input {
+  width:100%; height:28px; font-size:11px; font-family:var(--font-mono);
+  border:1px solid var(--border); border-radius:3px;
+  background:var(--surface); color:var(--text);
+  padding:0 6px; transition:border-color var(--tr); box-sizing:border-box;
+}
+.raw-table thead tr.thead-filters th input:focus { outline:none; border-color:var(--fd-yellow); }
+.raw-table td { padding:7px 10px; border-bottom:1px solid var(--rule); vertical-align:middle; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.raw-table tbody tr:hover td { background:var(--surface-2); }
+.raw-table td img { width:48px; height:48px; object-fit:contain; border-radius:3px; background:#f8f9fa; cursor:zoom-in; display:block; }
+.raw-table td.raw-num { font-size:10px; color:var(--muted-2); text-align:right; padding-right:8px; width:36px; min-width:36px; }
+.col-resize-handle { position:absolute; right:0; top:0; width:6px; height:100%; cursor:col-resize; background:transparent; z-index:2; }
+.col-resize-handle:hover, .col-resize-handle.dragging { background:var(--fd-yellow); opacity:.6; }
+
+/* ── Fallback (détection 0%) ── */
+.fallback-banner { display:none; padding:18px 20px; background:var(--orange-bg); border:1px solid var(--orange-border); border-radius:var(--r-md); margin:16px 0; gap:14px; align-items:flex-start; }
+.fallback-banner.active { display:flex; }
+.fallback-title { font-family:var(--font-cond); font-size:17px; font-weight:700; color:var(--orange); margin-bottom:3px; }
+.fallback-sub { font-size:13px; color:var(--text-2); }
+.fallback-toolbar { display:flex; align-items:center; gap:10px; margin:12px 0 10px; flex-wrap:wrap; }
+.fallback-search-wrap { position:relative; flex:1; min-width:200px; }
+.fallback-search-wrap svg { position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--muted); pointer-events:none; }
+.fallback-search { width:100%; height:38px; background:var(--surface); border:1.5px solid var(--border); border-radius:var(--r-md); padding:0 14px 0 36px; font-size:13px; font-family:var(--font-ui); color:var(--text); transition:all var(--tr); }
+.fallback-search:focus { outline:none; border-color:var(--fd-red); box-shadow:0 0 0 3px var(--accent-glow); }
+.fallback-stats { font-size:12px; font-weight:600; color:var(--muted); background:var(--surface); border:1px solid var(--border); padding:5px 10px; border-radius:var(--r-md); white-space:nowrap; }
+.fallback-table-wrap { overflow:auto; max-height:65vh; border-radius:var(--r-md); border:1px solid var(--border); box-shadow:var(--shadow-sm); }
+.fallback-table { width:100%; border-collapse:collapse; background:var(--surface); font-size:12px; }
+.fallback-table th { background:var(--surface-3); padding:8px 12px; text-align:left; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); border-bottom:2px solid var(--border); position:sticky; top:0; white-space:nowrap; z-index:1; }
+.fallback-table td { padding:7px 12px; border-bottom:1px solid var(--rule); font-size:12px; max-width:250px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; vertical-align:middle; }
+.fallback-table tr:hover td { background:var(--surface-2); }
+.fallback-table td img { width:36px; height:36px; object-fit:contain; border-radius:var(--r-sm); background:var(--surface-2); cursor:zoom-in; }
+
+/* ── Modal ── */
+#partModal { display:none; position:fixed; inset:0; z-index:1500; background:rgba(15,18,30,0.65); align-items:center; justify-content:center; padding:24px; backdrop-filter:blur(4px); }
+#partModal.active { display:flex; }
+.modal-inner { background:var(--surface); border-radius:var(--r-xl); box-shadow:var(--shadow-modal); max-width:720px; width:100%; max-height:90vh; display:flex; overflow:hidden; position:relative; animation:fadeUp .2s ease; }
+@keyframes fadeUp { from{opacity:0;transform:scale(0.96) translateY(10px);}to{opacity:1;transform:scale(1) translateY(0);} }
+.modal-close-btn { position:absolute; top:14px; right:14px; width:32px; height:32px; border-radius:50%; border:1.5px solid var(--border); background:var(--surface-2); color:var(--text-2); font-size:15px; display:flex; align-items:center; justify-content:center; transition:all var(--tr); z-index:10; }
+.modal-close-btn:hover { background:var(--border); color:var(--text); }
+.modal-img-side { width:260px; flex-shrink:0; background:var(--surface-2); display:flex; align-items:center; justify-content:center; padding:32px 20px; border-right:1px solid var(--border); }
+.modal-img-side img { max-width:100%; max-height:280px; object-fit:contain; cursor:zoom-in; transition:opacity .15s,transform .15s; border-radius:var(--r-sm); }
+.modal-img-side img:hover { opacity:.88; transform:scale(1.02); }
+.modal-no-img { display:flex; flex-direction:column; align-items:center; gap:10px; color:var(--muted-2); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; }
+.modal-body { flex:1; padding:28px 24px 28px 28px; overflow-y:auto; display:flex; flex-direction:column; gap:20px; }
+.modal-ref-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding-right:36px; }
+.modal-ref { font-family:var(--font-mono); font-size:20px; font-weight:700; color:var(--fd-red); user-select:all; word-break:break-all; }
+.modal-fields { display:grid; grid-template-columns:1fr 1fr; gap:14px 20px; }
+.modal-field { display:flex; flex-direction:column; gap:3px; }
+.modal-field.full { grid-column:1/-1; }
+.modal-field-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); }
+.modal-field-value { font-size:14px; font-weight:500; color:var(--text); line-height:1.5; word-break:break-word; }
+.copy-ref-btn { padding:5px 12px; border-radius:var(--r-sm); border:1.5px solid var(--border); background:var(--surface-2); color:var(--muted); font-size:12px; font-weight:600; transition:all var(--tr); white-space:nowrap; }
+.copy-ref-btn:hover { border-color:var(--fd-red); color:var(--fd-red); background:var(--accent-glow); }
+.copy-ref-btn:active { transform:scale(0.96); }
+
+/* ── Lightbox ── */
+#lightbox { display:none; position:fixed; inset:0; z-index:2000; background:rgba(0,0,0,.9); align-items:center; justify-content:center; cursor:zoom-out; backdrop-filter:blur(6px); }
+#lightbox.active { display:flex; }
+#lightboxImg { max-width:92vw; max-height:90vh; object-fit:contain; border-radius:var(--r-md); box-shadow:0 32px 80px rgba(0,0,0,.5); pointer-events:none; }
+#lightboxClose { position:fixed; top:18px; right:22px; width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,.12); border:1.5px solid rgba(255,255,255,.25); color:white; font-size:18px; display:flex; align-items:center; justify-content:center; transition:background var(--tr); z-index:2001; }
+#lightboxClose:hover { background:rgba(255,255,255,.25); }
+
+@media(max-width:600px){
+  .modal-inner { flex-direction:column; max-height:95vh; }
+  .modal-img-side { width:100%; height:200px; border-right:none; border-bottom:1px solid var(--border); padding:20px; }
+  .modal-body { padding:20px; }
+  .modal-fields { grid-template-columns:1fr; }
+  .tiles-grid { grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════ HEADER ══════════ -->
+<header class="hdr">
+  <div class="hdr-in">
+    <a href="index2.html" class="hdr-logo" title="Accueil SAV Dreame">
+      <span class="hdr-logo-brand"><span class="fnac">FNAC</span> <span class="darty">DARTY</span></span>
+    </a>
+    <nav class="hdr-nav">
+      <a href="index2.html">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        Recherche
+      </a>
+      <a href="bom_manager2.html" class="active">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        Lecteur BOM
+      </a>
+      <a href="index_fault_codes.html">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        Codes Erreurs
+      </a>
+      <a href="calibrage_dreame.html" class="nav-calibrage">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        Calibrage
+      </a>
+    </nav>
+    <div class="hdr-right">
+      <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Mode nuit / jour">&#9728;</button>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════ MAIN ══════════ -->
+<main class="main-wrap">
+
+  <!-- Upload — clic sur la zone appelle explicitement l'input (fix Chrome) -->
+  <div class="upload-zone" id="uploadZone">
+    <input type="file" id="bomFile" accept=".xlsx"/>
+    <svg class="upload-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+    </svg>
+    <div class="upload-title">Importer un fichier BOM Excel</div>
+    <div class="upload-sub">Glissez-deposez votre fichier <span>.xlsx</span> ici, ou cliquez pour parcourir</div>
+  </div>
+
+  <div class="loading-bar" id="loadingBar">
+    <div class="spinner"></div>
+    <span id="loadingMsg">Analyse en cours…</span>
+  </div>
+
+  <!-- Selecteur de feuille -->
+  <div class="sheet-picker" id="sheetPicker">
+    <div class="sheet-picker-title">&#128203; Plusieurs feuilles detectees</div>
+    <div class="sheet-picker-sub" id="sheetPickerSub">Cliquez sur la feuille qui contient votre BOM :</div>
+    <div class="sheet-buttons" id="sheetButtons"></div>
+  </div>
+
+  <!-- Banniere detection -->
+  <div class="detect-banner" id="detectBanner">
+    <div>
+      <div id="detectTitle" style="font-size:14px;margin-bottom:4px;"></div>
+      <div class="col-chips" id="detectChips"></div>
+    </div>
+  </div>
+
+  <!-- Bouton tableau brut -->
+  <div class="raw-hint" id="rawHint">
+    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+    <span>Les references ne s'affichent pas correctement ?</span>
+    <button class="btn-raw" id="btnShowRaw" onclick="showRawView()">&#128202; Mode secours &mdash; Tableau Excel brut</button>
+  </div>
+
+  <!-- Vue normale -->
+  <div id="normalView" style="display:none;">
+    <div class="toolbar">
+      <div class="search-wrap">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" class="search-bom" id="bomSearch" placeholder="Filtrer par reference, designation…"/>
+      </div>
+      <select class="sort-select" id="sortSelect">
+        <option value="photo">&#128247; Photos d'abord</option>
+        <option value="ref">&#128292; Reference A&rarr;Z</option>
+        <option value="desc">&#128221; Designation A&rarr;Z</option>
+      </select>
+      <div class="view-switcher">
+        <button class="view-btn active" id="btnTiles" title="Grille de tuiles">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+          Tuiles
+        </button>
+        <button class="view-btn" id="btnTable" title="Tableau">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M3 14h18M10 4v16M3 4h18a1 1 0 011 1v14a1 1 0 01-1 1H3a1 1 0 01-1-1V5a1 1 0 011-1z"/></svg>
+          Tableau
+        </button>
+      </div>
+      <div class="stats-badge" id="statsBadge">0 piece(s)</div>
+    </div>
+    <div id="tileView"><div class="tiles-grid" id="tilesGrid"></div></div>
+    <div id="tableView" style="display:none;">
+      <div class="full-table-wrap">
+        <table class="full-table"><thead id="fullThead"></thead><tbody id="fullTbody"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fallback (detection 0%) -->
+  <div id="fallbackView" style="display:none;">
+    <div class="fallback-banner active">
+      <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;color:#d97706;margin-top:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+      <div>
+        <div class="fallback-title">&#9888; Colonnes non identifiees &mdash; Affichage brut</div>
+        <div class="fallback-sub">Aucun format connu detecte. Utilisez le bouton "Mode secours" ci-dessus pour une vue complete avec filtres par colonne.</div>
+      </div>
+    </div>
+    <div class="fallback-toolbar">
+      <div class="fallback-search-wrap">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" class="fallback-search" id="fallbackSearch" placeholder="Rechercher dans toutes les colonnes…"/>
+      </div>
+      <div class="fallback-stats" id="fallbackStats">&#8212;</div>
+    </div>
+    <div class="fallback-table-wrap">
+      <table class="fallback-table"><thead id="fbThead"></thead><tbody id="fbTbody"></tbody></table>
+    </div>
+  </div>
+
+  <!-- Mode Secours -->
+  <div id="rawView">
+    <div class="raw-toolbar">
+      <div class="raw-search-wrap">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" class="raw-search" id="rawSearch" placeholder="Recherche globale dans tout le tableau…" oninput="renderRawTable(this.value)"/>
+      </div>
+      <div class="raw-stats" id="rawStats">&#8212;</div>
+      <button class="raw-back" onclick="hideRawView()">&#8592; Retour a la vue analysee</button>
+    </div>
+    <div class="raw-table-wrap">
+      <table class="raw-table" id="rawTable">
+        <thead id="rawThead"></thead>
+        <tbody id="rawTbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<!-- ══════════ MODAL ══════════ -->
+<div id="partModal">
+  <div class="modal-inner">
+    <button class="modal-close-btn" id="modalClose" title="Fermer (Echap)">&#x2715;</button>
+    <div class="modal-img-side">
+      <div class="modal-no-img" id="modalNoImg">
+        <svg width="44" height="44" fill="none" stroke="currentColor" stroke-width="1.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        Aucune image
+      </div>
+      <img id="modalImg" src="" alt="" style="display:none;" title="Cliquer pour agrandir"/>
+    </div>
+    <div class="modal-body">
+      <div class="modal-ref-row">
+        <span class="modal-ref" id="modalRef"></span>
+        <button class="copy-ref-btn" id="modalCopyBtn">&#128203; Copier</button>
+      </div>
+      <div class="modal-fields" id="modalFields"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ LIGHTBOX ══════════ -->
+<div id="lightbox">
+  <button id="lightboxClose" title="Fermer (Echap)">&#x2715;</button>
+  <img id="lightboxImg" src="" alt=""/>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   DARK MODE
+══════════════════════════════════════════════════════════════ */
+var LS_THEME = 'fd_sav_theme';
+function toggleTheme() {
+  var next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = next;
+  document.getElementById('themeToggle').textContent = next === 'dark' ? '☽' : '☀';
+  try { localStorage.setItem(LS_THEME, next); } catch(e){}
+}
+(function(){
+  try {
+    var s = localStorage.getItem(LS_THEME);
+    if (s) {
+      document.documentElement.dataset.theme = s;
+      var btn = document.getElementById('themeToggle');
+      if (btn) btn.textContent = s === 'dark' ? '☽' : '☀';
+    }
+  } catch(e){}
+})();
+
+/* ══════════════════════════════════════════════════════════════
+   CDN JSZip
+══════════════════════════════════════════════════════════════ */
+var JSZIP_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+var JSZIP_FB  = 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';
+
+function loadJSZip() {
+  return new Promise(function(resolve, reject) {
+    if (typeof JSZip !== 'undefined') return resolve();
+    function load(url, fb) {
+      var s = document.createElement('script'); s.src = url; s.async = true;
+      s.onload = resolve;
+      s.onerror = fb || function(){ reject(new Error('JSZip introuvable')); };
+      document.head.appendChild(s);
+    }
+    load(JSZIP_CDN, function(){ load(JSZIP_FB); });
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ETAT GLOBAL
+══════════════════════════════════════════════════════════════ */
+var allRows = [], filteredRows = [];
+var currentSort = 'photo';
+var viewMode = 'tiles';
+var currentWorkbook = null, currentEmbedded = {}, currentFileName = '';
+var toastTimer = null;
+var fbRawData = [], fbRawHeaders = [], fbRawImgs = {};
+var rawSheetData = [], rawSheetImgs = {}, rawSheetName = '';
+var colFilters = [];
+var resizeTh = null, resizeStartX = 0, resizeStartW = 0;
+
+/* ══════════════════════════════════════════════════════════════
+   EXTRACTION IMAGES drawingML
+══════════════════════════════════════════════════════════════ */
+async function extractImages(arrayBuffer) {
+  try {
+    await loadJSZip();
+    var zip = await JSZip.loadAsync(arrayBuffer).catch(function(){ return null; });
+    if (!zip) return {};
+    var mediaMap = {};
+    await Promise.all(Object.keys(zip.files).filter(function(p){ return /^xl\/media\//i.test(p); }).map(function(p) {
+      var fname = p.split('/').pop();
+      var ext   = (fname.split('.').pop()||'').toLowerCase();
+      var mime  = {png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',gif:'image/gif',bmp:'image/bmp',webp:'image/webp',svg:'image/svg+xml'}[ext]||'application/octet-stream';
+      return zip.file(p).async('base64').then(function(b64){ mediaMap[fname]='data:'+mime+';base64,'+b64; });
+    }));
+    if (!Object.keys(mediaMap).length) return {};
+
+    var wbFile = zip.file('xl/workbook.xml'); if (!wbFile) return {};
+    var wbXml  = await wbFile.async('text');
+    var sheets = [];
+    var m;
+    var shRe = /<sheet\b[^>]*>/g;
+    while ((m=shRe.exec(wbXml))!==null){
+      var nM=m[0].match(/\bname="([^"]*)"/), rM=m[0].match(/\br:id="([^"]+)"/)
+                                                    ||m[0].match(/\brelationships:id="([^"]+)"/i);
+      if(nM&&rM) sheets.push({name:nM[1],rId:rM[1]});
+    }
+    if (!sheets.length) return {};
+    var wbRelsFile = zip.file('xl/_rels/workbook.xml.rels'); if (!wbRelsFile) return {};
+    var wbRelsXml  = await wbRelsFile.async('text');
+    var wbRels = {};
+    var relRe = /<Relationship\b[^>]*>/g;
+    while ((m=relRe.exec(wbRelsXml))!==null){
+      var iM=m[0].match(/\bId="([^"]+)"/), tM=m[0].match(/\bTarget="([^"]+)"/);
+      if(iM&&tM) wbRels[iM[1]]=tM[1];
+    }
+    var out = {};
+    for (var si=0; si<sheets.length; si++) {
+      var s = sheets[si];
+      var target = wbRels[s.rId]; if (!target) continue;
+      var shPath = target.replace(/^\//,'').startsWith('xl/') ? target.replace(/^\//,'') : 'xl/'+target.replace(/^\.\.\//,'');
+      var shRelsFile = zip.file(shPath.replace(/([^/]+)$/,'_rels/$1.rels')); if (!shRelsFile) continue;
+      var shRelsXml  = await shRelsFile.async('text');
+      var drTarget = null;
+      relRe.lastIndex=0;
+      while((m=relRe.exec(shRelsXml))!==null){
+        if(!/drawing/i.test(m[0])) continue;
+        var tM2=m[0].match(/\bTarget="([^"]+)"/); if(tM2){drTarget=tM2[1];break;}
+      }
+      if (!drTarget) continue;
+      var drPath = drTarget.replace(/^\//,'').startsWith('xl/') ? drTarget.replace(/^\//,'') : 'xl/'+drTarget.replace(/^\.\.\//,'');
+      var drFile = zip.file(drPath); if (!drFile) continue;
+      var drXml  = await drFile.async('text');
+      var drRelsFile = zip.file(drPath.replace(/([^/]+)$/,'_rels/$1.rels')); if (!drRelsFile) continue;
+      var drRelsXml  = await drRelsFile.async('text');
+      var drRels = {};
+      relRe.lastIndex=0;
+      while((m=relRe.exec(drRelsXml))!==null){
+        var iM2=m[0].match(/\bId="([^"]+)"/), tM3=m[0].match(/\bTarget="([^"]+)"/);
+        if(iM2&&tM3) drRels[iM2[1]]=tM3[1].split('/').pop();
+      }
+      var rowMap = {};
+      var ancRe = /<xdr:(twoCellAnchor|oneCellAnchor|absoluteAnchor)\b[^>]*>([\s\S]*?)<\/xdr:\1>/g;
+      var am;
+      while ((am=ancRe.exec(drXml))!==null){
+        var inner=am[2];
+        var rowM =inner.match(/<xdr:from>[\s\S]*?<xdr:row>(\d+)<\/xdr:row>/);
+        var blipM=inner.match(/(?:r|relationships):embed="([^"]+)"/);
+        if(!rowM||!blipM) continue;
+        var row=parseInt(rowM[1],10), fname=drRels[blipM[1]];
+        if(fname&&mediaMap[fname]) rowMap[row]=mediaMap[fname];
+      }
+      if(Object.keys(rowMap).length) out[s.name]=rowMap;
+    }
+    return out;
+  } catch(e) { console.warn('extractImages failed:', e); return {}; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   DETECTION FUZZY
+══════════════════════════════════════════════════════════════ */
+var KW = {
+  ref: ['料号','备件号','配件号','零件号','部件号','物料编号','物料号','编号','material code','material no','material number','part number','part no','reference','référence','ref','article','sku','p/n','item number','item no','item code','part#','part id','component code','numéro','numero','code article'],
+  desc: ['名称','备件名称','配件名称','中文名称','英文名称','产品名称','商品名称','零件名称','part name','designation','désignation','description','name','product name','component name','item name','nom','libelle','libellé'],
+  qty: ['数量','件数','qty','quantity','quantité','quantite','qte','nb','nombre','number in','count','pieces','pcs'],
+  level: ['等级','维修等级','修复等级','备注','level','repair level','repair','niveau','remark','note','attribute'],
+  img: ['图片','照片','图像','image','photo','picture','img','visuel','illustration'],
+};
+
+function normalize(s) {
+  return String(s).replace(/[\r\n]+/g,' ').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').trim();
+}
+
+function fuzzyDetect(rawData) {
+  var best = { headerRow:-1, colMap:null, score:0 };
+  for (var r=0; r<Math.min(30,rawData.length); r++) {
+    var row = rawData[r];
+    var cm  = { ref:-1, desc1:-1, desc2:-1, qty:-1, level:-1, img:-1 };
+    var score = 0;
+    for (var c=0; c<row.length; c++) {
+      var v = normalize(String(row[c]||''));
+      if (!v || v.length > 120) continue;
+      var keys = Object.keys(KW);
+      for (var ki=0; ki<keys.length; ki++) {
+        var key = keys[ki], kws = KW[key];
+        if (!kws.some(function(kw){ return v.includes(kw); })) continue;
+        if      (key==='ref'   && cm.ref  ===-1) { cm.ref  =c; score+=4; break; }
+        else if (key==='desc'  && cm.desc1===-1) { cm.desc1=c; score+=3; break; }
+        else if (key==='desc'  && cm.desc2===-1) { cm.desc2=c; score+=1; break; }
+        else if (key==='qty'   && cm.qty  ===-1) { cm.qty  =c; score+=2; break; }
+        else if (key==='level' && cm.level===-1) { cm.level=c; score+=1; break; }
+        else if (key==='img'   && cm.img  ===-1) { cm.img  =c; score+=1; break; }
+      }
+    }
+    if (score >= 4 && cm.ref !== -1 && score > best.score)
+      best = { headerRow:r, colMap:{ref:cm.ref,desc1:cm.desc1,desc2:cm.desc2,qty:cm.qty,level:cm.level,img:cm.img}, score:score };
+  }
+  if (!best.colMap || best.colMap.ref === -1) return null;
+  return best;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   TRI
+══════════════════════════════════════════════════════════════ */
+function sortRows() {
+  if (currentSort === 'photo') allRows.sort(function(a,b){ return (b.imgSrc?1:0)-(a.imgSrc?1:0); });
+  else if (currentSort === 'ref')  allRows.sort(function(a,b){ return normalize(a.ref).localeCompare(normalize(b.ref)); });
+  else if (currentSort === 'desc') allRows.sort(function(a,b){ return normalize(a.desc).localeCompare(normalize(b.desc)); });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   RENDU — TUILES
+══════════════════════════════════════════════════════════════ */
+function applyFilter() {
+  var q = normalize(document.getElementById('bomSearch').value);
+  filteredRows = q
+    ? allRows.filter(function(r){ return normalize(r.ref).includes(q)||normalize(r.desc).includes(q)||normalize(r.desc2||'').includes(q)||(r.extra||[]).some(function(e){ return normalize(e[1]).includes(q); }); })
+    : allRows.slice();
+  document.getElementById('statsBadge').textContent = filteredRows.length + ' / ' + allRows.length + ' piece(s)';
+}
+
+function renderTiles() {
+  applyFilter();
+  var grid = document.getElementById('tilesGrid'); grid.innerHTML = '';
+  if (!filteredRows.length) { grid.innerHTML='<div class="no-tiles-msg">Aucun resultat</div>'; return; }
+  filteredRows.forEach(function(row, i) {
+    var card = document.createElement('div'); card.className='tile-card'+(row.imgSrc?' has-photo':'');
+    var imgWrap = document.createElement('div'); imgWrap.className='tile-img-wrap';
+    if (row.imgSrc) {
+      var img=document.createElement('img'); img.src=row.imgSrc; img.className='tile-img'; img.alt=row.ref; img.loading='lazy';
+      imgWrap.appendChild(img);
+    } else {
+      imgWrap.innerHTML='<div class="tile-ph-icon"><svg width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>Pas de photo</div>';
+    }
+    card.appendChild(imgWrap);
+    var body=document.createElement('div'); body.className='tile-body';
+    var refEl=document.createElement('div'); refEl.className='tile-ref'; refEl.textContent=row.ref;
+    var descEl=document.createElement('div'); descEl.className='tile-desc'; descEl.textContent=row.desc||'—';
+    body.appendChild(refEl); body.appendChild(descEl);
+    if (row.qty) { var q2=document.createElement('span'); q2.className='tile-qty'; q2.textContent='Qte : '+row.qty; body.appendChild(q2); }
+    card.appendChild(body);
+    (function(idx){ card.addEventListener('click', function(){ openModal(idx); }); })(i);
+    grid.appendChild(card);
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   RENDU — TABLEAU PARSE
+══════════════════════════════════════════════════════════════ */
+function getTableColumns() {
+  var cols = [{key:'imgSrc',label:'Photo',type:'img'},{key:'ref',label:'Reference',type:'ref'},{key:'desc',label:'Designation',type:'text'}];
+  if (allRows.some(function(r){ return r.desc2; }))  cols.push({key:'desc2',label:'Desig. ZH/EN',type:'text'});
+  if (allRows.some(function(r){ return r.qty; }))    cols.push({key:'qty',label:'Qte',type:'text'});
+  if (allRows.some(function(r){ return r.level; }))  cols.push({key:'level',label:'Niveau',type:'text'});
+  var extraKeys=[];
+  allRows.forEach(function(r){ (r.extra||[]).forEach(function(e){ if(!extraKeys.includes(e[0])) extraKeys.push(e[0]); }); });
+  extraKeys.forEach(function(k){ cols.push({key:'__extra__',extraKey:k,label:k,type:'text'}); });
+  return cols;
+}
+
+function renderFullTable() {
+  applyFilter();
+  var cols=getTableColumns();
+  document.getElementById('fullThead').innerHTML='<tr>'+cols.map(function(c){ return '<th>'+escHtml(c.label)+'</th>'; }).join('')+'</tr>';
+  var tbody=document.getElementById('fullTbody'); tbody.innerHTML='';
+  if (!filteredRows.length){ tbody.innerHTML='<tr><td class="no-table-msg" colspan="'+cols.length+'">Aucun resultat</td></tr>'; return; }
+  filteredRows.forEach(function(row,i){
+    var tr=document.createElement('tr');
+    cols.forEach(function(col){
+      var td=document.createElement('td');
+      if (col.type==='img') {
+        td.className='td-img';
+        if(row.imgSrc){ var img=document.createElement('img'); img.src=row.imgSrc; img.alt=row.ref; img.addEventListener('click',function(e){ e.stopPropagation(); openLightbox(row.imgSrc); }); td.appendChild(img); }
+        else td.innerHTML='<div class="ph"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>';
+      } else if(col.key==='__extra__'){ var ex=(row.extra||[]).find(function(e){ return e[0]===col.extraKey; }); td.textContent=ex?ex[1]:'—'; td.title=td.textContent; }
+      else { td.textContent=row[col.key]||'—'; td.title=td.textContent; if(col.type==='ref') td.className='td-ref'; }
+      tr.appendChild(td);
+    });
+    (function(idx){ tr.addEventListener('click', function(){ openModal(idx); }); })(i);
+    tbody.appendChild(tr);
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   VUE SWITCH (tuiles / tableau)
+══════════════════════════════════════════════════════════════ */
+function switchView(mode) {
+  viewMode=mode;
+  document.getElementById('btnTiles').classList.toggle('active',mode==='tiles');
+  document.getElementById('btnTable').classList.toggle('active',mode==='table');
+  document.getElementById('tileView').style.display=mode==='tiles'?'block':'none';
+  document.getElementById('tableView').style.display=mode==='table'?'block':'none';
+  if(mode==='tiles') renderTiles(); else renderFullTable();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   MODE SECOURS — TABLEAU BRUT
+══════════════════════════════════════════════════════════════ */
+function showRawView() {
+  document.getElementById('normalView').style.display='none';
+  document.getElementById('fallbackView').style.display='none';
+  document.getElementById('rawView').style.display='block';
+  document.getElementById('btnShowRaw').classList.add('active-raw');
+  document.getElementById('btnShowRaw').textContent='✓ Mode secours actif';
+  document.getElementById('rawSearch').value='';
+  colFilters=[];
+  renderRawTable('');
+}
+function hideRawView() {
+  document.getElementById('rawView').style.display='none';
+  document.getElementById('btnShowRaw').classList.remove('active-raw');
+  document.getElementById('btnShowRaw').textContent='\u{1F4CA} Mode secours — Tableau Excel brut';
+  if(allRows.length>0) document.getElementById('normalView').style.display='block';
+  else document.getElementById('fallbackView').style.display='block';
+}
+
+function renderRawTable(globalQuery) {
+  var thead=document.getElementById('rawThead');
+  var tbody=document.getElementById('rawTbody');
+  if (!rawSheetData.length) return;
+
+  var hRowIdx=0;
+  for(var r=0;r<rawSheetData.length;r++){ if(rawSheetData[r].some(function(c){ return String(c||'').trim(); })){ hRowIdx=r; break; } }
+  var headers=rawSheetData[hRowIdx];
+
+  if (!colFilters.length) colFilters=new Array(headers.length).fill('');
+
+  var trLabels=document.createElement('tr'); trLabels.className='thead-labels';
+  var thN=document.createElement('th'); thN.textContent='#'; thN.style.width='36px'; trLabels.appendChild(thN);
+  headers.forEach(function(h,c){
+    var th=document.createElement('th');
+    th.style.width='160px';
+    var span=document.createElement('span'); span.textContent=String(h||'Col '+(c+1)); th.appendChild(span);
+    var handle=document.createElement('div'); handle.className='col-resize-handle';
+    (function(t){ handle.addEventListener('mousedown', function(e){
+      e.preventDefault(); resizeTh=t; resizeStartX=e.clientX; resizeStartW=t.offsetWidth;
+      handle.classList.add('dragging');
+    }); })(th);
+    th.appendChild(handle);
+    trLabels.appendChild(th);
+  });
+
+  var trFilters=document.createElement('tr'); trFilters.className='thead-filters';
+  var thNF=document.createElement('th'); trFilters.appendChild(thNF);
+  headers.forEach(function(_,c){
+    var th=document.createElement('th');
+    var input=document.createElement('input');
+    input.type='text'; input.placeholder='🔍'; input.value=colFilters[c]||'';
+    input.dataset.col=c;
+    input.addEventListener('input',function(e){
+      colFilters[e.target.dataset.col]=e.target.value.toLowerCase();
+      renderRawBodyOnly(headers, globalQuery||document.getElementById('rawSearch').value);
+    });
+    th.appendChild(input); trFilters.appendChild(th);
+  });
+
+  thead.innerHTML=''; thead.appendChild(trLabels); thead.appendChild(trFilters);
+  renderRawBodyOnly(headers, globalQuery);
+}
+
+function renderRawBodyOnly(headers, globalQuery) {
+  var tbody=document.getElementById('rawTbody');
+  var gq=(globalQuery||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').trim();
+
+  var hRowIdx=0;
+  for(var r=0;r<rawSheetData.length;r++){ if(rawSheetData[r].some(function(c){ return String(c||'').trim(); })){ hRowIdx=r; break; } }
+
+  var dataRows=rawSheetData.slice(hRowIdx+1).map(function(row,i){ return {row:row,absIdx:hRowIdx+1+i}; })
+    .filter(function(o){ return o.row.some(function(c){ return String(c||'').trim(); }); })
+    .filter(function(o){
+      if(gq && !o.row.some(function(c){ return String(c||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').includes(gq); })) return false;
+      return colFilters.every(function(f,ci){
+        if(!f) return true;
+        return String(o.row[ci]||'').toLowerCase().includes(f);
+      });
+    });
+
+  document.getElementById('rawStats').textContent=dataRows.length+' ligne(s)';
+  tbody.innerHTML='';
+  var imgColIdx=headers.findIndex(function(h){ return normalize(String(h||'')).match(/图片|photo|picture|image|img/); });
+
+  dataRows.forEach(function(o, displayIdx){
+    var row=o.row, absIdx=o.absIdx;
+    var tr=document.createElement('tr');
+    var tdN=document.createElement('td'); tdN.className='raw-num'; tdN.textContent=displayIdx+1; tr.appendChild(tdN);
+    headers.forEach(function(_,c){
+      var td=document.createElement('td');
+      if(c===imgColIdx&&rawSheetImgs[absIdx]){
+        var img=document.createElement('img'); img.src=rawSheetImgs[absIdx]; img.alt='';
+        (function(src){ img.addEventListener('click',function(){ openLightbox(src); }); })(rawSheetImgs[absIdx]);
+        td.appendChild(img);
+      } else {
+        var v=String(row[c]||''); td.textContent=v; td.title=v;
+      }
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+}
+
+/* Resize globale */
+document.addEventListener('mousemove', function(e){
+  if(!resizeTh) return;
+  var w=Math.max(60, resizeStartW+(e.clientX-resizeStartX));
+  resizeTh.style.width=w+'px';
+});
+document.addEventListener('mouseup', function(){
+  if(resizeTh){
+    var h=resizeTh.querySelector('.col-resize-handle');
+    if(h) h.classList.remove('dragging');
+    resizeTh=null;
+  }
+});
+
+/* ══════════════════════════════════════════════════════════════
+   MODAL
+══════════════════════════════════════════════════════════════ */
+function openModal(filteredIdx) {
+  var row=filteredRows[filteredIdx]; if(!row) return;
+  var imgEl=document.getElementById('modalImg'); var noImgEl=document.getElementById('modalNoImg');
+  if(row.imgSrc){ imgEl.src=row.imgSrc; imgEl.style.display='block'; (function(src){ imgEl.onclick=function(){ openLightbox(src); }; })(row.imgSrc); noImgEl.style.display='none'; }
+  else{ imgEl.style.display='none'; imgEl.onclick=null; noImgEl.style.display='flex'; }
+  document.getElementById('modalRef').textContent=row.ref;
+  (function(ref){ document.getElementById('modalCopyBtn').onclick=function(){ copyToClipboard(ref); }; })(row.ref);
+  var items=[
+    ['Designation',row.desc||'—','full'],
+    row.desc2?['Designation (ZH/EN)',row.desc2,'full']:null,
+    row.qty?['Quantite',row.qty,'']:null,
+    row.level?['Niveau de reparation',row.level,'']:null
+  ].filter(Boolean);
+  (row.extra||[]).forEach(function(e){ items.push([e[0],e[1],'' ]); });
+  document.getElementById('modalFields').innerHTML=items.map(function(item){
+    return '<div class="modal-field '+item[2]+'"><div class="modal-field-label">'+escHtml(item[0])+'</div><div class="modal-field-value">'+escHtml(item[1]||'—')+'</div></div>';
+  }).join('');
+  document.getElementById('partModal').classList.add('active');
+  document.body.style.overflow='hidden';
+}
+function closeModal(){ document.getElementById('partModal').classList.remove('active'); document.body.style.overflow=''; }
+
+/* ══════════════════════════════════════════════════════════════
+   LIGHTBOX
+══════════════════════════════════════════════════════════════ */
+function openLightbox(src){ document.getElementById('lightboxImg').src=src; document.getElementById('lightbox').classList.add('active'); }
+function closeLightbox(){ document.getElementById('lightbox').classList.remove('active'); }
+document.getElementById('lightbox').addEventListener('click', closeLightbox);
+document.getElementById('lightboxClose').addEventListener('click', function(e){ e.stopPropagation(); closeLightbox(); });
+
+/* ══════════════════════════════════════════════════════════════
+   TOAST + CLIPBOARD
+══════════════════════════════════════════════════════════════ */
+function showToast(msg){
+  var t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer=setTimeout(function(){ t.classList.remove('show'); },2500);
+}
+function copyToClipboard(text){
+  if(navigator.clipboard&&navigator.clipboard.writeText)
+    navigator.clipboard.writeText(text).then(function(){ showToast('✓ Copie : '+text); }).catch(function(){ fallbackCopy(text); });
+  else fallbackCopy(text);
+}
+function fallbackCopy(text){
+  var ta=document.createElement('textarea'); ta.value=text; ta.style.cssText='position:fixed;opacity:0;top:-9999px;';
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); showToast('✓ Copie : '+text); } catch(e){ showToast('⚠ Copie impossible'); }
+  document.body.removeChild(ta);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   VUE FALLBACK
+══════════════════════════════════════════════════════════════ */
+function renderFallback(rawData, sheetImgs) {
+  fbRawData=rawData; fbRawImgs=sheetImgs||{};
+  var hRow=0;
+  for(var r=0;r<rawData.length;r++){ if(rawData[r].some(function(c){ return String(c).trim(); })){ hRow=r; break; } }
+  fbRawHeaders=rawData[hRow];
+  renderFallbackTable('');
+  document.getElementById('fallbackView').style.display='block';
+}
+function renderFallbackTable(query){
+  var thead=document.getElementById('fbThead'); var tbody=document.getElementById('fbTbody');
+  thead.innerHTML='<tr>'+fbRawHeaders.map(function(h){ return '<th>'+escHtml(String(h||''))+'</th>'; }).join('')+'</tr>';
+  var imgColIdx=fbRawHeaders.findIndex(function(h){ return normalize(String(h||'')).match(/图片|photo|picture|image|img/); });
+  var hIdx=fbRawData.indexOf(fbRawHeaders);
+  var dataRows=fbRawData.slice(hIdx+1).filter(function(r){ return r.some(function(c){ return String(c).trim(); }); });
+  if(query){ var qq=normalize(query); dataRows=dataRows.filter(function(row){ return row.some(function(c){ return normalize(String(c||'')).includes(qq); }); }); }
+  document.getElementById('fallbackStats').textContent=dataRows.length+' ligne(s)';
+  tbody.innerHTML='';
+  dataRows.forEach(function(row){
+    var tr=document.createElement('tr');
+    var rowIdx=fbRawData.indexOf(row);
+    fbRawHeaders.forEach(function(_,c){
+      var td=document.createElement('td');
+      if(c===imgColIdx&&fbRawImgs[rowIdx]){
+        var img=document.createElement('img'); img.src=fbRawImgs[rowIdx]; img.alt='';
+        (function(src){ img.addEventListener('click',function(e){ e.stopPropagation(); openLightbox(src); }); })(fbRawImgs[rowIdx]);
+        td.appendChild(img);
+      } else{ var val=String(row[c]||''); td.textContent=val; td.title=val; }
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SELECTEUR DE FEUILLE
+══════════════════════════════════════════════════════════════ */
+function showSheetPicker(sheetNames){
+  var picker=document.getElementById('sheetPicker'); var buttons=document.getElementById('sheetButtons');
+  document.getElementById('sheetPickerSub').textContent='"'+currentFileName+'" contient '+sheetNames.length+' feuilles :';
+  buttons.innerHTML='';
+  sheetNames.forEach(function(name){
+    var btn=document.createElement('button'); btn.className='sheet-btn'; btn.textContent='📄 '+name;
+    (function(n){ btn.addEventListener('click',function(){ picker.style.display='none'; parseSheet(n); }); })(name);
+    buttons.appendChild(btn);
+  });
+  picker.style.display='block';
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PARSING D'UNE FEUILLE
+══════════════════════════════════════════════════════════════ */
+function parseSheet(sheetName){
+  setLoading(true,'Analyse de la feuille "'+sheetName+'"…');
+  try{
+    var sheet=currentWorkbook.Sheets[sheetName];
+    var rawData=XLSX.utils.sheet_to_json(sheet,{header:1,defval:''});
+    var sheetImgs=currentEmbedded[sheetName]||{};
+    rawSheetData=rawData; rawSheetImgs=sheetImgs; rawSheetName=sheetName;
+    document.getElementById('rawHint').classList.add('active');
+    colFilters=[];
+
+    var detection=fuzzyDetect(rawData);
+    if(!detection){
+      setLoading(false);
+      showDetectBanner(false,'Colonnes non identifiees — "'+currentFileName+'" feuille "'+sheetName+'"');
+      renderFallback(rawData,sheetImgs);
+      return;
+    }
+
+    var headerRow=detection.headerRow, colMap=detection.colMap;
+    var rawHeaders=rawData[headerRow];
+    allRows=[];
+    for(var r=headerRow+1;r<rawData.length;r++){
+      var row=rawData[r];
+      if(!row||!row.some(function(c){ return String(c).trim(); })) continue;
+      var refRaw=String(row[colMap.ref]||'').split(/[\r\n]+/)[0].trim();
+      var ref=refRaw; if(!ref||ref.length<2) continue;
+      var desc=colMap.desc1!==-1?String(row[colMap.desc1]||'').trim():'';
+      var desc2=colMap.desc2!==-1?String(row[colMap.desc2]||'').trim():'';
+      if(desc.match(/[一-鿿]/)&&desc2&&!desc2.match(/[一-鿿]/)) { var tmp=desc; desc=desc2; desc2=tmp; }
+      var qty=colMap.qty!==-1?String(row[colMap.qty]||'').trim():'';
+      var level=colMap.level!==-1?String(row[colMap.level]||'').trim():'';
+      var usedCols={};
+      [colMap.ref,colMap.desc1,colMap.desc2,colMap.qty,colMap.level,colMap.img].filter(function(c){ return c!==-1; }).forEach(function(c){ usedCols[c]=true; });
+      var extra=[];
+      rawHeaders.forEach(function(h,c){ if(!usedCols[c]&&h&&String(row[c]||'').trim()) extra.push([String(h).trim(),String(row[c]).trim()]); });
+      allRows.push({ref:ref,desc:desc,desc2:desc2,qty:qty,level:level,imgSrc:sheetImgs[r]||null,extra:extra});
+    }
+    currentSort='photo'; document.getElementById('sortSelect').value='photo';
+    allRows.sort(function(a,b){ return (b.imgSrc?1:0)-(a.imgSrc?1:0); });
+    setLoading(false);
+    var photoCount=allRows.filter(function(r){ return r.imgSrc; }).length;
+    showDetectBanner(true,'"'+sheetName+'" — '+allRows.length+' piece(s)'+(photoCount?' · '+photoCount+' photo(s)':''),colMap,rawHeaders);
+    document.getElementById('normalView').style.display='block';
+    viewMode='tiles';
+    document.getElementById('btnTiles').classList.add('active');
+    document.getElementById('btnTable').classList.remove('active');
+    document.getElementById('tileView').style.display='block';
+    document.getElementById('tableView').style.display='none';
+    renderTiles();
+  } catch(err){
+    console.error(err); setLoading(false); alert('Erreur parsing : '+err.message);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   CHARGEMENT FICHIER — FIX CHROME
+   Probleme Chrome : file.arrayBuffer() peut echouer
+   silencieusement. On utilise un wrapper avec fallback
+   FileReader. On verifie aussi que XLSX est bien charge.
+══════════════════════════════════════════════════════════════ */
+
+/* Wrapper cross-browser ArrayBuffer */
+function fileToArrayBuffer(file) {
+  if (typeof file.arrayBuffer === 'function') {
+    return file.arrayBuffer().catch(function() {
+      return fileToArrayBufferFallback(file);
+    });
+  }
+  return fileToArrayBufferFallback(file);
+}
+function fileToArrayBufferFallback(file) {
+  return new Promise(function(resolve, reject) {
+    var fr = new FileReader();
+    fr.onload  = function(e) { resolve(e.target.result); };
+    fr.onerror = function()  { reject(fr.error || new Error('FileReader error')); };
+    fr.readAsArrayBuffer(file);
+  });
+}
+
+async function parseBOM(file) {
+  /* Verification que XLSX est charge (CDN lent ou bloque) */
+  if (typeof XLSX === 'undefined') {
+    alert('La bibliotheque Excel (XLSX.js) n\'est pas encore chargee.\nVerifiez votre connexion internet et rechargez la page.');
+    return;
+  }
+
+  setLoading(true, 'Lecture du fichier Excel…');
+  hideResults();
+  currentFileName = file.name;
+
+  try {
+    /* Lecture cross-browser — FileReader fallback pour Chrome */
+    var ab = await fileToArrayBuffer(file);
+
+    setLoading(true, 'Extraction des images embarquees…');
+    currentEmbedded = await extractImages(ab);
+
+    setLoading(true, 'Chargement du classeur…');
+    currentWorkbook = XLSX.read(ab, { type: 'array' });
+
+    setLoading(false);
+    if (currentWorkbook.SheetNames.length > 1) showSheetPicker(currentWorkbook.SheetNames);
+    else parseSheet(currentWorkbook.SheetNames[0]);
+
+  } catch(err) {
+    console.error('parseBOM error:', err);
+    setLoading(false);
+    alert('Erreur de lecture : ' + (err.message || String(err)));
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   HELPERS UI
+══════════════════════════════════════════════════════════════ */
+function setLoading(on,msg){
+  document.getElementById('loadingBar').classList.toggle('active',on);
+  if(msg) document.getElementById('loadingMsg').textContent=msg;
+}
+function hideResults(){
+  ['sheetPicker','normalView','fallbackView','rawView'].forEach(function(id){ document.getElementById(id).style.display='none'; });
+  document.getElementById('detectBanner').classList.remove('active');
+  document.getElementById('rawHint').classList.remove('active');
+  document.getElementById('btnShowRaw').classList.remove('active-raw');
+  document.getElementById('btnShowRaw').textContent='\u{1F4CA} Mode secours — Tableau Excel brut';
+  allRows=[]; filteredRows=[];
+}
+function showDetectBanner(ok,title,colMap,rawHeaders){
+  var banner=document.getElementById('detectBanner');
+  banner.className='detect-banner active '+(ok?'detect-ok':'detect-warn');
+  document.getElementById('detectTitle').textContent=title;
+  var chips=document.getElementById('detectChips'); chips.innerHTML='';
+  if(ok&&colMap&&rawHeaders){
+    var colNames={ref:'Reference',desc1:'Designation',desc2:'Desig.2',qty:'Quantite',level:'Niveau',img:'Image'};
+    Object.keys(colNames).forEach(function(k){
+      var idx=colMap[k]; if(idx===-1||idx===undefined) return;
+      var chip=document.createElement('span'); chip.className='chip-col';
+      chip.textContent=colNames[k]+' → '+String.fromCharCode(65+idx)+' "'+String(rawHeaders[idx]||idx).slice(0,28)+'"';
+      chips.appendChild(chip);
+    });
+  }
+}
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+/* ══════════════════════════════════════════════════════════════
+   EVENEMENTS — FIX CHROME
+   L'input file est cache hors ecran. Le clic sur la zone
+   appelle explicitement input.click() — fiable sur Chrome,
+   Edge et Firefox (contrairement a l'overlay CSS).
+══════════════════════════════════════════════════════════════ */
+var zone = document.getElementById('uploadZone');
+var bomFileInput = document.getElementById('bomFile');
+
+/* Clic sur la zone -> ouvre le selecteur de fichier */
+zone.addEventListener('click', function(e) {
+  if (e.target === bomFileInput) return;
+  bomFileInput.click();
+});
+
+/* Drag & Drop */
+zone.addEventListener('dragover', function(e) { e.preventDefault(); zone.classList.add('drag-over'); });
+zone.addEventListener('dragleave', function() { zone.classList.remove('drag-over'); });
+zone.addEventListener('drop', function(e) {
+  e.preventDefault(); zone.classList.remove('drag-over');
+  var f = e.dataTransfer.files[0];
+  if (f && f.name.endsWith('.xlsx')) parseBOM(f);
+  else alert('Merci d\'utiliser un fichier .xlsx');
+});
+
+/* Changement via l'input */
+bomFileInput.addEventListener('change', function(e) {
+  var f = e.target.files[0];
+  if (f) {
+    parseBOM(f);
+    /* Reset apres un court delai pour permettre de recharger le meme fichier */
+    setTimeout(function() { try { bomFileInput.value = ''; } catch(_){} }, 200);
+  }
+});
+
+document.getElementById('bomSearch').addEventListener('input', function() {
+  if (viewMode === 'tiles') renderTiles(); else renderFullTable();
+});
+document.getElementById('sortSelect').addEventListener('change', function(e) {
+  currentSort = e.target.value; sortRows();
+  if (viewMode === 'tiles') renderTiles(); else renderFullTable();
+});
+document.getElementById('btnTiles').addEventListener('click', function() { switchView('tiles'); });
+document.getElementById('btnTable').addEventListener('click', function() { switchView('table'); });
+document.getElementById('partModal').addEventListener('click', function(e) {
+  if (e.target === document.getElementById('partModal')) closeModal();
+});
+document.getElementById('modalClose').addEventListener('click', closeModal);
+document.getElementById('fallbackSearch').addEventListener('input', function(e) { renderFallbackTable(e.target.value); });
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    if (document.getElementById('lightbox').classList.contains('active')) closeLightbox();
+    else closeModal();
+  }
+});
+</script>
+</body>
+</html>
