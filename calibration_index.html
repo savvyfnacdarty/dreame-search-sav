@@ -213,8 +213,8 @@ const VIDEOS = {
 };
 
 // Photos de la procédure d'accès au mode calibration / BIT Test
-// Chemin relatif prêt pour GitHub Pages : placer les photos dans images/procedure-acces/
-const ACCESS_IMGS = ["figure-1.png","figure-2.png","figure-3.png","figure-4.png","figure-5.png"].map(f => `images/procedure-acces/${f}`);
+// Noms identiques aux fichiers du repo GitHub (images/procedure-acces/) — encodeURI gère les espaces
+const ACCESS_IMGS = ["figure 1.png","figure 2.png","figure 3.png","figure 4.png","figure 5.png"].map(f => encodeURI(`images/procedure-acces/${f}`));
 
 // Liens d'action par Project ID (mêmes boutons que la page d'accueil dreame-search-sav)
 // TODO: renseigner les URLs réelles. Exemple :
