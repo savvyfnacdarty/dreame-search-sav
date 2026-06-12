@@ -395,7 +395,10 @@ document.addEventListener('click', function(e) {
 });
 
 async function downloadFile(url, filename) {
-  // Tentative 1 : fetch -> blob -> objectURL (bypasse Edge Office viewer)
+
+  /* ── Tentative 1 : fetch → blob → objectURL ──
+     Fonctionne si la page est sur le meme domaine SharePoint.
+     L'URL blob est locale, Edge ne peut pas l'intercepter.    */
   try {
     var response = await fetch(url, { credentials: 'include' });
     if (!response.ok) throw new Error('HTTP ' + response.status);
@@ -407,16 +410,33 @@ async function downloadFile(url, filename) {
     setTimeout(function() { URL.revokeObjectURL(blobUrl); }, 10000);
     return;
   } catch (err) {
-    console.warn('downloadFile: fetch bloque (CORS probable), fallback iframe :', err.message);
+    console.warn('downloadFile: fetch bloque :', err.message);
   }
-  // Fallback : iframe cache — recoit Content-Disposition:attachment
-  // sans ouvrir d'onglet, contourne l'interception Office d'Edge
-  var iframe = document.createElement('iframe');
-  iframe.style.cssText = 'display:none;position:fixed;width:0;height:0;border:0;';
-  iframe.src = url;
-  document.body.appendChild(iframe);
-  showToast('⬇ Téléchargement lancé…');
-  setTimeout(function() { try { document.body.removeChild(iframe); } catch(_){} }, 20000);
+
+  /* ── Tentative 2 : URL REST API SharePoint dans un iframe ──
+     /_api/web/GetFileByServerRelativeUrl(...)/$value
+     retourne application/octet-stream. Le viewer Office d'Edge
+     n'intercepte pas les URLs /_api/ contrairement aux URLs
+     directes de fichiers .xlsx SharePoint.                     */
+  try {
+    var urlObj      = new URL(url);
+    var relPath     = urlObj.pathname.replace(/\?.*$/, '');
+    var escapedPath = relPath.replace(/'/g, "''");
+    var apiUrl      = urlObj.origin + "/_api/web/GetFileByServerRelativeUrl('" + escapedPath + "')/$value";
+    var iframe      = document.createElement('iframe');
+    iframe.style.cssText = 'display:none;position:fixed;width:0;height:0;border:0;';
+    iframe.src = apiUrl;
+    document.body.appendChild(iframe);
+    showToast('⬇ Téléchargement en cours…');
+    setTimeout(function() { try { document.body.removeChild(iframe); } catch(_){} }, 30000);
+    return;
+  } catch(err2) {
+    console.warn('downloadFile: fallback API echoue :', err2.message);
+  }
+
+  /* ── Fallback final : nouvel onglet ── */
+  window.open(url, '_blank', 'noopener');
+  showToast('ℹ Fichier ouvert — Fichier > Télécharger dans la visionneuse Edge');
 }
 </script>
 </body>
