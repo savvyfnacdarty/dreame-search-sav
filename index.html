@@ -363,7 +363,10 @@ function showProjectDetails(project) {
       const encodedPath = cleanPath.split('/').map(p => encodeURIComponent(p)).join('/');
       const encodedName = encodeURIComponent(file.name);
       const linkOpen = `https://groupefnac.sharepoint.com/:x:/r/sites/${encodedPath}/${encodedName}?csf=1&web=1`;
-      const linkDl   = `https://groupefnac.sharepoint.com/sites/${encodedPath}/${encodedName}?download=1`;
+      // Téléchargement forcé : endpoint download.aspx (renvoie Content-Disposition: attachment)
+      const siteName  = encodeURIComponent(cleanPath.split('/')[0]);
+      const sourceUrl = encodeURIComponent(`/sites/${cleanPath}/${file.name}`);
+      const linkDl    = `https://groupefnac.sharepoint.com/sites/${siteName}/_layouts/15/download.aspx?SourceUrl=${sourceUrl}`;
 
       const item = document.createElement('div');
       item.className = 'file-item';
@@ -375,7 +378,7 @@ function showProjectDetails(project) {
         </div>
         <div class="file-actions">
           ${!isBOM ? `<a href="${escHtml(linkOpen)}" target="_blank" rel="noopener" class="btn btn-preview">Aperçu</a>` : ''}
-          <a href="${escHtml(linkDl)}" download="${escHtml(file.name)}" target="_blank" rel="noopener" class="btn btn-download">
+          <a href="${escHtml(linkDl)}" class="btn btn-download">
             <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
             Télécharger
           </a>
