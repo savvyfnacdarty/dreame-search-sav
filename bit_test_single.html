@@ -418,6 +418,14 @@ let TESTS = EMBED.slice();
 const _manifestLow = {};
 MANIFEST.forEach(f => { _manifestLow[f.toLowerCase()] = f; });
 function isHttp(v){ return /^https?:\/\//i.test(String(v||'').trim()); }
+/* Image en échec : on la masque, et si plus aucune image visible, on retire le titre orphelin. */
+function imgErr(el){
+  el.style.display='none';
+  const grid = el.closest('.img-grid');
+  if(grid && !Array.from(grid.querySelectorAll('img')).some(i=>i.style.display!=='none')){
+    const sec = el.closest('.tb-section'); if(sec) sec.style.display='none';
+  }
+}
 function resolveMedia(val){
   if(!val) return '';
   val = String(val).trim();
@@ -491,7 +499,7 @@ function mediaHtml(t){
   const vidName = t.video||'';
   if(imgs.length){
     html += '<div class="tb-section"><div class="tb-title">Captures écran</div><div class="img-grid">';
-    imgs.forEach(src => { html += '<img loading="lazy" src="'+escHtml(src)+'" alt="" onclick="openLightbox(this)" onerror="this.style.display=&#39;none&#39;">'; });
+    imgs.forEach(src => { html += '<img loading="lazy" src="'+escHtml(src)+'" alt="" onclick="openLightbox(this)" onerror="imgErr(this)">'; });
     html += '</div></div>';
   }
   if(vidName){
