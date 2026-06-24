@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BIT Test Single &middot; Robots Dreame &amp; MOVA &middot; Fnac Darty</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90' font-family='Arial Black,Arial,sans-serif' font-weight='900'><tspan fill='%23F5A623'>F</tspan><tspan fill='%23E62E2E'>D</tspan></text></svg>"/>
+<link rel="stylesheet" href="assets/shared.css"/>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+.page-hero{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);color:#fff;padding:24px 20px;text-align:center}
+.page-hero h1{font-size:1.6rem;font-weight:700}
+.page-hero p{font-size:.85rem;opacity:.75;margin-top:4px}
+.toolbar{max-width:960px;margin:22px auto 0;padding:0 16px;display:flex;flex-direction:column;gap:12px}
+.search-box{display:flex;gap:8px;background:var(--surface);border:2px solid var(--border);border-radius:12px;padding:6px 6px 6px 16px;box-shadow:var(--shadow-md);transition:border-color var(--tr)}
+.search-box:focus-within{border-color:var(--fd-red);box-shadow:0 0 0 4px var(--accent-glow)}
+.search-box input{flex:1;border:none;outline:none;font-size:1rem;background:transparent;color:var(--text)}
+.clear-btn{background:var(--surface-3);color:var(--text-2);border:none;border-radius:8px;padding:10px 14px;font-size:.9rem;cursor:pointer;font-weight:600;transition:background .2s}
+.clear-btn:hover{background:var(--fd-red);color:#fff}
+.toolbar-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.toolbar-actions{display:flex;gap:8px;flex-wrap:wrap}
+.progress-wrap{flex:1;min-width:220px;display:flex;align-items:center;gap:10px}
+.progress-num{font-size:.8rem;font-weight:700;color:var(--text-2);white-space:nowrap}
+.progress-num em{font-style:normal;color:var(--muted);font-weight:600}
+.progress-bar{flex:1;height:8px;background:var(--surface-3);border-radius:20px;overflow:hidden}
+.progress-fill{height:100%;width:0;background:linear-gradient(90deg,var(--fd-yellow),var(--green));border-radius:20px;transition:width .3s}
+.results{max-width:960px;margin:18px auto 48px;padding:0 16px;display:flex;flex-direction:column;gap:12px}
+.no-results{text-align:center;padding:60px 20px;color:var(--muted)}
+.no-results .icon{font-size:3rem;margin-bottom:12px}
+.test-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow-sm);overflow:hidden;transition:border-color var(--tr),box-shadow var(--tr)}
+.test-card.open{border-color:var(--fd-red);box-shadow:var(--shadow-md)}
+.test-card.done{border-left:4px solid var(--green)}
+.test-header{display:flex;align-items:center;gap:14px;padding:14px 18px;cursor:pointer;user-select:none}
+.test-num{flex-shrink:0;width:30px;height:30px;border-radius:50%;background:#0f3460;color:#fff;display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:700}
+.test-card.done .test-num{background:var(--green)}
+.test-titles{flex:1;min-width:0}
+.test-name{font-size:1.05rem;font-weight:700;color:var(--text);text-transform:capitalize}
+.test-desc{font-size:.82rem;color:var(--muted);margin-top:1px}
+.test-badges{display:flex;gap:6px;flex-shrink:0}
+.mini-badge{display:inline-flex;align-items:center;gap:3px;font-size:.68rem;font-weight:700;padding:2px 7px;border-radius:20px;background:var(--surface-3);color:var(--text-2)}
+.mini-badge.img{background:#e0f2fe;color:#075985}
+.mini-badge.vid{background:#fee2e2;color:#b91c1c}
+[data-theme="dark"] .mini-badge.img{background:#16324a;color:#7dd3fc}
+[data-theme="dark"] .mini-badge.vid{background:#431414;color:#fca5a5}
+.test-arrow{flex-shrink:0;color:var(--muted);transition:transform .2s}
+.test-card.open .test-arrow{transform:rotate(180deg);color:var(--fd-red)}
+.test-body{display:none;padding:0 18px 18px;border-top:1px solid var(--rule)}
+.test-card.open .test-body{display:block}
+.tb-section{margin-top:16px}
+.tb-title{font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;border-bottom:2px solid var(--fd-red);padding-bottom:3px;display:inline-block}
+.msg-list{display:flex;flex-direction:column;gap:6px}
+.msg-item{display:flex;gap:10px;align-items:flex-start;background:var(--surface-2);border-left:3px solid #63b3ed;padding:8px 12px;border-radius:6px;font-size:.88rem;color:var(--text-2);line-height:1.5}
+[data-theme="dark"] .msg-item{border-left-color:#2b6cb0}
+.msg-item.pass{border-left-color:var(--green);background:var(--green-bg);color:var(--green)}
+.msg-ico{flex-shrink:0;font-size:.95rem;line-height:1.4}
+.result-box{background:var(--orange-bg);border-left:3px solid var(--orange);padding:10px 14px;border-radius:6px;font-size:.86rem;color:var(--orange);line-height:1.6;white-space:pre-line}
+.img-grid{display:flex;flex-wrap:wrap;gap:8px}
+.img-grid img{height:130px;width:auto;max-width:220px;object-fit:cover;border-radius:8px;border:2px solid var(--border);cursor:pointer;transition:transform .15s,border-color .15s;background:var(--surface-2)}
+.img-grid img:hover{transform:scale(1.03);border-color:var(--fd-red)}
+.video-container video{width:100%;max-width:560px;border-radius:10px;border:2px solid var(--border);display:block;background:#000}
+.done-row{display:flex;align-items:center;gap:10px;margin-top:16px;padding-top:14px;border-top:1px dashed var(--border)}
+.done-row label{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.88rem;font-weight:600;color:var(--text-2)}
+.done-row input[type=checkbox]{width:18px;height:18px;cursor:pointer;accent-color:var(--green)}
+.src-banner{max-width:960px;margin:12px auto 0;padding:0 16px}
+.src-inner{display:flex;align-items:center;gap:10px;font-size:.78rem;color:var(--muted);background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:8px 14px}
+.src-inner .dot{width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0}
+.src-inner.warn .dot{background:var(--orange)}
+#lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:999;justify-content:center;align-items:center}
+#lightbox.open{display:flex}
+#lightbox img{max-width:84vw;max-height:88vh;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+#lightbox-close{position:fixed;top:20px;right:28px;color:#fff;font-size:2rem;cursor:pointer;z-index:1001;line-height:1}
+.lightbox-nav{position:fixed;top:50%;transform:translateY(-50%);display:none;align-items:center;justify-content:center;width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;font-size:1.8rem;cursor:pointer;z-index:1001;user-select:none;transition:background .15s}
+.lightbox-nav:hover{background:rgba(255,255,255,.28)}
+#lightbox-prev{left:24px}#lightbox-next{right:24px}
+#lightbox-counter{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);color:#fff;font-size:.95rem;background:rgba(0,0,0,.45);padding:4px 14px;border-radius:20px;z-index:1001;display:none}
+@media(max-width:600px){.page-hero h1{font-size:1.3rem}.test-desc{display:none}.img-grid img{height:90px}.hdr{padding:0 12px}.hdr-in{gap:8px;height:56px;overflow-x:auto}.hdr-nav{margin-left:8px}.hdr-logo-brand{font-size:18px}.lightbox-nav{width:44px;height:44px;font-size:1.5rem}#lightbox-prev{left:8px}#lightbox-next{right:8px}#lightbox img{max-width:94vw}}
+</style>
+</head>
+<body>
+
+<div id="lightbox" onclick="closeLightbox()">
+  <span id="lightbox-close" onclick="closeLightbox();event.stopPropagation()">&times;</span>
+  <span id="lightbox-prev" class="lightbox-nav" onclick="lightboxNav(-1,event)">&lsaquo;</span>
+  <img id="lightbox-img" src="" alt="" onclick="event.stopPropagation()">
+  <span id="lightbox-next" class="lightbox-nav" onclick="lightboxNav(1,event)">&rsaquo;</span>
+  <div id="lightbox-counter"></div>
+</div>
+
+<header class="hdr">
+  <div class="hdr-in">
+    <a href="index.html" class="hdr-logo" title="Accueil SAV Dreame">
+      <span class="hdr-logo-brand"><span class="fnac">FNAC</span> <span class="darty">DARTY</span></span>
+    </a>
+    <nav class="hdr-nav">
+      <a href="index.html">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        Recherche
+      </a>
+      <a href="bom_manager.html">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        Lecteur BOM
+      </a>
+      <a href="index_fault_codes.html">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        Codes Erreurs
+      </a>
+      <a href="bit_test_dreame.html">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        BIT Test
+      </a>
+      <a href="bit_test_single.html" class="active">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+        BIT Test Single
+      </a>
+      <a href="calibration_index.html" class="nav-calibrage">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        Calibrage
+      </a>
+    </nav>
+    <div class="hdr-right">
+      <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Mode nuit / jour">&#9728;</button>
+    </div>
+  </div>
+</header>
+
+<div class="page-hero">
+  <h1>&#129514; BIT Test Single</h1>
+  <p>Fiches de test BIT unitaires &mdash; robots aspirateurs Dreame &amp; MOVA &middot; SAV PEM</p>
+</div>
+
+<div class="src-banner">
+  <div class="src-inner" id="srcBanner"><span class="dot"></span><span id="srcText">Chargement des tests&hellip;</span></div>
+</div>
+
+<div class="toolbar">
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="Filtrer un test (ex: gyroscope, TOF, brosse&hellip;)" autocomplete="off" oninput="render()"/>
+    <button id="clearBtn" class="clear-btn" onclick="clearSearch()" title="Effacer" style="display:none">&times;</button>
+  </div>
+  <div class="toolbar-row">
+    <div class="progress-wrap">
+      <span class="progress-num"><span id="doneCount">0</span><em> / <span id="totalCount">0</span> tests effectu&eacute;s</em></span>
+      <div class="progress-bar"><div class="progress-fill" id="progFill"></div></div>
+    </div>
+    <div class="toolbar-actions">
+      <button class="btn btn-ghost" onclick="expandAll(true)">Tout d&eacute;plier</button>
+      <button class="btn btn-ghost" onclick="expandAll(false)">Tout replier</button>
+      <button class="btn btn-ghost" onclick="resetDone()" title="R&eacute;initialiser pour un nouveau robot">&#8635; R&eacute;initialiser</button>
+    </div>
+  </div>
+</div>
+
+<div class="results" id="results"></div>
+
+<div id="toast"></div>
+
+<script>
+/* ============================================================================
+   BIT TEST SINGLE — fiches de test unitaires
+   POUR AJOUTER / MODIFIER UN TEST :
+   1. Ouvrez images/BIT-test/BIT-Test.xlsx (feuille « Bit_Test_Single ») et
+      ajoutez une ligne. Colonnes : A=Nom B=Description C=Infos dictées
+      D=Capture1 E=Capture2 F=Vidéo G=Test effectué (résultat attendu).
+   2. Déposez les images/vidéos dans images/BIT-test/ (le nom de fichier dans
+      l'Excel doit correspondre ; casse et extension tolérées).
+   3. Rechargez la page : les fiches sont régénérées automatiquement.
+   La page lit l'Excel en direct ; à défaut elle utilise l'instantané EMBED.
+   ============================================================================ */
+const MEDIA_BASE = 'images/BIT-test/';
+const EXCEL_URL  = MEDIA_BASE + 'BIT-Test.xlsx';
+const SHEET_NAME = 'Bit_Test_Single';
+const MANIFEST = ["20260624_172323.mp4", "BIT-Test - crash test.MOV", "Crash Test.PNG", "Down sensor test.PNG", "Dust box test.MOV", "Dust box test.MOV enlever le bac.PNG", "Forward Vision sensor test.PNG", "Forward Vision sensor test_test passed.PNG", "Geomagnatic test confirm.png", "Gyroscope test checking passed.PNG", "Gyroscope test checking.PNG", "Gyroscope.MOV", "IMG_7345.PNG", "IMG_7346.PNG", "IMG_7349.PNG", "IMG_7350.PNG", "IMG_7352.PNG", "LDS test.MOV", "Menu BIT-Test.PNG", "Menu Bit test.PNG", "PSD Test.MOV", "Roller test.MOV", "TOF Test checking passed.PNG", "TOF Test checking.PNG", "Wipe outside detection.MOV", "drive wheel test checking passed.PNG", "drive wheel test checking.PNG", "drive wheel test.MOV", "fan test.MOV", "fan test.png", "photo-6676_singular_display_fullPicture.jpeg", "rag installation inspection.MOV", "side brush test.png", "tank test.PNG", "video-6721_singular_display.MOV", "wipe lifthing detection.mp4"];
+const EMBED = [
+  {
+    "id": "crash-test",
+    "name": "Crash test",
+    "desc": "Test de collision",
+    "infos": [
+      "Faire un appuie sur le parre choc gauche.",
+      "Faire un appuie sur le parre choc droite.",
+      "Test réussi.",
+      "Test terminé."
+    ],
+    "images": [
+      "Crash Test.PNG"
+    ],
+    "video": "BIT-Test - crash test.MOV",
+    "effectue": "Test des capteurs de parre choc droite et gauche"
+  },
+  {
+    "id": "down-sensor-test",
+    "name": "Down sensor test",
+    "desc": "Test du capteur vers le bas",
+    "infos": [
+      "Lors des tests, veuillez soulever le robot du sol."
+    ],
+    "images": [
+      "Down sensor test.PNG"
+    ],
+    "video": "",
+    "effectue": "Test capteur de vide"
+  },
+  {
+    "id": "forward-vision-sensor-test",
+    "name": "Forward Vision sensor test",
+    "desc": "Test du capteur de vision avant",
+    "infos": [
+      "Forward Vision sensor test Test checking…."
+    ],
+    "images": [
+      "Forward Vision sensor test.PNG",
+      "Forward Vision sensor test_test passed.PNG"
+    ],
+    "video": "",
+    "effectue": "Test du module vision"
+  },
+  {
+    "id": "psd-test",
+    "name": "PSD test",
+    "desc": "Test PSD/ Power Spectral Density",
+    "infos": [
+      "PSD test checking… \"Power Spectral Density\"",
+      "Veuillez protéger le capteur de bord.",
+      "Test Réussi",
+      "Test terminé"
+    ],
+    "images": [],
+    "video": "PSD Test.MOV",
+    "effectue": "Test laser lateral"
+  },
+  {
+    "id": "tof-test",
+    "name": "TOF test",
+    "desc": "Test TOF / Time Of Flight",
+    "infos": [
+      "Time Of Flight",
+      "TOF test checking",
+      "Test Réussi",
+      "Test terminé"
+    ],
+    "images": [
+      "TOF Test checking.PNG",
+      "TOF Test checking passed.PNG"
+    ],
+    "video": "",
+    "effectue": "Dans l’interface de test BIT, cliquez sur« Test TOF ». Après l’annonce vocale du robot, masquez la fenêtre du capteur TOF située à l’avant du robot, puis retirez l’obstacle. Une fois l’opération terminée, le résultat du test est annoncé vocalement.\nRemarque : certains modèles ne sont pas équipés d’un capteur TOF. Dans ce cas, ce test n’est pas nécessaire. Veillez à vérifier si le modèle concerné dispose de cette fonction."
+  },
+  {
+    "id": "lds-test",
+    "name": "LDS test",
+    "desc": "Test LDS / Laser Distance Sensor",
+    "infos": [
+      "Laser Distance Sensor",
+      "Appuyer sur le capteur LDS gauche",
+      "Appuyer sur le capteur LDS droit",
+      "Test Réussi",
+      "Test terminé"
+    ],
+    "images": [],
+    "video": "LDS test.MOV",
+    "effectue": "Test switch LDS"
+  },
+  {
+    "id": "drive-wheel-test",
+    "name": "drive wheel test",
+    "desc": "Test des roues motrices",
+    "infos": [
+      "drive wheel test checking"
+    ],
+    "images": [
+      "drive wheel test checking.PNG",
+      "drive wheel test checking passed.PNG"
+    ],
+    "video": "drive wheel test.MOV",
+    "effectue": "Test des roues, le robot avance puis recule en ligne droite"
+  },
+  {
+    "id": "gyroscope-test",
+    "name": "Gyroscope test",
+    "desc": "Test du gyroscope",
+    "infos": [
+      "Gyroscope test checking"
+    ],
+    "images": [
+      "Gyroscope test checking.PNG",
+      "Gyroscope test checking passed.PNG"
+    ],
+    "video": "Gyroscope.MOV",
+    "effectue": "Test gyroscope, rotation anti horaire puis horaire"
+  },
+  {
+    "id": "geomagnatic-test",
+    "name": "Geomagnatic test",
+    "desc": "Test géomagnatique",
+    "infos": [
+      "Test Geomagnetic",
+      "Lors du test, veuillez utiliser la bande magnétique pour balayer le dessous du robot de gauche à droite.",
+      "Test Réussi",
+      "Test terminé"
+    ],
+    "images": [],
+    "video": "",
+    "effectue": ""
+  },
+  {
+    "id": "dust-box-test",
+    "name": "Dust box test",
+    "desc": "Test de la boîte à poussière",
+    "infos": [
+      "Lors du test, veuillez retirer le boitier à poussière",
+      "Test réussi",
+      "Test terminé"
+    ],
+    "images": [
+      "Dust box test.MOV enlever le bac.PNG"
+    ],
+    "video": "Dust box test.MOV",
+    "effectue": "Test capteur bac à poussire"
+  },
+  {
+    "id": "tank-test",
+    "name": "Tank test",
+    "desc": "Test réservoir d'eau",
+    "infos": [],
+    "images": [
+      "tank test.PNG"
+    ],
+    "video": "",
+    "effectue": ""
+  },
+  {
+    "id": "fan-test",
+    "name": "Fan test",
+    "desc": "Test du ventilateur",
+    "infos": [],
+    "images": [
+      "fan test.png"
+    ],
+    "video": "fan test.MOV",
+    "effectue": ""
+  },
+  {
+    "id": "side-brush-test",
+    "name": "Side brush test",
+    "desc": "Test de brossage latéral",
+    "infos": [],
+    "images": [
+      "side brush test.png"
+    ],
+    "video": "",
+    "effectue": ""
+  },
+  {
+    "id": "roller-test",
+    "name": "roller test",
+    "desc": "Test brosse principale",
+    "infos": [
+      "Test réussi",
+      "Test terminé"
+    ],
+    "images": [],
+    "video": "Roller test.MOV",
+    "effectue": "Placez le robot au sol, avec sa face inférieure orientée vers le bas.\nAprès l’annonce vocale du robot, la brosse principale effectue des rotations en marche avant puis en marche arrière à différentes vitesses. Une fois le test terminé, la brosse principale s’arrête et le résultat du test est annoncé vocalement."
+  },
+  {
+    "id": "wipe-lifting-detection",
+    "name": "wipe lifting detection",
+    "desc": "Détection de levage par nettoyage",
+    "infos": [],
+    "images": [],
+    "video": "wipe lifthing detection.mp4",
+    "effectue": ""
+  },
+  {
+    "id": "wipe-outside-detection",
+    "name": "Wipe outside detection",
+    "desc": "Test de sortie de la serpillière à l’extérieur",
+    "infos": [
+      "Test réussi",
+      "Test terminé"
+    ],
+    "images": [],
+    "video": "Wipe outside detection.MOV",
+    "effectue": ""
+  },
+  {
+    "id": "rag-installation-inspection",
+    "name": "Rag installation inspection",
+    "desc": "Vérification de l'installation des serpillères",
+    "infos": [
+      "Lors du test, veuillez installer les mops de nettoyage",
+      "Test réussi",
+      "Test terminé"
+    ],
+    "images": [],
+    "video": "rag installation inspection.MOV",
+    "effectue": "Avant de lancer le test enlever les plaques serpillère, lancer le test et les installer"
+  }
+];
+let TESTS = EMBED.slice();
+
+const _manifestLow = {};
+MANIFEST.forEach(f => { _manifestLow[f.toLowerCase()] = f; });
+function resolveMedia(val){
+  if(!val) return '';
+  val = String(val).trim();
+  if(!val) return '';
+  let real = _manifestLow[val.toLowerCase()];
+  if(!real){
+    for(const ext of ['.png','.jpg','.jpeg','.mov','.mp4']){
+      if(_manifestLow[(val+ext).toLowerCase()]){ real = _manifestLow[(val+ext).toLowerCase()]; break; }
+    }
+  }
+  if(!real) real = val;
+  return MEDIA_BASE + encodeURI(real);
+}
+function isVideo(name){ return /\.(mov|mp4|webm|m4v)$/i.test(name||''); }
+function slug(s){ return String(s).trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''); }
+
+const LS_DONE = 'fd_bit_single_done';
+let doneSet = new Set();
+(function(){ try{ const r=localStorage.getItem(LS_DONE); if(r) doneSet=new Set(JSON.parse(r)); }catch(e){} })();
+function saveDone(){ try{ localStorage.setItem(LS_DONE, JSON.stringify([...doneSet])); }catch(e){} }
+function toggleDone(id, on){ if(on) doneSet.add(id); else doneSet.delete(id); saveDone(); render(); }
+function resetDone(){ doneSet.clear(); saveDone(); render(); showToast('Progression réinitialisée'); }
+
+const LS_THEME='fd_sav_theme';
+function toggleTheme(){ const n=document.documentElement.dataset.theme==='dark'?'light':'dark'; applyTheme(n); try{localStorage.setItem(LS_THEME,n);}catch(e){} }
+function applyTheme(t){ document.documentElement.dataset.theme=t; document.getElementById('themeToggle').textContent=t==='dark'?'☾':'☀'; }
+(function(){ try{ const s=localStorage.getItem(LS_THEME); if(s) applyTheme(s); }catch(e){} })();
+let _tt; function showToast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(_tt); _tt=setTimeout(()=>t.classList.remove('show'),2200); }
+function escHtml(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+let galleryImgs=[], galleryIndex=0;
+function openLightbox(el){
+  const grid = el.closest && el.closest('.img-grid');
+  const srcs = grid ? Array.from(grid.querySelectorAll('img')).map(i=>i.getAttribute('src')) : [el.getAttribute('src')];
+  galleryIndex = Math.max(0, srcs.indexOf(el.getAttribute('src')));
+  galleryImgs = srcs; showLightbox();
+  document.getElementById('lightbox').classList.add('open');
+}
+function showLightbox(){
+  document.getElementById('lightbox-img').src = galleryImgs[galleryIndex];
+  const multi = galleryImgs.length>1;
+  document.getElementById('lightbox-prev').style.display = multi?'flex':'none';
+  document.getElementById('lightbox-next').style.display = multi?'flex':'none';
+  const c=document.getElementById('lightbox-counter');
+  c.style.display = multi?'block':'none'; c.textContent=(galleryIndex+1)+' / '+galleryImgs.length;
+}
+function lightboxNav(d,e){ if(e)e.stopPropagation(); if(!galleryImgs.length)return; galleryIndex=(galleryIndex+d+galleryImgs.length)%galleryImgs.length; showLightbox(); }
+function closeLightbox(){ document.getElementById('lightbox').classList.remove('open'); }
+document.addEventListener('keydown',e=>{ if(!document.getElementById('lightbox').classList.contains('open'))return; if(e.key==='Escape')closeLightbox(); if(e.key==='ArrowLeft')lightboxNav(-1); if(e.key==='ArrowRight')lightboxNav(1); });
+
+function clearSearch(){ const i=document.getElementById('searchInput'); i.value=''; render(); i.focus(); }
+
+let openSet = new Set();
+function toggleCard(id){ if(openSet.has(id))openSet.delete(id); else openSet.add(id); render(); }
+function expandAll(on){ openSet = on ? new Set(TESTS.map(t=>t.id)) : new Set(); render(); }
+
+function mediaHtml(t){
+  let html='';
+  const imgs = (t.images||[]).map(resolveMedia).filter(Boolean);
+  const vidName = t.video||'';
+  if(imgs.length){
+    html += '<div class="tb-section"><div class="tb-title">Captures écran</div><div class="img-grid">';
+    imgs.forEach(src => { html += '<img loading="lazy" src="'+escHtml(src)+'" alt="" onclick="openLightbox(this)" onerror="this.style.display=&#39;none&#39;">'; });
+    html += '</div></div>';
+  }
+  if(vidName){
+    const vsrc = resolveMedia(vidName);
+    if(isVideo(vsrc)){
+      html += '<div class="tb-section"><div class="tb-title">Vidéo</div><div class="video-container"><video controls preload="metadata" src="'+escHtml(vsrc)+'" onerror="this.parentNode.parentNode.style.display=&#39;none&#39;"></video></div></div>';
+    } else if(vsrc){
+      html += '<div class="tb-section"><div class="tb-title">Vidéo</div><div class="img-grid"><img loading="lazy" src="'+escHtml(vsrc)+'" alt="" onclick="openLightbox(this)" onerror="this.parentNode.parentNode.style.display=&#39;none&#39;"></div></div>';
+    }
+  }
+  return html;
+}
+function msgHtml(infos){
+  if(!infos||!infos.length) return '';
+  let out='<div class="tb-section"><div class="tb-title">Consignes opérateur / messages affichés</div><div class="msg-list">';
+  infos.forEach(line=>{
+    const pass = /(test r[ée]ussi|test termin[ée]|passed|checking passed)/i.test(line);
+    out += '<div class="msg-item'+(pass?' pass':'')+'"><span class="msg-ico">'+(pass?'✔':'▸')+'</span><span>'+escHtml(line)+'</span></div>';
+  });
+  out+='</div></div>';
+  return out;
+}
+function render(){
+  const q = (document.getElementById('searchInput').value||'').trim().toLowerCase();
+  document.getElementById('clearBtn').style.display = q?'block':'none';
+  const list = q ? TESTS.filter(t => (t.name+' '+t.desc+' '+(t.effectue||'')+' '+(t.infos||[]).join(' ')).toLowerCase().includes(q)) : TESTS;
+  const root = document.getElementById('results');
+  if(!list.length){
+    root.innerHTML = '<div class="no-results"><div class="icon">&#128269;</div><p>Aucun test ne correspond &agrave; &laquo; '+escHtml(q)+' &raquo;.</p></div>';
+  } else {
+    root.innerHTML = list.map(t=>{
+      const idx = TESTS.indexOf(t)+1;
+      const isOpen = openSet.has(t.id);
+      const isDone = doneSet.has(t.id);
+      const nImg = (t.images||[]).length;
+      const hasVid = !!t.video;
+      let badges='';
+      if(nImg) badges += '<span class="mini-badge img">&#128247; '+nImg+'</span>';
+      if(hasVid) badges += '<span class="mini-badge vid">&#9654; vid&eacute;o</span>';
+      if(isDone) badges += '<span class="mini-badge" style="background:var(--green-bg);color:var(--green)">&#10003;</span>';
+      let body='';
+      body += msgHtml(t.infos);
+      if(t.effectue) body += '<div class="tb-section"><div class="tb-title">R&eacute;sultat attendu / test effectu&eacute;</div><div class="result-box">'+escHtml(t.effectue)+'</div></div>';
+      body += mediaHtml(t);
+      if(!(t.infos||[]).length && !t.effectue && !nImg && !hasVid) body += '<div class="tb-section" style="color:var(--muted);font-size:.85rem">Aucune ressource renseign&eacute;e pour ce test dans l&#39;Excel.</div>';
+      body += '<div class="done-row"><label><input type="checkbox" '+(isDone?'checked':'')+' onchange="toggleDone(&#39;'+t.id+'&#39;,this.checked)"> Test effectu&eacute;</label></div>';
+      return '<div class="test-card'+(isOpen?' open':'')+(isDone?' done':'')+'" id="card-'+t.id+'">'
+        + '<div class="test-header" onclick="toggleCard(&#39;'+t.id+'&#39;)">'
+        +   '<div class="test-num">'+idx+'</div>'
+        +   '<div class="test-titles"><div class="test-name">'+escHtml(t.name)+'</div><div class="test-desc">'+escHtml(t.desc)+'</div></div>'
+        +   '<div class="test-badges">'+badges+'</div>'
+        +   '<svg class="test-arrow" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>'
+        + '</div>'
+        + '<div class="test-body">'+body+'</div>'
+        + '</div>';
+    }).join('');
+  }
+  document.getElementById('doneCount').textContent = doneSet.size;
+  document.getElementById('totalCount').textContent = TESTS.length;
+  const pct = TESTS.length ? Math.round(doneSet.size/TESTS.length*100) : 0;
+  document.getElementById('progFill').style.width = pct+'%';
+}
+
+function parseSheet(rows){
+  const out=[];
+  rows.forEach(r=>{
+    const name=(r[0]||'').toString().trim();
+    if(!name) return;
+    if(name.toLowerCase()==='bit test single') return;
+    if((r[1]||'').toString().trim().toLowerCase()==='bit test single') return;
+    const infos=(r[2]||'').toString().split('\n').map(s=>s.trim()).filter(Boolean);
+    const images=[r[3],r[4]].map(v=>(v||'').toString().trim()).filter(Boolean);
+    out.push({ id:slug(name), name:name, desc:(r[1]||'').toString().trim(),
+      infos:infos, images:images, video:(r[5]||'').toString().trim(), effectue:(r[6]||'').toString().trim() });
+  });
+  return out;
+}
+async function loadExcel(){
+  const banner=document.getElementById('srcBanner'), txt=document.getElementById('srcText');
+  try{
+    const res = await fetch(EXCEL_URL);
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const buf = await res.arrayBuffer();
+    const wb = XLSX.read(buf,{type:'array'});
+    const ws = wb.Sheets[SHEET_NAME] || wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+    const parsed = parseSheet(rows);
+    if(parsed.length){ TESTS = parsed; txt.textContent = TESTS.length+' tests chargés depuis BIT-Test.xlsx (mise à jour automatique).'; }
+    else { txt.textContent = TESTS.length+' tests (instantané intégré).'; }
+  }catch(err){
+    banner.classList.add('warn');
+    txt.textContent = TESTS.length+' tests (instantané intégré — Excel non lu en direct : '+err.message+').';
+  }
+  render();
+}
+document.addEventListener('DOMContentLoaded', loadExcel);
+</script>
+</body>
+</html>
