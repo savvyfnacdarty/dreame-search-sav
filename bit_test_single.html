@@ -175,10 +175,16 @@
    - Images  : collez l'URL SharePoint DIRECTE (qui pointe vraiment vers le
                fichier image) dans les colonnes « Capture écran ». -> balise <img>.
    - Si la cellule contient encore un simple nom de fichier (sans http), la page
-     retombe sur le dossier local images/BIT-test/ (compatibilité ascendante).
+     cherche l'image dans les dossiers locaux listés dans MEDIA_BASES ci-dessous
+     (le 1er emplacement où le fichier existe est utilisé).
    La page lit l'Excel en direct ; à défaut elle utilise l'instantané EMBED.
    ============================================================================ */
-const MEDIA_BASE = 'images/BIT-test/';
+// Dossiers possibles des médias locaux (essayés dans l'ordre jusqu'à trouver le fichier).
+const MEDIA_BASES = [
+  'images/procedure-acces/BIT-test/',
+  'images/BIT-test/'
+];
+const MEDIA_BASE = MEDIA_BASES[0]; // base par défaut (rétro-compatibilité)
 // Emplacements possibles du fichier Excel (le 1er trouvé est utilisé).
 const EXCEL_CANDIDATES = [
   'images/procedure-acces/BIT-test/BIT-Test.xlsx',
@@ -418,8 +424,25 @@ let TESTS = EMBED.slice();
 const _manifestLow = {};
 MANIFEST.forEach(f => { _manifestLow[f.toLowerCase()] = f; });
 function isHttp(v){ return /^https?:\/\//i.test(String(v||'').trim()); }
-/* Image en échec : on la masque, et si plus aucune image visible, on retire le titre orphelin. */
+/* Nom de fichier réel (corrige casse + extension via le manifeste). */
+function localName(val){
+  val = String(val||'').trim();
+  let real = _manifestLow[val.toLowerCase()];
+  if(!real){
+    for(const ext of ['.png','.jpg','.jpeg','.mov','.mp4']){
+      if(_manifestLow[(val+ext).toLowerCase()]){ real = _manifestLow[(val+ext).toLowerCase()]; break; }
+    }
+  }
+  return real || val;
+}
+/* Image en échec : on tente le dossier suivant ; si tous échouent, on masque
+   l'image et on retire le titre orphelin si la galerie est vide. */
 function imgErr(el){
+  const f = el.getAttribute('data-file');
+  let b = parseInt(el.getAttribute('data-b')||'0', 10);
+  if(f && b+1 < MEDIA_BASES.length){            // essai du dossier suivant
+    b++; el.setAttribute('data-b', b); el.src = MEDIA_BASES[b] + f; return;
+  }
   el.style.display='none';
   const grid = el.closest('.img-grid');
   if(grid && !Array.from(grid.querySelectorAll('img')).some(i=>i.style.display!=='none')){
@@ -431,14 +454,7 @@ function resolveMedia(val){
   val = String(val).trim();
   if(!val) return '';
   if(isHttp(val)) return val;            // URL Vimeo / SharePoint : utilisée telle quelle
-  let real = _manifestLow[val.toLowerCase()];
-  if(!real){
-    for(const ext of ['.png','.jpg','.jpeg','.mov','.mp4']){
-      if(_manifestLow[(val+ext).toLowerCase()]){ real = _manifestLow[(val+ext).toLowerCase()]; break; }
-    }
-  }
-  if(!real) real = val;
-  return MEDIA_BASE + encodeURI(real);   // repli : fichier local
+  return MEDIA_BASE + encodeURI(localName(val));   // repli : fichier local (1er dossier)
 }
 function isVideo(name){ return /\.(mov|mp4|webm|m4v)(\?|$)/i.test(name||''); }
 /* Transforme une URL Vimeo (publique/privée/embed) en URL d'intégration player. */
@@ -495,11 +511,18 @@ function expandAll(on){ openSet = on ? new Set(TESTS.map(t=>t.id)) : new Set(); 
 
 function mediaHtml(t){
   let html='';
-  const imgs = (t.images||[]).map(resolveMedia).filter(Boolean);
+  const imgVals = (t.images||[]).map(v=>String(v||'').trim()).filter(Boolean);
   const vidName = t.video||'';
-  if(imgs.length){
+  if(imgVals.length){
     html += '<div class="tb-section"><div class="tb-title">Captures écran</div><div class="img-grid">';
-    imgs.forEach(src => { html += '<img loading="lazy" src="'+escHtml(src)+'" alt="" onclick="openLightbox(this)" onerror="imgErr(this)">'; });
+    imgVals.forEach(v => {
+      if(isHttp(v)){
+        html += '<img loading="lazy" src="'+escHtml(v)+'" alt="" onclick="openLightbox(this)" onerror="imgErr(this)">';
+      } else {
+        const f = encodeURI(localName(v));   // nom corrigé ; le dossier est tenté via data-b dans imgErr
+        html += '<img loading="lazy" src="'+escHtml(MEDIA_BASES[0]+f)+'" data-file="'+escHtml(f)+'" data-b="0" alt="" onclick="openLightbox(this)" onerror="imgErr(this)">';
+      }
+    });
     html += '</div></div>';
   }
   if(vidName){
