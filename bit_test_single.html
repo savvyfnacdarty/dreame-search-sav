@@ -58,6 +58,9 @@
 .img-grid img{height:130px;width:auto;max-width:220px;object-fit:cover;border-radius:8px;border:2px solid var(--border);cursor:pointer;transition:transform .15s,border-color .15s;background:var(--surface-2)}
 .img-grid img:hover{transform:scale(1.03);border-color:var(--fd-red)}
 .video-container video{width:100%;max-width:560px;border-radius:10px;border:2px solid var(--border);display:block;background:#000}
+.video-embed{position:relative;width:100%;max-width:640px;aspect-ratio:16/9;border-radius:10px;overflow:hidden;border:2px solid var(--border);background:#000}
+.video-embed iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+@supports not (aspect-ratio:16/9){.video-embed{height:0;padding-bottom:56.25%}}
 .done-row{display:flex;align-items:center;gap:10px;margin-top:16px;padding-top:14px;border-top:1px dashed var(--border)}
 .done-row label{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.88rem;font-weight:600;color:var(--text-2)}
 .done-row input[type=checkbox]{width:18px;height:18px;cursor:pointer;accent-color:var(--green)}
@@ -164,10 +167,23 @@
    2. Déposez les images/vidéos dans images/BIT-test/ (le nom de fichier dans
       l'Excel doit correspondre ; casse et extension tolérées).
    3. Rechargez la page : les fiches sont régénérées automatiquement.
+
+   MÉDIAS (migration GitHub -> Vimeo / SharePoint) :
+   - Vidéos  : collez l'URL Vimeo dans la colonne « Vidéo » de l'Excel.
+               (https://vimeo.com/ID, .../ID/HASH pour une vidéo privée, ou un
+                lien d'intégration player.vimeo.com). -> lecteur iframe intégré.
+   - Images  : collez l'URL SharePoint DIRECTE (qui pointe vraiment vers le
+               fichier image) dans les colonnes « Capture écran ». -> balise <img>.
+   - Si la cellule contient encore un simple nom de fichier (sans http), la page
+     retombe sur le dossier local images/BIT-test/ (compatibilité ascendante).
    La page lit l'Excel en direct ; à défaut elle utilise l'instantané EMBED.
    ============================================================================ */
 const MEDIA_BASE = 'images/BIT-test/';
-const EXCEL_URL  = MEDIA_BASE + 'BIT-Test.xlsx';
+// Emplacements possibles du fichier Excel (le 1er trouvé est utilisé).
+const EXCEL_CANDIDATES = [
+  'images/procedure-acces/BIT-test/BIT-Test.xlsx',
+  'images/BIT-test/BIT-Test.xlsx'
+];
 const SHEET_NAME = 'Bit_Test_Single';
 const MANIFEST = ["20260624_172323.mp4", "BIT-Test - crash test.MOV", "Crash Test.PNG", "Down sensor test.PNG", "Dust box test.MOV", "Dust box test.MOV enlever le bac.PNG", "Forward Vision sensor test.PNG", "Forward Vision sensor test_test passed.PNG", "Geomagnatic test confirm.png", "Gyroscope test checking passed.PNG", "Gyroscope test checking.PNG", "Gyroscope.MOV", "IMG_7345.PNG", "IMG_7346.PNG", "IMG_7349.PNG", "IMG_7350.PNG", "IMG_7352.PNG", "LDS test.MOV", "Menu BIT-Test.PNG", "Menu Bit test.PNG", "PSD Test.MOV", "Roller test.MOV", "TOF Test checking passed.PNG", "TOF Test checking.PNG", "Wipe outside detection.MOV", "drive wheel test checking passed.PNG", "drive wheel test checking.PNG", "drive wheel test.MOV", "fan test.MOV", "fan test.png", "photo-6676_singular_display_fullPicture.jpeg", "rag installation inspection.MOV", "side brush test.png", "tank test.PNG", "video-6721_singular_display.MOV", "wipe lifthing detection.mp4"];
 const EMBED = [
@@ -401,10 +417,12 @@ let TESTS = EMBED.slice();
 
 const _manifestLow = {};
 MANIFEST.forEach(f => { _manifestLow[f.toLowerCase()] = f; });
+function isHttp(v){ return /^https?:\/\//i.test(String(v||'').trim()); }
 function resolveMedia(val){
   if(!val) return '';
   val = String(val).trim();
   if(!val) return '';
+  if(isHttp(val)) return val;            // URL Vimeo / SharePoint : utilisée telle quelle
   let real = _manifestLow[val.toLowerCase()];
   if(!real){
     for(const ext of ['.png','.jpg','.jpeg','.mov','.mp4']){
@@ -412,9 +430,19 @@ function resolveMedia(val){
     }
   }
   if(!real) real = val;
-  return MEDIA_BASE + encodeURI(real);
+  return MEDIA_BASE + encodeURI(real);   // repli : fichier local
 }
-function isVideo(name){ return /\.(mov|mp4|webm|m4v)$/i.test(name||''); }
+function isVideo(name){ return /\.(mov|mp4|webm|m4v)(\?|$)/i.test(name||''); }
+/* Transforme une URL Vimeo (publique/privée/embed) en URL d'intégration player. */
+function vimeoEmbed(url){
+  url = String(url||'').trim();
+  if(/player\.vimeo\.com\/video\//i.test(url)) return url;        // déjà une URL d'intégration
+  const priv = url.match(/vimeo\.com\/(\d+)\/([0-9a-zA-Z]+)/i);   // vidéo privée : /ID/HASH
+  if(priv) return 'https://player.vimeo.com/video/'+priv[1]+'?h='+priv[2];
+  const pub = url.match(/vimeo\.com\/(?:video\/)?(\d+)/i);        // vidéo publique : /ID
+  if(pub) return 'https://player.vimeo.com/video/'+pub[1];
+  return '';                                                       // pas reconnu comme Vimeo
+}
 function slug(s){ return String(s).trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''); }
 
 const LS_DONE = 'fd_bit_single_done';
@@ -467,12 +495,21 @@ function mediaHtml(t){
     html += '</div></div>';
   }
   if(vidName){
-    const vsrc = resolveMedia(vidName);
-    if(isVideo(vsrc)){
-      html += '<div class="tb-section"><div class="tb-title">Vidéo</div><div class="video-container"><video controls preload="metadata" src="'+escHtml(vsrc)+'" onerror="this.parentNode.parentNode.style.display=&#39;none&#39;"></video></div></div>';
-    } else if(vsrc){
-      html += '<div class="tb-section"><div class="tb-title">Vidéo</div><div class="img-grid"><img loading="lazy" src="'+escHtml(vsrc)+'" alt="" onclick="openLightbox(this)" onerror="this.parentNode.parentNode.style.display=&#39;none&#39;"></div></div>';
+    let inner='';
+    const emb = isHttp(vidName) ? vimeoEmbed(vidName) : '';
+    if(emb){
+      // Vimeo : lecteur intégré (iframe responsive 16:9)
+      inner = '<div class="video-embed"><iframe src="'+escHtml(emb)+'" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen title="'+escHtml(t.name)+'"></iframe></div>';
+    } else {
+      const vsrc = resolveMedia(vidName);
+      if(isVideo(vsrc)){
+        inner = '<div class="video-container"><video controls preload="metadata" src="'+escHtml(vsrc)+'" onerror="this.parentNode.parentNode.style.display=&#39;none&#39;"></video></div>';
+      } else if(vsrc){
+        // URL/fichier non vidéo et non Vimeo : tenté en image
+        inner = '<div class="img-grid"><img loading="lazy" src="'+escHtml(vsrc)+'" alt="" onclick="openLightbox(this)" onerror="this.parentNode.parentNode.style.display=&#39;none&#39;"></div>';
+      }
     }
+    if(inner) html += '<div class="tb-section"><div class="tb-title">Vidéo</div>'+inner+'</div>';
   }
   return html;
 }
@@ -541,12 +578,21 @@ function parseSheet(rows){
   });
   return out;
 }
+async function fetchExcelBuffer(){
+  let lastErr=null;
+  for(const url of EXCEL_CANDIDATES){
+    try{
+      const res = await fetch(url);
+      if(res.ok) return await res.arrayBuffer();
+      lastErr = new Error('HTTP '+res.status);
+    }catch(e){ lastErr = e; }
+  }
+  throw lastErr || new Error('Excel introuvable');
+}
 async function loadExcel(){
   const banner=document.getElementById('srcBanner'), txt=document.getElementById('srcText');
   try{
-    const res = await fetch(EXCEL_URL);
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    const buf = await res.arrayBuffer();
+    const buf = await fetchExcelBuffer();
     const wb = XLSX.read(buf,{type:'array'});
     const ws = wb.Sheets[SHEET_NAME] || wb.Sheets[wb.SheetNames[0]];
     const rows = XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
