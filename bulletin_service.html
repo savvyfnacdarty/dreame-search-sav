@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Bulletin Service — SAV DREAME · Fnac Darty</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90' font-family='Arial Black,Arial,sans-serif' font-weight='900'><tspan fill='%23F5A623'>F</tspan><tspan fill='%23E62E2E'>D</tspan></text></svg>"/>
+<link rel="stylesheet" href="assets/shared.css"/>
+<!-- Librairies d'extraction de texte (aperçu traductible) :
+     JSZip = lecture du .pptx · pdf.js = lecture du .pdf. Chargées depuis CDN. -->
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+<style>
+/* ══════════════════════════════════════════════════════════════
+   PAGE — BULLETIN SERVICE
+   (réutilise les tokens de assets/shared.css : --fd-red, --surface…)
+══════════════════════════════════════════════════════════════ */
+
+/* ── Barre de recherche ── */
+.bs-search-wrapper { position:relative; margin-bottom:16px; }
+.bs-search-input {
+  width:100%; height:54px;
+  background:var(--surface); border:2px solid var(--border); border-radius:var(--r-md);
+  padding:0 52px 0 18px;
+  font-family:var(--font-ui); font-size:15px; font-weight:500; color:var(--text);
+  box-shadow:var(--shadow-sm); transition:all var(--tr);
+}
+.bs-search-input:focus { outline:none; border-color:var(--fd-red); box-shadow:0 0 0 4px var(--accent-glow); }
+.bs-search-icon { position:absolute; right:16px; top:50%; transform:translateY(-50%); color:var(--muted); pointer-events:none; }
+
+/* ── Filtres rapides (chips) ── */
+.bs-filters { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px; }
+.bs-chip {
+  display:inline-flex; align-items:center; gap:6px;
+  padding:7px 14px; border-radius:999px;
+  border:1.5px solid var(--border); background:var(--surface);
+  color:var(--text-2); font-size:13px; font-weight:600;
+  transition:all var(--tr); cursor:pointer; user-select:none;
+}
+.bs-chip:hover { border-color:var(--border-strong); color:var(--text); }
+.bs-chip.active {
+  background:var(--fd-red); border-color:var(--fd-red); color:#fff;
+  box-shadow:0 2px 8px rgba(229,46,46,0.25);
+}
+
+/* ── Compteur de résultats ── */
+.bs-count { font-size:13px; color:var(--muted); font-weight:600; margin-bottom:14px; }
+.bs-count strong { color:var(--text); }
+
+/* ── Grille de cartes ── */
+.bs-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:16px; }
+.bs-card {
+  display:flex; flex-direction:column;
+  background:var(--surface); border:1.5px solid var(--border); border-radius:var(--r-lg);
+  padding:18px; box-shadow:var(--shadow-sm); transition:all var(--tr);
+}
+.bs-card:hover { border-color:var(--fd-red); box-shadow:var(--shadow-md); transform:translateY(-2px); }
+.bs-card-top { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:10px; }
+.bs-card-title { font-family:var(--font-cond); font-size:18px; font-weight:700; color:var(--text); line-height:1.25; word-break:break-word; }
+
+/* ── Badges type de fichier ── */
+.bs-badge {
+  flex-shrink:0; display:inline-flex; align-items:center; gap:5px;
+  padding:3px 9px; border-radius:var(--r-sm);
+  font-size:10px; font-weight:700; font-family:var(--font-mono);
+  text-transform:uppercase; letter-spacing:.4px; white-space:nowrap;
+}
+.bs-badge.ppt { background:#FCE9E2; color:#C43E00; }
+.bs-badge.pdf { background:#FBE0E0; color:#C20A0A; }
+[data-theme="dark"] .bs-badge.ppt { background:#4A2410; color:#FFB07A; }
+[data-theme="dark"] .bs-badge.pdf { background:#4A1414; color:#FF9A9A; }
+
+/* ── Tags modèle / code erreur ── */
+.bs-tags { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; }
+.bs-tag {
+  font-size:11px; font-weight:600; font-family:var(--font-mono);
+  padding:2px 8px; border-radius:var(--r-sm);
+  background:var(--surface-3); color:var(--text-2);
+}
+.bs-tag.err { background:var(--accent-glow); color:var(--fd-red); }
+
+/* ── Métadonnées de la carte ── */
+.bs-meta { font-size:12px; color:var(--muted); line-height:1.7; margin-bottom:14px; }
+.bs-meta-row { display:flex; gap:8px; }
+.bs-meta-row span:first-child { flex-shrink:0; color:var(--muted-2); min-width:78px; }
+.bs-meta-row span:last-child { color:var(--text-2); word-break:break-word; }
+.bs-path { font-family:var(--font-mono); font-size:11px; }
+
+/* ── Actions de la carte ── */
+.bs-actions { display:flex; gap:8px; margin-top:auto; flex-wrap:wrap; }
+.bs-btn {
+  display:inline-flex; align-items:center; gap:6px;
+  padding:9px 14px; border-radius:var(--r-md);
+  font-size:13px; font-weight:700; border:1.5px solid transparent;
+  transition:all var(--tr); cursor:pointer; text-decoration:none;
+}
+.bs-btn-open { background:var(--fd-red); color:#fff; border-color:var(--fd-red); }
+.bs-btn-open:hover { background:#c41e1e; border-color:#c41e1e; box-shadow:var(--shadow-md); }
+.bs-btn-tr { background:var(--surface); color:var(--text-2); border-color:var(--border); }
+.bs-btn-tr:hover { border-color:var(--border-strong); color:var(--text); background:var(--surface-2); }
+
+/* ── Aucun résultat ── */
+.bs-no-result {
+  display:none; padding:28px; text-align:center;
+  background:var(--surface); border:2px dashed var(--border-strong);
+  border-radius:var(--r-lg); color:var(--text-2);
+}
+.bs-no-result.active { display:block; }
+.bs-no-result strong { color:var(--fd-red); }
+
+/* ── Section / bloc générique ── */
+.bs-section { margin-top:34px; }
+.bs-section-head { display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+.bs-section-title { font-family:var(--font-cond); font-size:24px; font-weight:700; color:var(--text); }
+.bs-section-sub { font-size:13px; color:var(--muted); margin-bottom:16px; }
+
+/* ── Traducteur EN → FR ── */
+.bs-translator {
+  background:var(--surface); border:1.5px solid var(--border); border-radius:var(--r-lg);
+  padding:22px; box-shadow:var(--shadow-sm);
+}
+.bs-tr-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.bs-tr-col { display:flex; flex-direction:column; }
+.bs-tr-label {
+  font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.5px;
+  color:var(--muted); margin-bottom:8px; display:flex; align-items:center; gap:6px;
+}
+.bs-tr-textarea, .bs-tr-output {
+  width:100%; min-height:200px; resize:vertical;
+  background:var(--surface-2); border:1.5px solid var(--border); border-radius:var(--r-md);
+  padding:14px; font-family:var(--font-ui); font-size:14px; line-height:1.6; color:var(--text);
+  transition:border-color var(--tr);
+}
+.bs-tr-textarea:focus { outline:none; border-color:var(--fd-red); }
+.bs-tr-output { overflow:auto; white-space:pre-wrap; }
+.bs-tr-output:empty::before { content:attr(data-placeholder); color:var(--muted); }
+.bs-tr-actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
+.bs-tr-hint {
+  font-size:12px; color:var(--text-2); margin-top:14px;
+  padding:10px 14px; background:var(--orange-bg); border:1px solid var(--orange-border);
+  border-radius:var(--r-sm); display:flex; align-items:center; gap:8px;
+}
+.bs-tr-status { font-size:12px; color:var(--muted); margin-top:10px; min-height:16px; }
+.bs-tr-status.warn { color:var(--orange); font-weight:600; }
+
+/* ══════════════════════════════════════════════════════════════
+   MODALE — APERÇU + TRADUCTION CÔTE À CÔTE
+══════════════════════════════════════════════════════════════ */
+.bs-modal { display:none; position:fixed; inset:0; z-index:1000; }
+.bs-modal.open { display:block; }
+.bs-modal-backdrop { position:absolute; inset:0; background:rgba(15,23,42,.55); backdrop-filter:blur(2px); }
+.bs-modal-card {
+  position:relative; z-index:1; display:flex; flex-direction:column;
+  width:min(1200px, 94vw); height:min(86vh, 900px); margin:6vh auto 0;
+  background:var(--surface); border-radius:var(--r-xl);
+  box-shadow:var(--shadow-modal); overflow:hidden;
+}
+.bs-modal-head {
+  display:flex; align-items:center; justify-content:space-between; gap:14px;
+  padding:16px 22px; border-bottom:1px solid var(--rule); flex-shrink:0;
+}
+.bs-modal-title { font-family:var(--font-cond); font-size:20px; font-weight:700; color:var(--text); line-height:1.25; }
+.bs-modal-close {
+  flex-shrink:0; width:34px; height:34px; border-radius:var(--r-md);
+  border:1.5px solid var(--border); background:var(--surface-2);
+  color:var(--text-2); font-size:16px; line-height:1; transition:all var(--tr);
+}
+.bs-modal-close:hover { border-color:var(--fd-red); color:var(--fd-red); }
+.bs-modal-body { display:grid; grid-template-columns:1fr 1fr; gap:0; flex:1; min-height:0; }
+.bs-modal-pane { display:flex; flex-direction:column; padding:18px 22px; min-height:0; overflow:auto; }
+.bs-pane-preview { border-right:1px solid var(--rule); }
+.bs-pane-label {
+  font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.5px;
+  color:var(--muted); margin-bottom:10px;
+}
+.bs-iframe-wrap {
+  position:relative; flex:1; min-height:300px;
+  border:1.5px solid var(--border); border-radius:var(--r-md); overflow:hidden;
+  background:var(--surface-2);
+}
+.bs-iframe-wrap iframe { width:100%; height:100%; border:0; display:block; }
+.bs-iframe-note { font-size:11px; color:var(--muted); margin:10px 0 12px; line-height:1.5; }
+.bs-import-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+.bs-import-hint { font-size:12px; color:var(--muted); }
+.bs-modal-tr-actions { display:flex; gap:8px; flex-wrap:wrap; margin:12px 0; }
+#bsModalSrc { min-height:120px; }
+#bsModalOut { flex:0 0 auto; min-height:120px; }
+
+/* ── Responsive (tablette / mobile) ── */
+@media (max-width:880px) {
+  .bs-tr-grid { grid-template-columns:1fr; }
+  .bs-modal-body { grid-template-columns:1fr; overflow:auto; }
+  .bs-pane-preview { border-right:none; border-bottom:1px solid var(--rule); }
+  .bs-iframe-wrap { min-height:340px; }
+}
+@media (max-width:560px) {
+  .bs-grid { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════════
+     HEADER + NAVIGATION
+     (identique aux autres pages ; onglet « Bulletin Service » marqué .active)
+══════════════════════════════════════════════════════════════ -->
+<header class="hdr">
+  <div class="hdr-in">
+    <a href="index.html" class="hdr-logo" title="Accueil SAV Dreame">
+      <span class="hdr-logo-brand"><span class="fnac">FNAC</span> <span class="darty">DARTY</span></span>
+    </a>
+    <nav class="hdr-nav">
+      <a href="index.html">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        Recherche
+      </a>
+      <a href="bom_manager.html">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        Lecteur BOM
+      </a>
+      <a href="index_fault_codes.html">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        Codes Erreurs
+      </a>
+      <a href="bit_test_dreame.html">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        BIT Test
+      </a>
+      <a href="bit_test_single.html">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+        BIT Test Single
+      </a>
+      <!-- ══ ONGLET : BULLETIN SERVICE ══ -->
+      <a href="bulletin_service.html" class="active">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10l4 4v10a2 2 0 01-2 2zM9 9h6M9 13h6M9 17h4"/></svg>
+        Bulletin Service
+      </a>
+      <a href="calibration_index.html" class="nav-calibrage">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        Calibrage
+      </a>
+    </nav>
+    <div class="hdr-right">
+      <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Mode nuit / jour">☀</button>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════════════════════════════
+     CONTENU
+══════════════════════════════════════════════════════════════ -->
+<main class="main-wrap">
+
+  <!-- ── 1. Recherche ── -->
+  <div class="bs-search-wrapper">
+    <input type="text" id="bsSearch" class="bs-search-input" autocomplete="off"
+      placeholder="Rechercher un Bulletin Service : modèle (X40, H15…), code erreur (R2579…), problème (water leak, motherboard…)"/>
+    <div class="bs-search-icon">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+    </div>
+  </div>
+
+  <!-- ── Filtres rapides ── -->
+  <div class="bs-filters" id="bsFilters"></div>
+
+  <!-- ── Compteur ── -->
+  <div class="bs-count" id="bsCount"></div>
+
+  <!-- ── Résultats ── -->
+  <div class="bs-grid" id="bsGrid"></div>
+
+  <!-- ── Aucun résultat ── -->
+  <div class="bs-no-result" id="bsNoResult">
+    Aucun Bulletin Service ne correspond à <strong id="bsNoResultTerm"></strong>.<br/>
+    Essayez un autre modèle, un code erreur, ou réinitialisez les filtres.
+  </div>
+
+  <!-- ── 3 & 4. Traducteur EN → FR (autonome) ── -->
+  <section class="bs-section" id="bsTranslatorSection">
+    <div class="bs-section-head">
+      <svg width="22" height="22" fill="none" stroke="var(--fd-red)" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
+      <div class="bs-section-title">Traducteur anglais → français</div>
+    </div>
+    <div class="bs-section-sub">Collez ici le texte extrait du Bulletin Service anglais pour obtenir une version française exploitable.</div>
+
+    <div class="bs-translator">
+      <div class="bs-tr-grid">
+        <div class="bs-tr-col">
+          <div class="bs-tr-label">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5h12M9 3v2m1 9A18 18 0 016 9"/></svg>
+            Texte anglais (source)
+          </div>
+          <textarea id="bsTrInput" class="bs-tr-textarea" placeholder="Paste the English text extracted from the PowerPoint or PDF here…"></textarea>
+        </div>
+        <div class="bs-tr-col">
+          <div class="bs-tr-label">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21l5-10 5 10M14 18h7"/></svg>
+            Traduction française
+          </div>
+          <div id="bsTrOutput" class="bs-tr-output" data-placeholder="La traduction française s'affichera ici…"></div>
+        </div>
+      </div>
+
+      <div class="bs-tr-actions">
+        <button class="bs-btn bs-btn-open" onclick="bsRunTranslation()">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7l7 7-7 7"/></svg>
+          Traduire en français
+        </button>
+        <button class="bs-btn bs-btn-tr" onclick="bsCopyTranslation()">Copier la traduction</button>
+        <button class="bs-btn bs-btn-tr" onclick="bsClearTranslation()">Effacer</button>
+      </div>
+
+      <div class="bs-tr-status" id="bsTrStatus"></div>
+
+      <div class="bs-tr-hint">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 16v-4m0-4h.01"/></svg>
+        Connecteur de traduction à brancher (voir <code>translateToFrench()</code> dans le code) — mode démonstration actif pour l'instant.
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ══════════════════════════════════════════════════════════════
+     MODALE — APERÇU TRADUCTIBLE
+     Gauche : aperçu SharePoint (iframe) · Droite : texte extrait + traduction
+══════════════════════════════════════════════════════════════ -->
+<div class="bs-modal" id="bsModal" aria-hidden="true">
+  <div class="bs-modal-backdrop" onclick="bsClosePreview()"></div>
+  <div class="bs-modal-card" role="dialog" aria-modal="true" aria-labelledby="bsModalTitle">
+    <div class="bs-modal-head">
+      <div class="bs-modal-title" id="bsModalTitle">Aperçu</div>
+      <button class="bs-modal-close" onclick="bsClosePreview()" aria-label="Fermer">✕</button>
+    </div>
+    <div class="bs-modal-body">
+
+      <!-- ── Gauche : aperçu visuel ── -->
+      <div class="bs-modal-pane bs-pane-preview">
+        <div class="bs-pane-label">Aperçu du document</div>
+        <div class="bs-iframe-wrap">
+          <iframe id="bsPreviewFrame" title="Aperçu du document" referrerpolicy="no-referrer"></iframe>
+        </div>
+        <div class="bs-iframe-note">
+          L'aperçu s'affiche si vous êtes connecté à SharePoint dans ce navigateur. Sinon, utilisez le bouton ci-dessous.
+        </div>
+        <a class="bs-btn bs-btn-open" id="bsOpenExternal" target="_blank" rel="noopener" href="#">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+          Ouvrir dans SharePoint
+        </a>
+      </div>
+
+      <!-- ── Droite : texte + traduction ── -->
+      <div class="bs-modal-pane bs-pane-tr">
+        <div class="bs-pane-label">Texte &amp; traduction française</div>
+
+        <div class="bs-import-row">
+          <label class="bs-btn bs-btn-tr" style="cursor:pointer;">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16V8m0 0l-3 3m3-3l3 3M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1"/></svg>
+            Importer le fichier (.pptx / .pdf)
+            <input type="file" id="bsFileImport" accept=".pptx,.pdf,.txt" hidden/>
+          </label>
+          <span class="bs-import-hint" id="bsImportHint">…ou collez le texte anglais ci-dessous</span>
+        </div>
+
+        <textarea id="bsModalSrc" class="bs-tr-textarea" placeholder="Texte anglais — collez-le ici ou importez le fichier pour l'extraire automatiquement…"></textarea>
+
+        <div class="bs-modal-tr-actions">
+          <button class="bs-btn bs-btn-open" onclick="bsModalTranslate()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7l7 7-7 7"/></svg>
+            Traduire en français
+          </button>
+          <button class="bs-btn bs-btn-tr" onclick="bsModalCopy()">Copier</button>
+          <button class="bs-btn bs-btn-tr" onclick="bsModalClear()">Effacer</button>
+        </div>
+
+        <div class="bs-pane-label" style="margin-top:4px;">Traduction</div>
+        <div id="bsModalOut" class="bs-tr-output" data-placeholder="La traduction française s'affichera ici…"></div>
+        <div class="bs-tr-status" id="bsModalStatus"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   DARK MODE  (identique aux autres pages du portail)
+══════════════════════════════════════════════════════════════ */
+const LS_THEME = 'fd_sav_theme';
+function toggleTheme() {
+  const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  applyTheme(next);
+  try { localStorage.setItem(LS_THEME, next); } catch(e){}
+}
+function applyTheme(t) {
+  document.documentElement.dataset.theme = t;
+  document.getElementById('themeToggle').textContent = t === 'dark' ? '☾' : '☀';
+}
+(function(){ try { const s = localStorage.getItem(LS_THEME); if (s) applyTheme(s); } catch(e){} })();
+
+/* ══════════════════════════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════════════════════════ */
+let _toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   5. DONNÉES — BULLETINS SERVICE
+   Structure prête pour l'import Excel (20260625_Bulletin service.xlsx).
+   Colonnes : Nom / Modifié / Modifié par / Type d'élément / Chemin d'accès.
+   Lignes issues directement du fichier Excel (70 bulletins).
+══════════════════════════════════════════════════════════════ */
+const bulletinServiceData = [
+  {"nom": "[R2513]Matrix 10 Ultra——Robot Error Warning(Battery failure).pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "【R9419A】L40s Pro Ultra Left drive wheel error.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "ALL Lawn mower hidden menu notes.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "Aqua 10 series Base station waterway description.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "Aqua10 Series common issues.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "Aqua10 Series common issues——Robot water leakage problem.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "Aqua10 Ultra Roller Complete—— Mop cover error.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "Base Station Charging Contact Oxidation Issue.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "H12 Pro&G10 Pro&Mova X4 Pro no water flow issues.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "H12 Pro&G10 Pro&Mova X4 Pro Water Pump Different Versions.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "H14 Pro Cleaning fluid leaking.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "H14H15 series Wet and dry vacuum wiring tools.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "H15 Pro Dirty Water Tank Different Versions.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "H15 Pro falsely reports water shortage in the clean water tank.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "H15 Pro Heat No water output problem.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "H15 PRO Heat The water pump is working but not producing water.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "H15 series Water leaks inside to the floor brush problem.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "L10s Pro Ultra-Heat R2338 Hot Water Module New and Old.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "L10s Ultra Gen2 Abnormal water level in Cleaning plate.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "L20 Ultra Dust bag detection sensor.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "L20 Ultra mop motor continues to swing out.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "L40 Base station New and Old Version.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "L40 Ultra AE_ R2579 Checkerboard calibration failure issue.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "L40 Ultra AE_R2579 Mop extend or Recharge failure, Side brush tangled & not working problem.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "L50 Pro Ultra Base station New and Old Version.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "Lawn mower Radar calibration has no response or times out for a long time.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "Lawn mowers A series Radar hardware failure.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "LDS calibration.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "M50 Ultra Handle & Main Board PCBA Update.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "Matrix 10 Ultra and Aqua10 series models New serial port tool.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "Matrix 10 Ultra Cannot Power-On Issue.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "Matrix10 Ultra Base station waterway description.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "Mop Washing Noise Repair Case&Robot water outlet Repair Case.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "Mother board repair notice for model ：X40 Ultra、X40 Ultra Complete、L40 Ultra.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "Motherboard Different platforms.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "MOVA VIAX Series Lawn Mower Running Test.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "MOVA Z50 Ultra Recharge failure troubleshooting.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "New model calibration tips.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "New products, Air purifiers, Humidifiers, Dehumidifiers, Fans, repair solutions..pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "Quick Troubleshooting for H15 Series Robotic Arm Issues.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "Repair scenario for replacing the SOC board or MCU board.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "Repair scenario for the LDS malfunction issue of Dreame A  series.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "Robot Battery abnormal problem.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "Robot serial port tool test item update.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "Robot Vacuum Light plane Calibration.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "Robot Vacuum Test Area Upgrade.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "Robotic Pool Cleaner Camera Calibration.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "Robotic Pool Cleaner Repair Notes.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "Technical notification —— Dreame Lawn mower.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "The motherboards and core boards of the above models have new and old versions.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "Tof Cliff Sensor Calibration.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "Update PIN removal tool.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "Window Cleaning Robot Common issues.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "X30 series APP water test.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "X40 L40 series side brush motor short circuit problem.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "X40 Master Station cleaning fluid switch soft rubber.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "X40 series APP water test.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "X50 Base station structure.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "X50 L50 Matrix10 series side brush motor short circuit problem.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "X50 New accessory.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "X50 obstacle crossing.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "X50 Robot internal water pump test.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "X50 Robot structure.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "X50 series APP water test.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "X50 Ultra Complete Base station New and Old Version.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "X50 Ultra complete does not turn on.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "X50 Voice Control.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "Z20 and Z30 different versions attention.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "Z20, Z30, Z40 series Main suction port is loose problem.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"},
+  {"nom": "Z60 Ultra Roller Complete Leaks water during mopping.pptx", "modifie": "2026-06-25", "modifiePar": "LECONTE Jerome", "typeElement": "Élément", "cheminAcces": "sites/SAVVY_FNACDARTY/Documents partages/DREAME_Referent/DREAME/Bulletin Service"}
+];
+
+/* ──────────────────────────────────────────────────────────────
+   (Optionnel) CHARGEMENT XLSX EN DIRECT
+   Pour charger « 20260625_Bulletin service.xlsx » au lieu du tableau ci-dessus,
+   ajoutez dans <head> : <script src="…/xlsx.full.min.js"></scr+ipt> puis :
+     const res = await fetch('images/Manuel_tech/20260625_Bulletin service.xlsx');
+     const wb  = XLSX.read(await res.arrayBuffer(), { type:'array' });
+     const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {defval:''})
+       .map(r => ({ nom:r['Nom'], modifie:r['Modifié'], modifiePar:r['Modifié par'],
+                    typeElement:r["Type d'élément"], cheminAcces:r["Chemin d'accès"] }));
+     bulletinServiceData.length = 0; bulletinServiceData.push(...rows); initBulletins();
+─────────────────────────────────────────────────────────────── */
+
+/* ══════════════════════════════════════════════════════════════
+   NORMALISATION (tolérance casse / espaces / tirets / underscores
+   / caractères spéciaux)
+══════════════════════════════════════════════════════════════ */
+function bsNormalize(s) {
+  return String(s || '')
+    .toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')   // accents
+    .replace(/[^a-z0-9]+/g, '');  // ne garde que lettres + chiffres
+}
+
+function bsFileType(nom) {
+  const n = String(nom || '').toLowerCase();
+  if (n.endsWith('.pdf')) return 'pdf';
+  if (n.endsWith('.pptx') || n.endsWith('.ppt')) return 'ppt';
+  return 'autre';
+}
+
+function bsExtractErrorCodes(nom) {
+  const m = String(nom || '').match(/R\d{3,4}[A-Z]?/gi);
+  return m ? [...new Set(m.map(x => x.toUpperCase()))] : [];
+}
+
+function bsExtractModels(nom) {
+  const tokens = String(nom || '').match(/\b(?:X\d{2}|L\d{2}s?|Z\d{2}|H\d{2}|G\d{2}|M\d{2}|Matrix\s?10|Aqua\s?10|VIAX|A series)\b/gi);
+  return tokens ? [...new Set(tokens.map(t => t.replace(/\s+/g,' ').trim()))].slice(0,4) : [];
+}
+
+function bsCleanName(nom) {
+  return String(nom || '').replace(/\.(pptx?|pdf)$/i, '');
+}
+
+/* ══════════════════════════════════════════════════════════════
+   2. LIENS SHAREPOINT (ouverture du document)
+══════════════════════════════════════════════════════════════ */
+function bsBuildOpenLink(item) {
+  let cleanPath = item.cheminAcces || '';
+  if (cleanPath.startsWith('sites/')) cleanPath = cleanPath.substring(6);
+  const encodedPath = cleanPath.split('/').map(p => encodeURIComponent(p)).join('/');
+  const encodedName = encodeURIComponent(item.nom);
+  const t = bsFileType(item.nom);
+  const viewer = t === 'pdf' ? ':b:' : t === 'ppt' ? ':p:' : ':w:';  // :p: PPT · :b: PDF · :w: Word
+  return `https://groupefnac.sharepoint.com/${viewer}/r/sites/${encodedPath}/${encodedName}?csf=1&web=1`;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   6. FILTRES RAPIDES (mots-clés cherchés dans nom + chemin normalisés)
+══════════════════════════════════════════════════════════════ */
+const BS_FILTERS = [
+  { id:'all',     label:'Tous' },
+  { id:'pdf',     label:'PDF',             type:'pdf' },
+  { id:'ppt',     label:'PowerPoint',      type:'ppt' },
+  { id:'dreame',  label:'Dreame',          excludeKw:['mova'] },
+  { id:'mova',    label:'MOVA',            kw:['mova'] },
+  { id:'robot',   label:'Robot',           kw:['robot','matrix','aqua','sidebrush','mop','obstacle','x40','x50','x30','l40','l50','l20','l10','z20','z30','z40','z60'] },
+  { id:'station', label:'Station de base', kw:['basestation','station','charging','waterway','masterstation','dock'] },
+  { id:'battery', label:'Batterie',        kw:['battery','batterie'] },
+  { id:'calib',   label:'Calibration',     kw:['calibration','calibrate','calibrage'] },
+  { id:'leak',    label:"Fuite d'eau",     kw:['leak','leakage','watershortage','nowater','wateroutput','waterflow','fluidleaking','noflow','leakswater'] },
+  { id:'wheel',   label:'Roue / moteur',   kw:['wheel','motor','drivewheel','swing','shortcircuit'] },
+  { id:'board',   label:'Carte mère',      kw:['motherboard','mainboard','coreboard','mcu','soc','pcba'] }
+];
+
+/* ══════════════════════════════════════════════════════════════
+   ÉTAT + INITIALISATION
+══════════════════════════════════════════════════════════════ */
+let bsActiveFilter = 'all';
+let bsIndex = [];
+
+function initBulletins() {
+  bsIndex = bulletinServiceData.map(item => ({
+    ...item,
+    _type:   bsFileType(item.nom),
+    _errors: bsExtractErrorCodes(item.nom),
+    _models: bsExtractModels(item.nom),
+    _hay:    bsNormalize((item.nom||'') + ' ' + (item.cheminAcces||'') + ' ' + (item.modifiePar||''))
+  }));
+  renderFilters();
+  renderResults();
+}
+
+function renderFilters() {
+  const box = document.getElementById('bsFilters');
+  box.innerHTML = '';
+  BS_FILTERS.forEach(f => {
+    const chip = document.createElement('button');
+    chip.className = 'bs-chip' + (f.id === bsActiveFilter ? ' active' : '');
+    chip.textContent = f.label;
+    chip.onclick = () => { bsActiveFilter = f.id; renderFilters(); renderResults(); };
+    box.appendChild(chip);
+  });
+}
+
+function bsPassFilter(item) {
+  const f = BS_FILTERS.find(x => x.id === bsActiveFilter);
+  if (!f || f.id === 'all') return true;
+  if (f.type) return item._type === f.type;
+  if (f.excludeKw) return !f.excludeKw.some(k => item._hay.includes(bsNormalize(k)));
+  if (f.kw) return f.kw.some(k => item._hay.includes(bsNormalize(k)));
+  return true;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   1 & 2. RECHERCHE + AFFICHAGE DES RÉSULTATS
+══════════════════════════════════════════════════════════════ */
+function renderResults() {
+  const q     = document.getElementById('bsSearch').value.trim();
+  const grid  = document.getElementById('bsGrid');
+  const nores = document.getElementById('bsNoResult');
+  const count = document.getElementById('bsCount');
+  grid.innerHTML = '';
+
+  const terms = q ? q.split(/\s+/).map(bsNormalize).filter(Boolean) : [];
+  const list  = bsIndex.filter(item => bsPassFilter(item) && terms.every(t => item._hay.includes(t)));
+
+  count.innerHTML = `<strong>${list.length}</strong> bulletin(s) sur ${bsIndex.length}`;
+
+  if (!list.length) {
+    nores.classList.add('active');
+    document.getElementById('bsNoResultTerm').textContent = q || '(filtre actif)';
+    return;
+  }
+  nores.classList.remove('active');
+  list.forEach(item => grid.appendChild(bsCardEl(item)));
+}
+
+function bsCardEl(item) {
+  const card = document.createElement('div');
+  card.className = 'bs-card';
+
+  const badgeClass = item._type === 'pdf' ? 'pdf' : 'ppt';
+  const badgeLabel = item._type === 'pdf' ? 'PDF' : (item._type === 'ppt' ? 'PowerPoint' : 'Fichier');
+  const openLink   = bsBuildOpenLink(item);
+  const tags = [
+    ...item._models.map(m => `<span class="bs-tag">${esc(m)}</span>`),
+    ...item._errors.map(e => `<span class="bs-tag err">${esc(e)}</span>`)
+  ].join('');
+
+  card.innerHTML = `
+    <div class="bs-card-top">
+      <div class="bs-card-title">${esc(bsCleanName(item.nom))}</div>
+      <span class="bs-badge ${badgeClass}">${badgeLabel}</span>
+    </div>
+    ${tags ? `<div class="bs-tags">${tags}</div>` : ''}
+    <div class="bs-meta">
+      <div class="bs-meta-row"><span>Modifié</span><span>${esc(item.modifie)}</span></div>
+      <div class="bs-meta-row"><span>Modifié par</span><span>${esc(item.modifiePar)}</span></div>
+      <div class="bs-meta-row"><span>Chemin</span><span class="bs-path">${esc(item.cheminAcces)}</span></div>
+    </div>
+    <div class="bs-actions">
+      <button class="bs-btn bs-btn-open bs-btn-preview" type="button">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.5 12S5.5 5 12 5s9.5 7 9.5 7-3 7-9.5 7-9.5-7-9.5-7z"/><circle cx="12" cy="12" r="3"/></svg>
+        Aperçu traductible
+      </button>
+      <a class="bs-btn bs-btn-tr" href="${esc(openLink)}" target="_blank" rel="noopener">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+        Ouvrir
+      </a>
+    </div>`;
+
+  card.querySelector('.bs-btn-preview').addEventListener('click', () => bsOpenPreview(item));
+  return card;
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ══════════════════════════════════════════════════════════════
+   3. TRADUCTEUR ANGLAIS → FRANÇAIS
+   ──────────────────────────────────────────────────────────────
+   ⚠ AUCUNE CLÉ API DANS LE HTML.
+   Branchez votre service (DeepL, Azure, Google, ou endpoint interne)
+   UNIQUEMENT dans translateToFrench(text). La clé reste côté serveur.
+══════════════════════════════════════════════════════════════ */
+
+/**
+ * translateToFrench — traduit un texte anglais en français.
+ * @param {string} text  Texte source (anglais)
+ * @returns {Promise<string>}  Texte traduit (français)
+ */
+async function translateToFrench(text) {
+  /* ┌──────────────────────────────────────────────────────────┐
+     │  >>> CONNECTEUR DE TRADUCTION À BRANCHER ICI <<<          │
+     │  const res = await fetch('/api/translate', {             │
+     │    method:'POST', headers:{'Content-Type':'application/json'},│
+     │    body: JSON.stringify({ text, source:'en', target:'fr' })│
+     │  });                                                      │
+     │  if (!res.ok) throw new Error('translate API error');    │
+     │  return (await res.json()).translation;   // texte FR    │
+     └──────────────────────────────────────────────────────────┘ */
+
+  // ── MODE DÉMONSTRATION (aucune API branchée) ──
+  return Promise.resolve(
+    '【Connecteur de traduction à brancher ici】\n' +
+    '(Mode démonstration — le texte ci-dessous n\'est pas encore traduit)\n\n' +
+    text
+  );
+}
+
+/* Passez à true une fois translateToFrench() relié à une vraie API */
+const BS_TRANSLATE_CONNECTED = false;
+
+async function bsRunTranslation() {
+  const input  = document.getElementById('bsTrInput').value.trim();
+  const output = document.getElementById('bsTrOutput');
+  const status = document.getElementById('bsTrStatus');
+  if (!input) {
+    status.textContent = 'Saisissez ou collez d\'abord un texte anglais.';
+    status.className = 'bs-tr-status warn';
+    output.textContent = '';
+    return;
+  }
+  status.textContent = 'Traduction en cours…';
+  status.className = 'bs-tr-status';
+  try {
+    output.textContent = await translateToFrench(input);
+    status.textContent = BS_TRANSLATE_CONNECTED
+      ? 'Traduction terminée.'
+      : 'Mode démonstration : connecteur de traduction non branché (voir translateToFrench()).';
+    status.className = BS_TRANSLATE_CONNECTED ? 'bs-tr-status' : 'bs-tr-status warn';
+  } catch (e) {
+    output.textContent = '';
+    status.textContent = 'Erreur de traduction : ' + e.message;
+    status.className = 'bs-tr-status warn';
+  }
+}
+
+function bsCopyTranslation() {
+  const txt = document.getElementById('bsTrOutput').textContent;
+  if (!txt) { showToast('Rien à copier.'); return; }
+  navigator.clipboard.writeText(txt).then(() => showToast('Traduction copiée ✓'))
+    .catch(() => showToast('Copie impossible.'));
+}
+
+function bsClearTranslation() {
+  document.getElementById('bsTrInput').value = '';
+  document.getElementById('bsTrOutput').textContent = '';
+  document.getElementById('bsTrStatus').textContent = '';
+  document.getElementById('bsTrInput').focus();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   APERÇU TRADUCTIBLE (MODALE)
+   Gauche : aperçu SharePoint (iframe Office Online).
+   Droite : texte du document + traduction française.
+   En local (file://), le contenu d'un fichier SharePoint distant ne peut
+   pas être lu par le navigateur (CORS) : on propose donc l'import direct
+   du .pptx / .pdf pour en extraire le texte (hors-ligne) — ou le copier-coller.
+══════════════════════════════════════════════════════════════ */
+if (window.pdfjsLib) {
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+}
+
+function bsBuildEmbedUrl(item) {
+  let cleanPath = item.cheminAcces || '';
+  if (cleanPath.startsWith('sites/')) cleanPath = cleanPath.substring(6);
+  const encodedPath = cleanPath.split('/').map(p => encodeURIComponent(p)).join('/');
+  const encodedName = encodeURIComponent(item.nom);
+  const viewer = item._type === 'pdf' ? ':b:' : item._type === 'ppt' ? ':p:' : ':w:';
+  return `https://groupefnac.sharepoint.com/${viewer}/r/sites/${encodedPath}/${encodedName}?csf=1&web=1&action=embedview`;
+}
+
+function bsOpenPreview(item) {
+  document.getElementById('bsModalTitle').textContent = bsCleanName(item.nom);
+  document.getElementById('bsPreviewFrame').src = bsBuildEmbedUrl(item);
+  document.getElementById('bsOpenExternal').href = bsBuildOpenLink(item);
+  document.getElementById('bsModalSrc').value = bsCleanName(item.nom);
+  document.getElementById('bsModalOut').textContent = '';
+  const hint = document.getElementById('bsImportHint');
+  hint.textContent = '…ou collez le texte anglais ci-dessous';
+  hint.style.color = '';
+  document.getElementById('bsModalStatus').textContent = '';
+
+  const modal = document.getElementById('bsModal');
+  modal.classList.add('open');
+  modal.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+}
+
+function bsClosePreview() {
+  const modal = document.getElementById('bsModal');
+  modal.classList.remove('open');
+  modal.setAttribute('aria-hidden', 'true');
+  document.getElementById('bsPreviewFrame').src = 'about:blank';
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && document.getElementById('bsModal').classList.contains('open')) bsClosePreview();
+});
+
+/* ── Extraction de texte côté navigateur ── */
+function bsDecodeXml(s) {
+  return s.replace(/&lt;/g,'<').replace(/&gt;/g,'>')
+          .replace(/&quot;/g,'"').replace(/&apos;/g,"'").replace(/&amp;/g,'&');
+}
+
+async function bsExtractPptx(file) {
+  if (!window.JSZip) throw new Error('JSZip non chargé (vérifiez la connexion internet).');
+  const zip = await JSZip.loadAsync(await file.arrayBuffer());
+  const slideNames = Object.keys(zip.files)
+    .filter(n => /ppt\/slides\/slide\d+\.xml$/.test(n))
+    .sort((a, b) => (+a.match(/slide(\d+)/)[1]) - (+b.match(/slide(\d+)/)[1]));
+  const out = [];
+  for (const name of slideNames) {
+    const xml = await zip.files[name].async('string');
+    const texts = [...xml.matchAll(/<a:t>([\s\S]*?)<\/a:t>/g)].map(m => bsDecodeXml(m[1]));
+    if (texts.length) out.push('— Slide ' + name.match(/slide(\d+)/)[1] + ' —\n' + texts.join(' '));
+  }
+  return out.join('\n\n') || '(Aucun texte détecté dans ce PowerPoint.)';
+}
+
+async function bsExtractPdf(file) {
+  if (!window.pdfjsLib) throw new Error('pdf.js non chargé (vérifiez la connexion internet).');
+  const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+  const out = [];
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const tc = await (await pdf.getPage(i)).getTextContent();
+    out.push('— Page ' + i + ' —\n' + tc.items.map(it => it.str).join(' '));
+  }
+  return out.join('\n\n') || '(Aucun texte détecté dans ce PDF.)';
+}
+
+async function bsHandleFileImport(file) {
+  const hint = document.getElementById('bsImportHint');
+  const name = (file.name || '').toLowerCase();
+  hint.textContent = 'Extraction de « ' + file.name + ' »…';
+  hint.style.color = '';
+  try {
+    let text;
+    if (name.endsWith('.pptx'))     text = await bsExtractPptx(file);
+    else if (name.endsWith('.pdf')) text = await bsExtractPdf(file);
+    else if (name.endsWith('.txt')) text = await file.text();
+    else throw new Error('Format non supporté (.pptx, .pdf ou .txt).');
+    document.getElementById('bsModalSrc').value = text;
+    hint.textContent = 'Texte extrait ✓ — cliquez « Traduire en français ».';
+    hint.style.color = 'var(--green)';
+  } catch (e) {
+    hint.textContent = 'Échec de l\'extraction : ' + e.message;
+    hint.style.color = 'var(--fd-red)';
+  }
+}
+
+/* ── Traduction dans la modale (réutilise translateToFrench) ── */
+async function bsModalTranslate() {
+  const input  = document.getElementById('bsModalSrc').value.trim();
+  const output = document.getElementById('bsModalOut');
+  const status = document.getElementById('bsModalStatus');
+  if (!input) {
+    status.textContent = 'Importez un fichier ou collez un texte d\'abord.';
+    status.className = 'bs-tr-status warn';
+    return;
+  }
+  status.textContent = 'Traduction en cours…';
+  status.className = 'bs-tr-status';
+  try {
+    output.textContent = await translateToFrench(input);
+    status.textContent = BS_TRANSLATE_CONNECTED
+      ? 'Traduction terminée.'
+      : 'Mode démonstration : connecteur de traduction non branché (voir translateToFrench()).';
+    status.className = BS_TRANSLATE_CONNECTED ? 'bs-tr-status' : 'bs-tr-status warn';
+  } catch (e) {
+    output.textContent = '';
+    status.textContent = 'Erreur de traduction : ' + e.message;
+    status.className = 'bs-tr-status warn';
+  }
+}
+
+function bsModalCopy() {
+  const txt = document.getElementById('bsModalOut').textContent;
+  if (!txt) { showToast('Rien à copier.'); return; }
+  navigator.clipboard.writeText(txt).then(() => showToast('Traduction copiée ✓'))
+    .catch(() => showToast('Copie impossible.'));
+}
+
+function bsModalClear() {
+  document.getElementById('bsModalSrc').value = '';
+  document.getElementById('bsModalOut').textContent = '';
+  document.getElementById('bsModalStatus').textContent = '';
+}
+
+/* ══════════════════════════════════════════════════════════════
+   DÉMARRAGE
+══════════════════════════════════════════════════════════════ */
+document.getElementById('bsSearch').addEventListener('input', renderResults);
+document.getElementById('bsFileImport').addEventListener('change', e => {
+  if (e.target.files && e.target.files[0]) bsHandleFileImport(e.target.files[0]);
+  e.target.value = '';  // permet de ré-importer le même fichier
+});
+initBulletins();
+</script>
+</body>
+</html>
