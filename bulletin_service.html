@@ -180,6 +180,7 @@
 }
 .bs-iframe-wrap iframe { width:100%; height:100%; border:0; display:block; }
 .bs-iframe-note { font-size:11px; color:var(--muted); margin:10px 0 12px; line-height:1.5; }
+.bs-preview-actions { display:flex; gap:8px; flex-wrap:wrap; }
 .bs-import-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
 .bs-import-hint { font-size:12px; color:var(--muted); }
 .bs-modal-tr-actions { display:flex; gap:8px; flex-wrap:wrap; margin:12px 0; }
@@ -341,12 +342,18 @@
           <iframe id="bsPreviewFrame" title="Aperçu du document" referrerpolicy="no-referrer"></iframe>
         </div>
         <div class="bs-iframe-note">
-          L'aperçu s'affiche si vous êtes connecté à SharePoint dans ce navigateur. Sinon, utilisez le bouton ci-dessous.
+          L'aperçu s'affiche si vous êtes connecté à SharePoint. Sinon, <strong>téléchargez</strong> le document puis <strong>importez-le</strong> dans le traducteur (colonne de droite).
         </div>
-        <a class="bs-btn bs-btn-open" id="bsOpenExternal" target="_blank" rel="noopener" href="#">
-          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-          Ouvrir dans SharePoint
-        </a>
+        <div class="bs-preview-actions">
+          <a class="bs-btn bs-btn-open" id="bsDownloadFile" href="#" download>
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Télécharger
+          </a>
+          <a class="bs-btn bs-btn-tr" id="bsOpenExternal" target="_blank" rel="noopener" href="#">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+            Ouvrir dans SharePoint
+          </a>
+        </div>
       </div>
 
       <!-- ── Droite : texte + traduction ── -->
@@ -359,7 +366,7 @@
             Importer le fichier (.pptx / .pdf)
             <input type="file" id="bsFileImport" accept=".pptx,.pdf,.txt" hidden/>
           </label>
-          <span class="bs-import-hint" id="bsImportHint">…ou collez le texte anglais ci-dessous</span>
+          <span class="bs-import-hint" id="bsImportHint">Téléchargez le document à gauche, puis importez-le ici (ou collez le texte).</span>
         </div>
 
         <textarea id="bsModalSrc" class="bs-tr-textarea" placeholder="Texte anglais — collez-le ici ou importez le fichier pour l'extraire automatiquement…"></textarea>
@@ -766,14 +773,24 @@ function bsBuildEmbedUrl(item) {
   return `https://groupefnac.sharepoint.com/${viewer}/r/sites/${encodedPath}/${encodedName}?csf=1&web=1&action=embedview`;
 }
 
+/* Lien de téléchargement forcé (endpoint download.aspx → Content-Disposition: attachment) */
+function bsBuildDownloadLink(item) {
+  let cleanPath = item.cheminAcces || '';
+  if (cleanPath.startsWith('sites/')) cleanPath = cleanPath.substring(6);
+  const siteName  = encodeURIComponent(cleanPath.split('/')[0]);
+  const sourceUrl = encodeURIComponent('/sites/' + cleanPath + '/' + item.nom);
+  return `https://groupefnac.sharepoint.com/sites/${siteName}/_layouts/15/download.aspx?SourceUrl=${sourceUrl}`;
+}
+
 function bsOpenPreview(item) {
   document.getElementById('bsModalTitle').textContent = bsCleanName(item.nom);
   document.getElementById('bsPreviewFrame').src = bsBuildEmbedUrl(item);
   document.getElementById('bsOpenExternal').href = bsBuildOpenLink(item);
+  document.getElementById('bsDownloadFile').href = bsBuildDownloadLink(item);
   document.getElementById('bsModalSrc').value = bsCleanName(item.nom);
   document.getElementById('bsModalOut').textContent = '';
   const hint = document.getElementById('bsImportHint');
-  hint.textContent = '…ou collez le texte anglais ci-dessous';
+  hint.textContent = 'Téléchargez le document à gauche, puis importez-le ici (ou collez le texte).';
   hint.style.color = '';
   document.getElementById('bsModalStatus').textContent = '';
 
