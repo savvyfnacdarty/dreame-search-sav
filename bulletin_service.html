@@ -173,14 +173,16 @@
   font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.5px;
   color:var(--muted); margin-bottom:10px;
 }
-.bs-iframe-wrap {
-  position:relative; flex:1; min-height:300px;
-  border:1.5px solid var(--border); border-radius:var(--r-md); overflow:hidden;
+.bs-doc-card {
+  flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  text-align:center; gap:12px; padding:28px 22px;
+  border:1.5px solid var(--border); border-radius:var(--r-md);
   background:var(--surface-2);
 }
-.bs-iframe-wrap iframe { width:100%; height:100%; border:0; display:block; }
-.bs-iframe-note { font-size:11px; color:var(--muted); margin:10px 0 12px; line-height:1.5; }
-.bs-preview-actions { display:flex; gap:8px; flex-wrap:wrap; }
+.bs-doc-icon { color:var(--fd-red); }
+.bs-doc-name { font-family:var(--font-cond); font-size:19px; font-weight:700; color:var(--text); line-height:1.3; word-break:break-word; }
+.bs-doc-msg { font-size:12px; color:var(--text-2); line-height:1.6; max-width:380px; margin:4px 0 6px; }
+.bs-preview-actions { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
 .bs-import-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
 .bs-import-hint { font-size:12px; color:var(--muted); }
 .bs-modal-tr-actions { display:flex; gap:8px; flex-wrap:wrap; margin:12px 0; }
@@ -315,7 +317,7 @@
 
       <div class="bs-tr-hint">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 16v-4m0-4h.01"/></svg>
-        Connecteur de traduction à brancher (voir <code>translateToFrench()</code> dans le code) — mode démonstration actif pour l'instant.
+        Traduction assurée par un service gratuit (MyMemory, sans clé API). Pour un service interne (DeepL, Azure, proxy Fnac…), voir <code>bsTranslateCustom()</code> dans le code.
       </div>
     </div>
   </section>
@@ -335,24 +337,27 @@
     </div>
     <div class="bs-modal-body">
 
-      <!-- ── Gauche : aperçu visuel ── -->
+      <!-- ── Gauche : carte document + actions ── -->
       <div class="bs-modal-pane bs-pane-preview">
-        <div class="bs-pane-label">Aperçu du document</div>
-        <div class="bs-iframe-wrap">
-          <iframe id="bsPreviewFrame" title="Aperçu du document" referrerpolicy="no-referrer"></iframe>
-        </div>
-        <div class="bs-iframe-note">
-          L'aperçu s'affiche si vous êtes connecté à SharePoint. Sinon, <strong>téléchargez</strong> le document puis <strong>importez-le</strong> dans le traducteur (colonne de droite).
-        </div>
-        <div class="bs-preview-actions">
-          <a class="bs-btn bs-btn-open" id="bsDownloadFile" href="#" download>
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-            Télécharger
-          </a>
-          <a class="bs-btn bs-btn-tr" id="bsOpenExternal" target="_blank" rel="noopener" href="#">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-            Ouvrir dans SharePoint
-          </a>
+        <div class="bs-pane-label">Document</div>
+        <div class="bs-doc-card">
+          <div class="bs-doc-icon" id="bsDocIcon"></div>
+          <div class="bs-doc-name" id="bsDocName"></div>
+          <span class="bs-badge" id="bsDocBadge"></span>
+          <p class="bs-doc-msg">
+            L'aperçu intégré n'est pas disponible en mode local : SharePoint bloque l'affichage de ses documents hors de son site.
+            <strong>Ouvrez</strong> le document dans un onglet, ou <strong>téléchargez-le</strong> puis importez-le dans le traducteur (colonne de droite).
+          </p>
+          <div class="bs-preview-actions">
+            <a class="bs-btn bs-btn-open" id="bsOpenExternal" target="_blank" rel="noopener" href="#">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+              Ouvrir dans SharePoint
+            </a>
+            <a class="bs-btn bs-btn-tr" id="bsDownloadFile" href="#" download>
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              Télécharger
+            </a>
+          </div>
         </div>
       </div>
 
@@ -685,32 +690,91 @@ function esc(s) {
    UNIQUEMENT dans translateToFrench(text). La clé reste côté serveur.
 ══════════════════════════════════════════════════════════════ */
 
+/* Service de traduction actif. Valeurs possibles : 'mymemory' (gratuit, sans clé)
+   ou 'custom' (votre propre endpoint/proxy interne — voir bsTranslateCustom). */
+const BS_TRANSLATE_PROVIDER = 'mymemory';
+
 /**
  * translateToFrench — traduit un texte anglais en français.
+ * Découpe le texte ligne par ligne (préserve la structure des slides/pages),
+ * puis traduit chaque segment via le service choisi.
  * @param {string} text  Texte source (anglais)
  * @returns {Promise<string>}  Texte traduit (français)
  */
 async function translateToFrench(text) {
+  const lines = String(text).split('\n');
+  const out = [];
+  for (const line of lines) {
+    const trimmed = line.trim();
+    // Lignes vides ou marqueurs « — Slide N — / — Page N — » : on garde tel quel.
+    if (!trimmed || /^—\s*(Slide|Page)\b/i.test(trimmed)) { out.push(line); continue; }
+    out.push(await bsTranslateLine(line));
+  }
+  return out.join('\n');
+}
+
+/* Traduit une ligne, en la re-découpant si elle dépasse la limite du service. */
+async function bsTranslateLine(line) {
+  const parts = bsChunkText(line, 450);   // MyMemory recommande ≤ 500 caractères / requête
+  const res = [];
+  for (const p of parts) res.push(await bsTranslateSegment(p));
+  return res.join(' ');
+}
+
+/* Découpe un texte en segments ≤ max, sur les fins de phrases si possible. */
+function bsChunkText(s, max) {
+  if (s.length <= max) return [s];
+  const out = []; let cur = '';
+  for (const sent of s.split(/(?<=[.!?；;])\s+/)) {
+    if ((cur + ' ' + sent).trim().length > max) {
+      if (cur) out.push(cur.trim());
+      // segment unique trop long : on coupe brutalement
+      if (sent.length > max) { for (let i = 0; i < sent.length; i += max) out.push(sent.slice(i, i + max)); cur = ''; }
+      else cur = sent;
+    } else { cur = (cur ? cur + ' ' : '') + sent; }
+  }
+  if (cur.trim()) out.push(cur.trim());
+  return out;
+}
+
+/* Aiguille vers le bon service de traduction. */
+async function bsTranslateSegment(segment) {
+  if (BS_TRANSLATE_PROVIDER === 'custom') return bsTranslateCustom(segment);
+  return bsTranslateMyMemory(segment);
+}
+
+/* ── Service par défaut : MyMemory (gratuit, sans clé API, CORS ouvert) ──
+   Limite indicative : ~5000 mots/jour en anonyme. Pour augmenter la limite,
+   ajoutez votre e-mail : &de=adresse@domaine (aucune clé secrète requise). */
+async function bsTranslateMyMemory(segment) {
+  const url = 'https://api.mymemory.translated.net/get?q=' +
+              encodeURIComponent(segment) + '&langpair=en|fr';
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('MyMemory HTTP ' + res.status);
+  const data = await res.json();
+  const t = data && data.responseData && data.responseData.translatedText;
+  if (!t) throw new Error(data && data.responseDetails ? data.responseDetails : 'réponse vide');
+  return t;
+}
+
+/* ── Option : VOTRE service interne (DeepL, Azure, Google, proxy Fnac…) ──
+   ⚠ AUCUNE CLÉ API DANS LE HTML : la clé doit rester côté serveur (proxy).
+   Mettez BS_TRANSLATE_PROVIDER = 'custom' puis complétez l'appel ci-dessous. */
+async function bsTranslateCustom(segment) {
   /* ┌──────────────────────────────────────────────────────────┐
-     │  >>> CONNECTEUR DE TRADUCTION À BRANCHER ICI <<<          │
+     │  >>> CONNECTEUR DE TRADUCTION INTERNE À BRANCHER ICI <<<  │
      │  const res = await fetch('/api/translate', {             │
      │    method:'POST', headers:{'Content-Type':'application/json'},│
-     │    body: JSON.stringify({ text, source:'en', target:'fr' })│
+     │    body: JSON.stringify({ text: segment, source:'en', target:'fr' })│
      │  });                                                      │
      │  if (!res.ok) throw new Error('translate API error');    │
      │  return (await res.json()).translation;   // texte FR    │
      └──────────────────────────────────────────────────────────┘ */
-
-  // ── MODE DÉMONSTRATION (aucune API branchée) ──
-  return Promise.resolve(
-    '【Connecteur de traduction à brancher ici】\n' +
-    '(Mode démonstration — le texte ci-dessous n\'est pas encore traduit)\n\n' +
-    text
-  );
+  throw new Error('Connecteur interne non configuré (voir bsTranslateCustom).');
 }
 
-/* Passez à true une fois translateToFrench() relié à une vraie API */
-const BS_TRANSLATE_CONNECTED = false;
+/* Le traducteur est opérationnel (service gratuit branché). */
+const BS_TRANSLATE_CONNECTED = true;
 
 async function bsRunTranslation() {
   const input  = document.getElementById('bsTrInput').value.trim();
@@ -782,9 +846,16 @@ function bsBuildDownloadLink(item) {
   return `https://groupefnac.sharepoint.com/sites/${siteName}/_layouts/15/download.aspx?SourceUrl=${sourceUrl}`;
 }
 
+const BS_ICON_PPT = '<svg width="46" height="46" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3a1.5 1.5 0 010 3H9v-3zm0 0v5"/></svg>';
+const BS_ICON_PDF = '<svg width="46" height="46" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/><path stroke-linecap="round" stroke-linejoin="round" d="M8 13h1.5M8 13v4m0-2h1.3M12 13v4m0-4h1a1 1 0 011 1v2a1 1 0 01-1 1h-1m4-4h1.5m-1.5 0v4m0-2h1.2"/></svg>';
+
 function bsOpenPreview(item) {
   document.getElementById('bsModalTitle').textContent = bsCleanName(item.nom);
-  document.getElementById('bsPreviewFrame').src = bsBuildEmbedUrl(item);
+  document.getElementById('bsDocName').textContent = bsCleanName(item.nom);
+  document.getElementById('bsDocIcon').innerHTML = item._type === 'pdf' ? BS_ICON_PDF : BS_ICON_PPT;
+  const badge = document.getElementById('bsDocBadge');
+  badge.className = 'bs-badge ' + (item._type === 'pdf' ? 'pdf' : 'ppt');
+  badge.textContent = item._type === 'pdf' ? 'PDF' : 'PowerPoint';
   document.getElementById('bsOpenExternal').href = bsBuildOpenLink(item);
   document.getElementById('bsDownloadFile').href = bsBuildDownloadLink(item);
   document.getElementById('bsModalSrc').value = bsCleanName(item.nom);
@@ -804,7 +875,6 @@ function bsClosePreview() {
   const modal = document.getElementById('bsModal');
   modal.classList.remove('open');
   modal.setAttribute('aria-hidden', 'true');
-  document.getElementById('bsPreviewFrame').src = 'about:blank';
   document.body.style.overflow = '';
 }
 
