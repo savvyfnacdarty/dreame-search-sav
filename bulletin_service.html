@@ -56,7 +56,11 @@
 }
 .bs-card:hover { border-color:var(--fd-red); box-shadow:var(--shadow-md); transform:translateY(-2px); }
 .bs-card-top { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:10px; }
+.bs-card-titles { min-width:0; }
 .bs-card-title { font-family:var(--font-cond); font-size:18px; font-weight:700; color:var(--text); line-height:1.25; word-break:break-word; }
+.bs-card-title-fr { font-size:13px; font-weight:600; line-height:1.3; margin-top:3px; color:#2563EB; word-break:break-word; }
+.bs-card-title-fr.pending { color:var(--muted); font-style:italic; font-weight:500; }
+[data-theme="dark"] .bs-card-title-fr { color:#60A5FA; }
 
 /* ── Badges type de fichier ── */
 .bs-badge {
@@ -693,7 +697,10 @@ function bsCardEl(item) {
 
   card.innerHTML = `
     <div class="bs-card-top">
-      <div class="bs-card-title">${esc(bsCleanName(item.nom))}</div>
+      <div class="bs-card-titles">
+        <div class="bs-card-title">${esc(bsCleanName(item.nom))}</div>
+        <div class="bs-card-title-fr pending">Traduction du titre…</div>
+      </div>
       <span class="bs-badge ${badgeClass}">${badgeLabel}</span>
     </div>
     ${tags ? `<div class="bs-tags">${tags}</div>` : ''}
@@ -714,7 +721,58 @@ function bsCardEl(item) {
     </div>`;
 
   card.querySelector('.bs-btn-preview').addEventListener('click', () => bsOpenPreview(item));
+
+  // Traduction du titre (FR) affichée sous le titre anglais, en bleu — avec cache.
+  bsQueueTitleTranslation(bsCleanName(item.nom), card.querySelector('.bs-card-title-fr'));
+
   return card;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   TRADUCTION DES TITRES (vignettes) — file d'attente + cache
+   Affiche la traduction française sous le titre anglais. Le cache évite
+   de retraduire à chaque frappe de recherche ; la file séquentielle
+   ménage le service de traduction (pas de rafale de requêtes).
+══════════════════════════════════════════════════════════════ */
+const bsTitleFrCache = new Map();    // titre EN → titre FR (résultats)
+const bsTitlePending = new Map();    // titre EN → [éléments à mettre à jour]
+const bsTitleQueue = [];
+let bsTitleBusy = false;
+
+function bsQueueTitleTranslation(enTitle, el) {
+  if (!el) return;
+  if (bsTitleFrCache.has(enTitle)) {            // déjà traduit : affichage immédiat
+    el.textContent = bsTitleFrCache.get(enTitle);
+    el.classList.remove('pending');
+    return;
+  }
+  if (bsTitlePending.has(enTitle)) {            // traduction déjà en cours : on s'y rattache
+    bsTitlePending.get(enTitle).push(el);
+    return;
+  }
+  bsTitlePending.set(enTitle, [el]);
+  bsTitleQueue.push(enTitle);
+  bsProcessTitleQueue();
+}
+
+async function bsProcessTitleQueue() {
+  if (bsTitleBusy) return;
+  bsTitleBusy = true;
+  while (bsTitleQueue.length) {
+    const enTitle = bsTitleQueue.shift();
+    const els = bsTitlePending.get(enTitle) || [];
+    let fr = null;
+    try { fr = await translateToFrench(enTitle); bsTitleFrCache.set(enTitle, fr); }
+    catch (e) { fr = null; }   // échec réseau/quota : on garde le titre anglais seul
+    bsTitlePending.delete(enTitle);
+    els.forEach(el => {
+      if (!el.isConnected) return;
+      if (fr) { el.textContent = fr; el.classList.remove('pending'); }
+      else    { el.style.display = 'none'; }
+    });
+    await new Promise(r => setTimeout(r, 120));  // petite pause pour ménager l'API
+  }
+  bsTitleBusy = false;
 }
 
 function esc(s) {
