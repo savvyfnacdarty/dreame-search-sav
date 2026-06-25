@@ -183,6 +183,21 @@
 .bs-doc-name { font-family:var(--font-cond); font-size:19px; font-weight:700; color:var(--text); line-height:1.3; word-break:break-word; }
 .bs-doc-msg { font-size:12px; color:var(--text-2); line-height:1.6; max-width:380px; margin:4px 0 6px; }
 .bs-preview-actions { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+
+/* ── Aperçu slide par slide + bascule de langue ── */
+.bs-pane-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
+.bs-lang-toggle { display:inline-flex; border:1.5px solid var(--border); border-radius:999px; overflow:hidden; flex-shrink:0; }
+.bs-lang-btn { padding:5px 14px; font-size:12px; font-weight:700; background:var(--surface); color:var(--text-2); border:0; cursor:pointer; transition:all var(--tr); }
+.bs-lang-btn.active { background:var(--fd-red); color:#fff; }
+.bs-preview-scroll { flex:1; min-height:0; overflow:auto; }
+.bs-slides-bar { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; font-size:12px; color:var(--muted); font-weight:600; }
+.bs-slide { border:1.5px solid var(--border); border-radius:var(--r-md); background:var(--surface-2); padding:14px; margin-bottom:12px; }
+.bs-slide-head { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); margin-bottom:8px; }
+.bs-slide-text { font-size:13px; line-height:1.6; color:var(--text); white-space:pre-wrap; word-break:break-word; }
+.bs-slide-text.pending { color:var(--muted); font-style:italic; }
+.bs-slide-media { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+.bs-slide-media img { max-width:100%; max-height:260px; object-fit:contain; border-radius:var(--r-sm); border:1px solid var(--border); background:#fff; }
+.bs-slide-media video { width:100%; max-height:340px; border-radius:var(--r-sm); border:1px solid var(--border); background:#000; }
 .bs-import-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
 .bs-import-hint { font-size:12px; color:var(--muted); }
 .bs-modal-tr-actions { display:flex; gap:8px; flex-wrap:wrap; margin:12px 0; }
@@ -337,27 +352,56 @@
     </div>
     <div class="bs-modal-body">
 
-      <!-- ── Gauche : carte document + actions ── -->
+      <!-- ── Gauche : aperçu traductible généré depuis le fichier importé ── -->
       <div class="bs-modal-pane bs-pane-preview">
-        <div class="bs-pane-label">Document</div>
-        <div class="bs-doc-card">
-          <div class="bs-doc-icon" id="bsDocIcon"></div>
-          <div class="bs-doc-name" id="bsDocName"></div>
-          <span class="bs-badge" id="bsDocBadge"></span>
-          <p class="bs-doc-msg">
-            L'aperçu intégré n'est pas disponible en mode local : SharePoint bloque l'affichage de ses documents hors de son site.
-            <strong>Ouvrez</strong> le document dans un onglet, ou <strong>téléchargez-le</strong> puis importez-le dans le traducteur (colonne de droite).
-          </p>
-          <div class="bs-preview-actions">
-            <a class="bs-btn bs-btn-open" id="bsOpenExternal" target="_blank" rel="noopener" href="#">
-              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-              Ouvrir dans SharePoint
-            </a>
-            <a class="bs-btn bs-btn-tr" id="bsDownloadFile" href="#" download>
-              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-              Télécharger
-            </a>
+        <!-- input fichier partagé (déclenché par les labels for="bsFileImport") -->
+        <input type="file" id="bsFileImport" accept=".pptx,.pdf,.txt" hidden/>
+        <div class="bs-pane-head">
+          <div class="bs-pane-label">Aperçu traductible</div>
+          <div class="bs-lang-toggle" id="bsLangToggle" style="display:none;">
+            <button class="bs-lang-btn active" id="bsLangEn" type="button" onclick="bsSetPreviewLang('en')">Anglais</button>
+            <button class="bs-lang-btn" id="bsLangFr" type="button" onclick="bsSetPreviewLang('fr')">Français</button>
           </div>
+        </div>
+
+        <div class="bs-preview-scroll" id="bsPreviewScroll">
+
+          <!-- État par défaut : carte document -->
+          <div class="bs-doc-card" id="bsDocCard">
+            <div class="bs-doc-icon" id="bsDocIcon"></div>
+            <div class="bs-doc-name" id="bsDocName"></div>
+            <span class="bs-badge" id="bsDocBadge"></span>
+            <p class="bs-doc-msg">
+              L'aperçu visuel SharePoint n'est pas disponible en local (SharePoint bloque l'affichage hors de son site).
+              <strong>Importez le fichier</strong> (.pptx / .pdf) pour générer ici un aperçu <strong>slide par slide, traductible d'un clic</strong>. Vous pouvez aussi ouvrir ou télécharger le document.
+            </p>
+            <div class="bs-preview-actions">
+              <label class="bs-btn bs-btn-open" for="bsFileImport" style="cursor:pointer;">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16V8m0 0l-3 3m3-3l3 3M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1"/></svg>
+                Importer le fichier
+              </label>
+            </div>
+            <div class="bs-preview-actions">
+              <a class="bs-btn bs-btn-tr" id="bsOpenExternal" target="_blank" rel="noopener" href="#">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                Ouvrir
+              </a>
+              <a class="bs-btn bs-btn-tr" id="bsDownloadFile" href="#" download>
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                Télécharger
+              </a>
+            </div>
+          </div>
+
+          <!-- État chargé : aperçu slide par slide -->
+          <div id="bsSlidesWrap" style="display:none;">
+            <div class="bs-slides-bar">
+              <span id="bsSlidesInfo"></span>
+              <label class="bs-btn bs-btn-tr" for="bsFileImport" style="cursor:pointer;padding:6px 12px;">Réimporter</label>
+            </div>
+            <div id="bsSlides"></div>
+          </div>
+
         </div>
       </div>
 
@@ -366,15 +410,10 @@
         <div class="bs-pane-label">Texte &amp; traduction française</div>
 
         <div class="bs-import-row">
-          <label class="bs-btn bs-btn-tr" style="cursor:pointer;">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16V8m0 0l-3 3m3-3l3 3M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1"/></svg>
-            Importer le fichier (.pptx / .pdf)
-            <input type="file" id="bsFileImport" accept=".pptx,.pdf,.txt" hidden/>
-          </label>
-          <span class="bs-import-hint" id="bsImportHint">Téléchargez le document à gauche, puis importez-le ici (ou collez le texte).</span>
+          <span class="bs-import-hint" id="bsImportHint">Le texte du fichier importé (à gauche) apparaît ci-dessous. Vous pouvez aussi le coller manuellement, puis traduire l'ensemble.</span>
         </div>
 
-        <textarea id="bsModalSrc" class="bs-tr-textarea" placeholder="Texte anglais — collez-le ici ou importez le fichier pour l'extraire automatiquement…"></textarea>
+        <textarea id="bsModalSrc" class="bs-tr-textarea" placeholder="Texte anglais — importez un fichier à gauche, ou collez le texte ici…"></textarea>
 
         <div class="bs-modal-tr-actions">
           <button class="bs-btn bs-btn-open" onclick="bsModalTranslate()">
@@ -858,12 +897,20 @@ function bsOpenPreview(item) {
   badge.textContent = item._type === 'pdf' ? 'PDF' : 'PowerPoint';
   document.getElementById('bsOpenExternal').href = bsBuildOpenLink(item);
   document.getElementById('bsDownloadFile').href = bsBuildDownloadLink(item);
-  document.getElementById('bsModalSrc').value = bsCleanName(item.nom);
+  document.getElementById('bsModalSrc').value = '';
   document.getElementById('bsModalOut').textContent = '';
   const hint = document.getElementById('bsImportHint');
-  hint.textContent = 'Téléchargez le document à gauche, puis importez-le ici (ou collez le texte).';
+  hint.textContent = 'Le texte du fichier importé (à gauche) apparaît ci-dessous. Vous pouvez aussi le coller manuellement.';
   hint.style.color = '';
   document.getElementById('bsModalStatus').textContent = '';
+
+  // Réinitialise l'aperçu slide par slide
+  bsSlidesData = [];
+  bsPreviewLang = 'en';
+  document.getElementById('bsSlides').innerHTML = '';
+  document.getElementById('bsSlidesWrap').style.display = 'none';
+  document.getElementById('bsDocCard').style.display = '';
+  document.getElementById('bsLangToggle').style.display = 'none';
 
   const modal = document.getElementById('bsModal');
   modal.classList.add('open');
@@ -888,49 +935,210 @@ function bsDecodeXml(s) {
           .replace(/&quot;/g,'"').replace(/&apos;/g,"'").replace(/&amp;/g,'&');
 }
 
-async function bsExtractPptx(file) {
+/* ── Médias (images / vidéos) intégrés dans le .pptx ── */
+const BS_IMG_EXT = ['png','jpg','jpeg','gif','bmp','webp','svg'];           // affichables par le navigateur
+const BS_VID_EXT = ['mp4','webm','mov','m4v'];                              // lisibles par le navigateur
+function bsMimeFor(ext) {
+  return ({ png:'image/png', jpg:'image/jpeg', jpeg:'image/jpeg', gif:'image/gif', bmp:'image/bmp',
+            webp:'image/webp', svg:'image/svg+xml', mp4:'video/mp4', webm:'video/webm',
+            mov:'video/quicktime', m4v:'video/x-m4v' })[ext] || 'application/octet-stream';
+}
+/* Résout un chemin relatif de .rels (ex: "../media/image1.png") en chemin zip absolu */
+function bsZipJoin(base, rel) {
+  const parts = (base + rel).split('/'); const out = [];
+  for (const p of parts) { if (p === '..') out.pop(); else if (p !== '.' && p !== '') out.push(p); }
+  return out.join('/');
+}
+
+/* Extraction structurée : tableau [{label, en, media:[{kind,src,name}]}] (1 entrée / slide) */
+async function bsExtractPptxSlides(file) {
   if (!window.JSZip) throw new Error('JSZip non chargé (vérifiez la connexion internet).');
   const zip = await JSZip.loadAsync(await file.arrayBuffer());
   const slideNames = Object.keys(zip.files)
     .filter(n => /ppt\/slides\/slide\d+\.xml$/.test(n))
     .sort((a, b) => (+a.match(/slide(\d+)/)[1]) - (+b.match(/slide(\d+)/)[1]));
-  const out = [];
+  const slides = [];
   for (const name of slideNames) {
+    const num = name.match(/slide(\d+)/)[1];
     const xml = await zip.files[name].async('string');
     const texts = [...xml.matchAll(/<a:t>([\s\S]*?)<\/a:t>/g)].map(m => bsDecodeXml(m[1]));
-    if (texts.length) out.push('— Slide ' + name.match(/slide(\d+)/)[1] + ' —\n' + texts.join(' '));
+
+    // ── Cartographie des relations (rId → fichier média) ──
+    const relsPath = 'ppt/slides/_rels/slide' + num + '.xml.rels';
+    const relMap = {};
+    if (zip.files[relsPath]) {
+      const relsXml = await zip.files[relsPath].async('string');
+      for (const r of relsXml.matchAll(/<Relationship\b[^>]*>/g)) {
+        const tag = r[0];
+        const id = (tag.match(/Id="([^"]+)"/) || [])[1];
+        const target = (tag.match(/Target="([^"]+)"/) || [])[1];
+        const external = /TargetMode="External"/.test(tag);
+        if (id && target && !external) relMap[id] = target;
+      }
+    }
+
+    // ── Médias référencés par la slide (dans l'ordre d'apparition) ──
+    const media = [];
+    const seen = new Set();
+    for (const m of xml.matchAll(/r:(?:embed|link)="([^"]+)"/g)) {
+      const id = m[1];
+      if (seen.has(id)) continue; seen.add(id);
+      const target = relMap[id];
+      if (!target) continue;
+      const path = bsZipJoin('ppt/slides/', target);
+      const zf = zip.files[path];
+      if (!zf) continue;
+      const ext = path.split('.').pop().toLowerCase();
+      const isVid = BS_VID_EXT.includes(ext);
+      const isImg = BS_IMG_EXT.includes(ext);
+      if (!isVid && !isImg) continue;   // formats non affichables (emf/wmf…) ignorés
+      const b64 = await zf.async('base64');
+      media.push({ kind: isVid ? 'video' : 'image', src: 'data:' + bsMimeFor(ext) + ';base64,' + b64, name: path.split('/').pop() });
+    }
+
+    slides.push({ label: 'Slide ' + num, en: texts.join(' ').trim(), media });
   }
-  return out.join('\n\n') || '(Aucun texte détecté dans ce PowerPoint.)';
+  return slides;
 }
 
-async function bsExtractPdf(file) {
+async function bsExtractPdfSlides(file) {
   if (!window.pdfjsLib) throw new Error('pdf.js non chargé (vérifiez la connexion internet).');
   const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
-  const out = [];
+  const slides = [];
   for (let i = 1; i <= pdf.numPages; i++) {
     const tc = await (await pdf.getPage(i)).getTextContent();
-    out.push('— Page ' + i + ' —\n' + tc.items.map(it => it.str).join(' '));
+    slides.push({ label: 'Page ' + i, en: tc.items.map(it => it.str).join(' ').trim() });
   }
-  return out.join('\n\n') || '(Aucun texte détecté dans ce PDF.)';
+  return slides;
 }
 
+/* État de l'aperçu */
+let bsSlidesData = [];     // [{label, en, fr|null}]
+let bsPreviewLang = 'en';
+
 async function bsHandleFileImport(file) {
-  const hint = document.getElementById('bsImportHint');
   const name = (file.name || '').toLowerCase();
-  hint.textContent = 'Extraction de « ' + file.name + ' »…';
-  hint.style.color = '';
+  bsSetImportStatus('Extraction de « ' + file.name + ' »…', '');
   try {
-    let text;
-    if (name.endsWith('.pptx'))     text = await bsExtractPptx(file);
-    else if (name.endsWith('.pdf')) text = await bsExtractPdf(file);
-    else if (name.endsWith('.txt')) text = await file.text();
+    let slides;
+    if (name.endsWith('.pptx'))     slides = await bsExtractPptxSlides(file);
+    else if (name.endsWith('.pdf')) slides = await bsExtractPdfSlides(file);
+    else if (name.endsWith('.txt')) slides = [{ label: 'Texte', en: (await file.text()).trim() }];
     else throw new Error('Format non supporté (.pptx, .pdf ou .txt).');
-    document.getElementById('bsModalSrc').value = text;
-    hint.textContent = 'Texte extrait ✓ — cliquez « Traduire en français ».';
-    hint.style.color = 'var(--green)';
+
+    bsSlidesData = slides.map(s => ({ label: s.label, en: s.en, fr: null, media: s.media || [] }));
+
+    // Remplit la zone source (droite) avec le texte complet
+    document.getElementById('bsModalSrc').value =
+      bsSlidesData.map(s => '— ' + s.label + ' —\n' + s.en).join('\n\n');
+
+    // Construit l'aperçu (gauche)
+    bsPreviewLang = 'en';
+    bsRenderPreview();
+    document.getElementById('bsDocCard').style.display = 'none';
+    document.getElementById('bsSlidesWrap').style.display = 'block';
+    document.getElementById('bsLangToggle').style.display = '';
+    bsSetLangButtons('en');
+    const unit = name.endsWith('.pdf') ? 'page(s)' : (name.endsWith('.txt') ? 'bloc' : 'slide(s)');
+    document.getElementById('bsSlidesInfo').textContent = bsSlidesData.length + ' ' + unit + ' — aperçu généré ✓';
+    bsSetImportStatus('Texte importé ✓ — basculez l\'aperçu en « Français », ou traduisez l\'ensemble ci-dessous.', 'ok');
   } catch (e) {
-    hint.textContent = 'Échec de l\'extraction : ' + e.message;
-    hint.style.color = 'var(--fd-red)';
+    bsSetImportStatus('Échec de l\'extraction : ' + e.message, 'err');
+  }
+}
+
+function bsSetImportStatus(msg, kind) {
+  const h = document.getElementById('bsImportHint');
+  h.textContent = msg;
+  h.style.color = kind === 'ok' ? 'var(--green)' : kind === 'err' ? 'var(--fd-red)' : '';
+}
+
+/* Applique le texte (EN ou FR) à un élément de slide */
+function bsApplySlideText(el, s) {
+  let txt, pending = false;
+  if (bsPreviewLang === 'fr') {
+    if (!s.en.trim())       txt = '(slide sans texte)';
+    else if (s.fr === null){ txt = 'Traduction en cours…'; pending = true; }
+    else                    txt = s.fr;
+  } else {
+    txt = s.en.trim() ? s.en : '(slide sans texte)';
+  }
+  el.textContent = txt;
+  el.classList.toggle('pending', pending);
+}
+
+/* Rendu de l'aperçu slide par slide : texte + médias (images / vidéos) intégrés */
+let bsSlideTextEls = [];
+function bsRenderPreview() {
+  const wrap = document.getElementById('bsSlides');
+  wrap.innerHTML = '';
+  bsSlideTextEls = [];
+  bsSlidesData.forEach(s => {
+    const div = document.createElement('div');
+    div.className = 'bs-slide';
+
+    const head = document.createElement('div');
+    head.className = 'bs-slide-head';
+    head.textContent = s.label;
+    div.appendChild(head);
+
+    const textEl = document.createElement('div');
+    textEl.className = 'bs-slide-text';
+    bsApplySlideText(textEl, s);
+    div.appendChild(textEl);
+    bsSlideTextEls.push(textEl);
+
+    // Médias intégrés (photos / vidéos extraits du fichier)
+    if (s.media && s.media.length) {
+      const mw = document.createElement('div');
+      mw.className = 'bs-slide-media';
+      s.media.forEach(m => {
+        if (m.kind === 'video') {
+          const v = document.createElement('video');
+          v.controls = true; v.preload = 'metadata'; v.src = m.src;
+          mw.appendChild(v);
+        } else {
+          const img = document.createElement('img');
+          img.src = m.src; img.alt = m.name; img.loading = 'lazy';
+          mw.appendChild(img);
+        }
+      });
+      div.appendChild(mw);
+    }
+
+    wrap.appendChild(div);
+  });
+}
+
+function bsSetLangButtons(lang) {
+  document.getElementById('bsLangEn').classList.toggle('active', lang === 'en');
+  document.getElementById('bsLangFr').classList.toggle('active', lang === 'fr');
+}
+
+/* Bascule Anglais / Français de l'aperçu (traduit à la volée, avec cache) */
+async function bsSetPreviewLang(lang) {
+  if (lang === bsPreviewLang || !bsSlidesData.length) { bsSetLangButtons(lang); return; }
+  bsPreviewLang = lang;
+  bsSetLangButtons(lang);
+  bsRenderPreview();
+  if (lang !== 'fr') return;
+
+  const todo = bsSlidesData.filter(s => s.en.trim() && s.fr === null);
+  if (!todo.length) { bsRenderPreview(); return; }
+
+  bsSetImportStatus('Traduction de l\'aperçu en cours…', '');
+  try {
+    for (let i = 0; i < bsSlidesData.length; i++) {
+      const s = bsSlidesData[i];
+      if (s.en.trim() && s.fr === null) {
+        s.fr = await translateToFrench(s.en);
+        // met à jour uniquement le texte (les médias ne sont pas rechargés)
+        if (bsPreviewLang === 'fr' && bsSlideTextEls[i]) bsApplySlideText(bsSlideTextEls[i], s);
+      }
+    }
+    bsSetImportStatus('Aperçu traduit en français ✓', 'ok');
+  } catch (e) {
+    bsSetImportStatus('Erreur de traduction : ' + e.message, 'err');
   }
 }
 
