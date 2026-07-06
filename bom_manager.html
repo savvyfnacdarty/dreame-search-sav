@@ -51,6 +51,47 @@
 }
 .sheet-btn:hover { border-color:var(--fd-red); background:var(--accent-glow); color:var(--fd-red); }
 
+/* ── Barre fichier chargé ── */
+.file-bar {
+  display:none; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:12px 16px; background:var(--surface); border:1.5px solid var(--border);
+  border-radius:var(--r-md);
+}
+.file-bar.active { display:flex; }
+.file-bar-name { font-family:var(--font-mono); font-size:13px; font-weight:700; color:var(--text); overflow:hidden; text-overflow:ellipsis; }
+.file-bar-meta { font-size:12px; color:var(--muted); }
+.btn-change-file {
+  margin-left:auto; padding:7px 14px; border-radius:var(--r-md); border:1.5px solid var(--border);
+  background:var(--surface-2); color:var(--text-2); font-size:12.5px; font-weight:600;
+  transition:all var(--tr); white-space:nowrap;
+}
+.btn-change-file:hover { border-color:var(--fd-red); color:var(--fd-red); }
+
+/* ── Onglets feuilles (persistants) ── */
+.sheet-tabs {
+  display:none; gap:6px; flex-wrap:wrap; align-items:center;
+  margin:14px 0 4px; padding:6px 8px;
+  background:var(--surface-2); border:1px solid var(--border); border-radius:var(--r-md);
+}
+.sheet-tabs.active { display:flex; }
+.sheet-tabs-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); margin-right:4px; }
+.sheet-tab {
+  padding:7px 16px; border-radius:var(--r-sm); border:1.5px solid transparent;
+  background:transparent; color:var(--text-2); font-size:13px; font-weight:600;
+  transition:all var(--tr); white-space:nowrap;
+}
+.sheet-tab:hover { background:var(--surface); color:var(--fd-red); }
+.sheet-tab.active { background:var(--fd-red); color:#fff; border-color:var(--fd-red); }
+
+/* ── Boutons toolbar (filtre photo, export) ── */
+.btn-tool {
+  height:42px; padding:0 14px; border-radius:var(--r-md); border:1.5px solid var(--border);
+  background:var(--surface); color:var(--text-2); font-size:13px; font-weight:600;
+  transition:all var(--tr); white-space:nowrap; display:flex; align-items:center; gap:6px;
+}
+.btn-tool:hover { border-color:var(--fd-red); color:var(--fd-red); }
+.btn-tool.on { background:var(--fd-red); color:#fff; border-color:var(--fd-red); }
+
 /* ── Bannières détection ── */
 .detect-banner { display:none; padding:14px 18px; border-radius:var(--r-md); margin:16px 0; font-size:13px; font-weight:600; gap:10px; align-items:flex-start; }
 .detect-banner.active { display:flex; }
@@ -334,10 +375,21 @@
     <div class="upload-sub">Glissez-déposez votre fichier <span>.xlsx</span> ici, ou cliquez pour parcourir</div>
   </div>
 
+  <!-- Barre fichier chargé -->
+  <div class="file-bar" id="fileBar">
+    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;color:var(--fd-red);"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+    <span class="file-bar-name" id="fileBarName"></span>
+    <span class="file-bar-meta" id="fileBarMeta"></span>
+    <button class="btn-change-file" onclick="resetToUpload()">↺ Changer de fichier</button>
+  </div>
+
   <div class="loading-bar" id="loadingBar">
     <div class="spinner"></div>
     <span id="loadingMsg">Analyse en cours…</span>
   </div>
+
+  <!-- Onglets feuilles (persistants) -->
+  <div class="sheet-tabs" id="sheetTabs"></div>
 
   <!-- Sélecteur de feuille -->
   <div class="sheet-picker" id="sheetPicker">
@@ -373,6 +425,8 @@
         <option value="ref">🔤 Référence A→Z</option>
         <option value="desc">📝 Désignation A→Z</option>
       </select>
+      <button class="btn-tool" id="btnPhotoFilter" title="Afficher uniquement les pièces avec photo">📷 Avec photo</button>
+      <button class="btn-tool" id="btnExportCsv" title="Exporter les résultats filtrés en CSV">⬇ CSV</button>
       <div class="view-switcher">
         <button class="view-btn active" id="btnTiles" title="Grille de tuiles">
           <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
@@ -510,6 +564,7 @@ function loadJSZip() {
 let allRows = [], filteredRows = [];
 let currentSort = 'photo';
 let viewMode = 'tiles';
+let photoOnly = false;
 let currentWorkbook = null, currentEmbedded = {}, currentFileName = '';
 let toastTimer = null;
 // Fallback
@@ -656,6 +711,7 @@ function applyFilter() {
   filteredRows = q
     ? allRows.filter(r => normalize(r.ref).includes(q)||normalize(r.desc).includes(q)||normalize(r.desc2||'').includes(q)||(r.extra||[]).some(([,v])=>normalize(v).includes(q)))
     : [...allRows];
+  if (photoOnly) filteredRows = filteredRows.filter(r => r.imgSrc);
   document.getElementById('statsBadge').textContent = `${filteredRows.length} / ${allRows.length} pièce(s)`;
 }
 
@@ -958,9 +1014,46 @@ function showSheetPicker(sheetNames){
 }
 
 /* ══════════════════════════════════════════════════════════════
+   ONGLETS FEUILLES (persistants)
+══════════════════════════════════════════════════════════════ */
+function renderSheetTabs(activeName){
+  const tabs=document.getElementById('sheetTabs');
+  tabs.innerHTML='';
+  if(!currentWorkbook||currentWorkbook.SheetNames.length<2){tabs.classList.remove('active');return;}
+  const lbl=document.createElement('span'); lbl.className='sheet-tabs-label'; lbl.textContent='Feuilles :';
+  tabs.appendChild(lbl);
+  currentWorkbook.SheetNames.forEach(name=>{
+    const b=document.createElement('button');
+    b.className='sheet-tab'+(name===activeName?' active':'');
+    b.textContent='📄 '+name;
+    b.addEventListener('click',()=>{if(name!==rawSheetName)parseSheet(name);});
+    tabs.appendChild(b);
+  });
+  tabs.classList.add('active');
+}
+
+/* Retour à l'écran d'upload */
+function resetToUpload(){
+  hideResults();
+  document.getElementById('fileBar').classList.remove('active');
+  document.getElementById('sheetTabs').classList.remove('active');
+  document.getElementById('uploadZone').style.display='block';
+  currentWorkbook=null; currentEmbedded={}; currentFileName='';
+  rawSheetData=[]; rawSheetImgs={}; rawSheetName='';
+}
+
+/* ══════════════════════════════════════════════════════════════
    PARSING D'UNE FEUILLE
 ══════════════════════════════════════════════════════════════ */
 function parseSheet(sheetName){
+  // Réinitialiser toutes les vues (permet de basculer entre feuilles)
+  ['normalView','fallbackView','rawView','sheetPicker'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('detectBanner').classList.remove('active');
+  document.getElementById('btnShowRaw').classList.remove('active-raw');
+  document.getElementById('btnShowRaw').textContent='📊 Mode secours — Tableau Excel brut';
+  document.getElementById('bomSearch').value='';
+  photoOnly=false; document.getElementById('btnPhotoFilter').classList.remove('on');
+  renderSheetTabs(sheetName);
   setLoading(true,`Analyse de la feuille "${sheetName}"…`);
   try{
     const sheet=currentWorkbook.Sheets[sheetName];
@@ -1025,6 +1118,11 @@ async function parseBOM(file){
     setLoading(true,'Chargement du classeur…');
     currentWorkbook=XLSX.read(ab,{type:'array'});
     setLoading(false);
+    // Barre fichier + masquer la zone d'upload
+    document.getElementById('uploadZone').style.display='none';
+    document.getElementById('fileBarName').textContent=file.name;
+    document.getElementById('fileBarMeta').textContent=currentWorkbook.SheetNames.length+' feuille(s)';
+    document.getElementById('fileBar').classList.add('active');
     if(currentWorkbook.SheetNames.length>1) showSheetPicker(currentWorkbook.SheetNames);
     else parseSheet(currentWorkbook.SheetNames[0]);
   } catch(err){console.error(err);setLoading(false);alert('Erreur lecture : '+err.message);}
@@ -1039,6 +1137,7 @@ function setLoading(on,msg=''){
 }
 function hideResults(){
   ['sheetPicker','normalView','fallbackView','rawView'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('sheetTabs').classList.remove('active');
   document.getElementById('detectBanner').classList.remove('active');
   document.getElementById('rawHint').classList.remove('active');
   document.getElementById('btnShowRaw').classList.remove('active-raw');
@@ -1063,6 +1162,29 @@ function showDetectBanner(ok,title,colMap,rawHeaders){
 function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
 /* ══════════════════════════════════════════════════════════════
+   EXPORT CSV (résultats filtrés)
+══════════════════════════════════════════════════════════════ */
+function exportCsv(){
+  applyFilter();
+  if(!filteredRows.length){showToast('⚠ Rien à exporter');return;}
+  const cols=getTableColumns().filter(c=>c.type!=='img');
+  const esc=v=>{v=String(v??'');return /[";\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
+  const lines=[cols.map(c=>esc(c.label)).join(';')];
+  filteredRows.forEach(r=>{
+    lines.push(cols.map(c=>{
+      if(c.key==='__extra__'){const e=(r.extra||[]).find(([k])=>k===c.extraKey);return esc(e?e[1]:'');}
+      return esc(r[c.key]||'');
+    }).join(';'));
+  });
+  const blob=new Blob(['﻿'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'}); // BOM UTF-8 pour Excel
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=(currentFileName.replace(/\.xlsx$/i,'')||'bom')+'_'+(rawSheetName||'feuille')+'.csv';
+  a.click(); URL.revokeObjectURL(a.href);
+  showToast('✓ CSV exporté ('+filteredRows.length+' ligne(s))');
+}
+
+/* ══════════════════════════════════════════════════════════════
    ÉVÉNEMENTS
 ══════════════════════════════════════════════════════════════ */
 const zone=document.getElementById('uploadZone');
@@ -1079,6 +1201,12 @@ document.getElementById('bomSearch').addEventListener('input',()=>{if(viewMode==
 document.getElementById('sortSelect').addEventListener('change',e=>{currentSort=e.target.value;sortRows();if(viewMode==='tiles')renderTiles();else renderFullTable();});
 document.getElementById('btnTiles').addEventListener('click',()=>switchView('tiles'));
 document.getElementById('btnTable').addEventListener('click',()=>switchView('table'));
+document.getElementById('btnPhotoFilter').addEventListener('click',()=>{
+  photoOnly=!photoOnly;
+  document.getElementById('btnPhotoFilter').classList.toggle('on',photoOnly);
+  if(viewMode==='tiles')renderTiles();else renderFullTable();
+});
+document.getElementById('btnExportCsv').addEventListener('click',exportCsv);
 document.getElementById('partModal').addEventListener('click',e=>{if(e.target===document.getElementById('partModal'))closeModal();});
 document.getElementById('modalClose').addEventListener('click',closeModal);
 document.getElementById('fallbackSearch').addEventListener('input',e=>renderFallbackTable(e.target.value));
