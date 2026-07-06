@@ -192,7 +192,7 @@ const EXCEL_CANDIDATES = [
   'images/BIT-test/BIT-Test.xlsx'
 ];
 const SHEET_NAME = 'Bit_Test_Single';
-const MANIFEST = ["20260624_172323.mp4", "BIT-Test - crash test.MOV", "Crash Test.PNG", "Down sensor test.PNG", "Dust box test.MOV", "Dust box test.MOV enlever le bac.PNG", "Forward Vision sensor test.PNG", "Forward Vision sensor test_test passed.PNG", "Geomagnatic test confirm.png", "Gyroscope test checking passed.PNG", "Gyroscope test checking.PNG", "Gyroscope.MOV", "IMG_7345.PNG", "IMG_7346.PNG", "IMG_7349.PNG", "IMG_7350.PNG", "IMG_7352.PNG", "LDS test.MOV", "Menu BIT-Test.PNG", "Menu Bit test.PNG", "PSD Test.MOV", "Roller test.MOV", "TOF Test checking passed.PNG", "TOF Test checking.PNG", "Wipe outside detection.MOV", "drive wheel test checking passed.PNG", "drive wheel test checking.PNG", "drive wheel test.MOV", "fan test.MOV", "fan test.png", "photo-6676_singular_display_fullPicture.jpeg", "rag installation inspection.MOV", "Tank test 2.png", "side brush test.png", "tank test.PNG", "video-6721_singular_display.MOV", "wipe lifthing detection.mp4"];
+const MANIFEST = ["20260624_172323.mp4", "BIT-Test - crash test.MOV", "Crash Test.PNG", "Down sensor test.PNG", "Dust box test.MOV", "Dust box test.MOV enlever le bac.PNG", "Forward Vision sensor test.PNG", "Forward Vision sensor test_test passed.PNG", "Geomagnatic test confirm.png", "Gyroscope test checking passed.PNG", "Gyroscope test checking.PNG", "Gyroscope.MOV", "IMG_7345.PNG", "IMG_7346.PNG", "IMG_7349.PNG", "IMG_7350.PNG", "IMG_7352.PNG", "LDS test.MOV", "Menu BIT-Test.PNG", "Menu Bit test.PNG", "PSD Test.MOV", "Roller test.MOV", "TOF Test checking passed.PNG", "TOF Test checking.PNG", "Wipe outside detection.MOV", "drive wheel test checking passed.PNG", "drive wheel test checking.PNG", "drive wheel test.MOV", "fan test.MOV", "fan test.png", "photo-6676_singular_display_fullPicture.jpeg", "rag installation inspection.MOV", "Tank test 2.png", "side brush test.png", "tank test.PNG", "video-6721_singular_display.MOV", "wipe lifthing detection.mp4", "Test kit eau 1.jpg", "Test kit eau 2.jpg", "Test kit eau 3.jpg"];
 const EMBED = [
   {
     "id": "crash-test",
@@ -418,6 +418,24 @@ const EMBED = [
     "images": [],
     "video": "rag installation inspection.MOV",
     "effectue": "Avant de lancer le test enlever les plaques serpillère, lancer le test et les installer"
+  },
+  {
+    "id": "test-alimentation-evacuation-eau",
+    "name": "Test de l'alimentation et de l'évacuation automatique de l'eau",
+    "desc": "Test de l'alimentation et de l'évacuation automatique de l'eau",
+    "infos": [
+      "Avant le test, placez le robot dans la station d'acceuil.",
+      "Pendant le test, veuillez ne pas déplacer le robot hors de la station d'acceuil",
+      "Vérifier que les tuyaux sont tous bien raccordés selon le schéma. Ne raccorder pas l'eau du robinet directement a l'adaptateur d'eau propre.",
+      "Pendant le test, la serpillière sera humidifiée"
+    ],
+    "images": [
+      "Test kit eau 1.jpg",
+      "Test kit eau 2.jpg",
+      "Test kit eau 3.jpg"
+    ],
+    "video": "",
+    "effectue": "Penser a ouvrir le robinet d'eau avant de lancer le test.\nPrise d'eau et vidange en même temps\nRotation des serpillères \nTest OK voir message sur application"
   }
 ];
 let TESTS = EMBED.slice();
@@ -604,7 +622,7 @@ function parseSheet(rows){
     if(name.toLowerCase()==='bit test single') return;
     if((r[1]||'').toString().trim().toLowerCase()==='bit test single') return;
     const infos=(r[2]||'').toString().split('\n').map(s=>s.trim()).filter(Boolean);
-    const images=[r[3],r[4]].map(v=>(v||'').toString().trim()).filter(Boolean);
+    const images=[r[3],r[4]].flatMap(v=>(v||'').toString().split(/\s*&\s*/)).map(s=>s.trim()).filter(Boolean);
     out.push({ id:slug(name), name:name, desc:(r[1]||'').toString().trim(),
       infos:infos, images:images, video:(r[5]||'').toString().trim(), effectue:(r[6]||'').toString().trim() });
   });
