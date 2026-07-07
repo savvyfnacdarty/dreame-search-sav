@@ -332,7 +332,7 @@
 
       <div class="bs-tr-hint">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 16v-4m0-4h.01"/></svg>
-        Traduction assurée par un service gratuit (MyMemory, sans clé API). Pour un service interne (DeepL, Azure, proxy Fnac…), voir <code>bsTranslateCustom()</code> dans le code.
+        Traduction assurée par un service gratuit (Google Translate, sans clé API ; repli automatique sur MyMemory). Pour un service interne (DeepL, Azure, proxy Fnac…), voir <code>bsTranslateCustom()</code> dans le code.
       </div>
     </div>
   </section>
@@ -783,9 +783,10 @@ function esc(s) {
    UNIQUEMENT dans translateToFrench(text). La clé reste côté serveur.
 ══════════════════════════════════════════════════════════════ */
 
-/* Service de traduction actif. Valeurs possibles : 'mymemory' (gratuit, sans clé)
+/* Service de traduction actif. Valeurs possibles : 'google' (gratuit, sans clé,
+   quota large — défaut), 'mymemory' (gratuit mais quota ~5000 mots/jour/IP)
    ou 'custom' (votre propre endpoint/proxy interne — voir bsTranslateCustom). */
-const BS_TRANSLATE_PROVIDER = 'mymemory';
+const BS_TRANSLATE_PROVIDER = 'google';
 
 /**
  * translateToFrench — traduit un texte anglais en français.
@@ -830,10 +831,28 @@ function bsChunkText(s, max) {
   return out;
 }
 
-/* Aiguille vers le bon service de traduction. */
+/* Aiguille vers le bon service de traduction.
+   En mode 'google', bascule automatiquement sur MyMemory en cas d'échec. */
 async function bsTranslateSegment(segment) {
-  if (BS_TRANSLATE_PROVIDER === 'custom') return bsTranslateCustom(segment);
-  return bsTranslateMyMemory(segment);
+  if (BS_TRANSLATE_PROVIDER === 'custom')   return bsTranslateCustom(segment);
+  if (BS_TRANSLATE_PROVIDER === 'mymemory') return bsTranslateMyMemory(segment);
+  // Défaut : Google, avec repli sur MyMemory si l'endpoint échoue.
+  try { return await bsTranslateGoogle(segment); }
+  catch (e) { return bsTranslateMyMemory(segment); }
+}
+
+/* ── Service par défaut : Google Translate (endpoint public gtx) ──
+   Gratuit, sans clé API, CORS ouvert, pas de quota strict par IP.
+   Endpoint non officiel : peut évoluer sans préavis (repli MyMemory prévu). */
+async function bsTranslateGoogle(segment) {
+  const url = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=fr&dt=t&q=' +
+              encodeURIComponent(segment);
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Google HTTP ' + res.status);
+  const data = await res.json();
+  // data[0] = tableau de segments ; chaque segment[0] = texte traduit.
+  if (!data || !Array.isArray(data[0])) throw new Error('réponse Google vide');
+  return data[0].map(seg => (seg && seg[0]) ? seg[0] : '').join('');
 }
 
 /* ── Service par défaut : MyMemory (gratuit, sans clé API, CORS ouvert) ──
