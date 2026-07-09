@@ -96,8 +96,8 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--
 .section-head{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--text-2);display:flex;align-items:center;gap:8px;margin-bottom:10px;}
 .section-head .count{background:var(--bg);color:var(--text-3);padding:1px 7px;border-radius:10px;font-size:10px;border:1px solid var(--border);}
 .doc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px;}
-.doc-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer;transition:var(--transition);display:flex;align-items:flex-start;gap:10px;text-decoration:none;color:inherit;}
-.doc-card:hover{border-color:#818CF8;box-shadow:0 2px 10px rgba(99,102,241,.1);transform:translateY(-1px);}
+.doc-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;transition:var(--transition);display:flex;align-items:flex-start;gap:10px;color:inherit;}
+.doc-card:hover{border-color:#818CF8;box-shadow:0 2px 10px rgba(99,102,241,.1);}
 .doc-card.bom{background:var(--accent-bg);border-color:var(--accent-bd);}
 .doc-card.bom:hover{border-color:var(--accent);}
 .doc-icon{font-size:22px;flex-shrink:0;margin-top:2px;}
@@ -105,6 +105,12 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--
 .doc-type{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;}
 .doc-name{font-size:12px;color:var(--text-2);line-height:1.4;word-break:break-word;}
 .doc-ext{font-size:10px;color:var(--text-3);margin-top:3px;font-family:monospace;}
+.doc-actions{display:flex;gap:6px;margin-top:9px;}
+.doc-btn{flex:1;padding:6px 8px;border-radius:7px;font-size:11px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:4px;transition:var(--transition);cursor:pointer;}
+.doc-btn.preview{background:var(--blue-bg);color:var(--blue-text);border:1px solid var(--blue-bd);}
+.doc-btn.preview:hover{background:#DBEAFE;}
+.doc-btn.dl{background:var(--accent);color:#1a1a1a;border:1px solid var(--accent);}
+.doc-btn.dl:hover{background:var(--accent-h);border-color:var(--accent-h);}
 .no-docs{text-align:center;padding:20px;color:var(--text-3);font-size:13px;background:var(--bg);border-radius:8px;border:1px dashed var(--border);}
 
 /* MODAL */
@@ -147,6 +153,7 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--
     <div class="header-title">SAV Atelier — <b>GEM &amp; TV · Drive Dreame</b></div>
   </div>
   <div class="header-right">
+    <a class="btn-import" href="Lecteur_BOM_GEM_TV.html" style="text-decoration:none">📋 Lecteur BOM</a>
     <button class="btn-import" onclick="openImportModal()">📥 Importer l'export</button>
     <div class="badge loading" id="catalogBadge">⏳ Chargement…</div>
   </div>
@@ -225,6 +232,11 @@ function hl(text,q){
   return esc(text).replace(new RegExp('('+toks.join('|')+')','gi'),'<span class="hl">$1</span>');
 }
 function fileExt(name){const m=String(name).split('.');return m.length>1?m.pop().toLowerCase():'';}
+// ── Liens Google Drive : aperçu + téléchargement direct ──
+function driveId(url){const m=String(url).match(/\/d\/([A-Za-z0-9_-]{10,})/)||String(url).match(/[?&]id=([A-Za-z0-9_-]{10,})/);return m?m[1]:null;}
+function docKind(url){if(/docs\.google\.com\/spreadsheets/.test(url))return 'spreadsheets';if(/docs\.google\.com\/presentation/.test(url))return 'presentation';if(/docs\.google\.com\/document/.test(url))return 'document';return 'file';}
+function previewUrl(url){const id=driveId(url);if(!id)return url;const k=docKind(url);return k==='file'?'https://drive.google.com/file/d/'+id+'/preview':'https://docs.google.com/'+k+'/d/'+id+'/preview';}
+function downloadUrl(url){const id=driveId(url);if(!id)return url;return 'https://drive.google.com/uc?export=download&id='+id;}
 function stripCJK(s){return String(s).replace(/[　-鿿＀-￯]/g,'').replace(/\s{2,}/g,' ').trim().replace(/[_\-·&]+$/,'').replace(/^[_\-·&\s]+/,'').trim();}
 // Nettoie un libellé de catégorie : garde les segments (séparés par _) contenant du latin
 function cleanCat(raw){const keep=String(raw).split('_').map(s=>s.trim()).filter(s=>/[A-Za-z]/.test(s));return (keep.join(' ')||stripCJK(raw)||raw).replace(/\s{2,}/g,' ').trim();}
@@ -534,13 +546,17 @@ function openDetail(idx){
         '<div class="doc-grid">'+
         arr.map(d=>{
           const ext=fileExt(d.name);
-          return '<a class="doc-card'+(type==='bom'?' bom':'')+'" href="'+esc(d.url)+'" target="_blank" rel="noopener">'+
+          return '<div class="doc-card'+(type==='bom'?' bom':'')+'">'+
             '<div class="doc-icon">'+t.icon+'</div>'+
             '<div class="doc-body">'+
               '<div class="doc-type" style="color:'+t.color+'">'+esc(t.label)+'</div>'+
               '<div class="doc-name">'+esc(d.name)+'</div>'+
               (ext?'<div class="doc-ext">.'+esc(ext)+'</div>':'')+
-            '</div></a>';
+              '<div class="doc-actions">'+
+                '<a class="doc-btn preview" href="'+esc(previewUrl(d.url))+'" target="_blank" rel="noopener">👁 Aperçu</a>'+
+                '<a class="doc-btn dl" href="'+esc(downloadUrl(d.url))+'" target="_blank" rel="noopener">⬇ Télécharger</a>'+
+              '</div>'+
+            '</div></div>';
         }).join('')+
         '</div></div>';
     });
