@@ -221,12 +221,71 @@ const CAT_FR = {
   'Induction Hobs':'Plaque à induction',
   'Washer & Clothes dryer':'Lave-linge & sèche-linge',
   'Refrigerator':'Réfrigérateur',
+  'Dishwasher':'Lave-vaisselle',
+  'Wet&Dry Vacuum':'Aspirateur eau & poussière',
+  'Wet & Dry Vacuum':'Aspirateur eau & poussière',
+  'Major appliances':'Gros électroménager',
   'Steam Oven':'Four vapeur',
   'Air conditionor':'Climatiseur',
   'Air conditioner':'Climatiseur',
   'Major appliance installation instruction':'Installation GEM',
 };
 function catFr(c){ if(!c) return c; if(CAT_FR[c]) return CAT_FR[c]; const k=Object.keys(CAT_FR).find(x=>x.toLowerCase()===String(c).toLowerCase()); return k?CAT_FR[k]:c; }
+
+// ── Glossaire de traduction des titres (dossiers + fichiers) ──
+// Affichage uniquement : l'original reste en infobulle et cherchable.
+const TR_ZH=[
+  ['大家电安装相关资料','matériel installation GEM'],['安装视频说明','notice vidéo installation'],
+  ['门体组件拆卸','démontage ensemble porte'],['上盖板后板拆卸','démontage capot / panneau arrière'],
+  ['排气口转动电机拆卸','démontage moteur volet d’évacuation'],['蒸汽发生器组件拆卸','démontage générateur vapeur'],
+  ['内胆温度传感器拆卸','démontage sonde température cuve'],['水箱微动开关拆卸','démontage micro-switch réservoir'],
+  ['西南欧蒸烤箱拆卸说明','notice démontage four vapeur (Europe SO)'],['西南欧蒸烤箱维修等级','niveau réparation four vapeur (Europe SO)'],
+  ['散热风扇拆卸','démontage ventilateur'],['温控器拆卸','démontage thermostat'],['电磁阀拆卸','démontage électrovanne'],
+  ['控制板拆卸','démontage carte commande'],['电源板拆卸','démontage carte alimentation'],['电源线拆卸','démontage câble alimentation'],
+  ['吸油烟机维修手册','manuel réparation hotte'],['中国追觅科技','Dreame Technology'],['爆炸图清单','liste vues éclatées'],
+  ['安装说明','notice d’installation'],['使用视频','vidéo d’utilisation'],['拆机视频','vidéo de démontage'],
+  ['维修手册','manuel de réparation'],['维修等级','niveau de réparation'],['洗衣机原始','lave-linge (origine)'],
+  ['大家电','gros électroménager'],['西南欧','Europe du Sud-Ouest'],['显示器','écran'],['电磁灶','plaque à induction'],
+  ['吸油烟机','hotte aspirante'],['移动空调','climatiseur portable'],['咖啡机','machine à café'],['蒸烤箱','four vapeur'],
+  ['洗衣机','lave-linge'],['干衣机','sèche-linge'],['冰箱','réfrigérateur'],['空调','climatiseur'],['电视','téléviseur'],
+  ['追觅','Dreame'],['售后','SAV'],['拆卸','démontage'],['爆炸图','vue éclatée'],['视频','vidéo'],['中文','chinois'],
+  ['德语','allemand'],['荷比卢','Benelux'],['表','tableau'],['旧','ancien'],
+];
+const TR_PHRASES=[
+  ['installation environment survey','étude environnement d’installation'],['installation enviroment survey','étude environnement d’installation'],
+  ['portable air conditionor','climatiseur portable'],['portable air conditioner','climatiseur portable'],['portable ac','climatiseur portable'],
+  ['installation instruction','instructions d’installation'],['installation materials','matériel d’installation'],
+  ['installation requirement','prérequis d’installation'],['installation video','vidéo d’installation'],['installation issue','problème d’installation'],
+  ['clothes dryer','sèche-linge'],['range hood','hotte aspirante'],['steam oven','four vapeur'],
+  ['induction hobs','plaque à induction'],['induction hob','plaque à induction'],
+  ['user manual','manuel utilisateur'],['service manual','manuel SAV'],['maintenance manual','manuel d’entretien'],['repair manual','manuel de réparation'],
+  ['service bom list','liste BOM SAV'],['bom list','liste BOM'],['service video','vidéo SAV'],
+  ['disassembly video','vidéo de démontage'],['dismantle video','vidéo de démontage'],
+  ['how to use video','vidéo mode d’emploi'],['how to use','mode d’emploi'],['exploded view','vue éclatée'],['spare parts','pièces détachées'],
+  ['power board','carte d’alimentation'],['control board','carte de commande'],['door direction','sens de porte'],
+  ['product introduction','présentation produit'],['service level','niveau SAV'],['repair level','niveau de réparation'],
+  ['southwest europe','Europe du Sud-Ouest'],['air conditionor','climatiseur'],['air conditioner','climatiseur'],
+];
+const TR_WORDS=[
+  ['washer','lave-linge'],['dryer','sèche-linge'],['dishwasher','lave-vaisselle'],['refrigerator','réfrigérateur'],
+  ['oven','four'],['steam','vapeur'],['hood','hotte'],['monitor','écran'],['television','téléviseur'],
+  ['removal','démontage'],['disassembly','démontage'],['dismantling','démontage'],['dismantle','démontage'],
+  ['assembly','assemblage'],['exploded','éclatée'],['door','porte'],['doors','portes'],['board','carte'],
+  ['power','alimentation'],['level','niveau'],['list','liste'],['service','SAV'],['user','utilisateur'],
+  ['specification','spécifications'],['introduction','présentation'],['product','produit'],['materials','matériel'],['material','matériel'],
+  ['issue','problème'],['requirement','prérequis'],['environment','environnement'],['enviroment','environnement'],['survey','étude'],
+  ['coffee','café'],['parts','pièces'],['spare','détachées'],['manual','manuel'],['video','vidéo'],['guide','guide'],['change','changement'],
+  ['and','et'],['the',''],['for','pour'],['with','avec'],['new','nouveau'],['old','ancien'],
+];
+function trTitle(s){
+  if(!s) return s;
+  let t=String(s);
+  for(const [a,b] of TR_ZH) t=t.split(a).join(b);
+  for(const [a,b] of TR_PHRASES) t=t.replace(new RegExp('\\b'+a.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b','gi'),b);
+  for(const [a,b] of TR_WORDS) t=t.replace(new RegExp('\\b'+a+'\\b','gi'),b);
+  t=t.replace(/\s{2,}/g,' ').trim();
+  return t.charAt(0).toUpperCase()+t.slice(1);
+}
 
 // ══════════════════════════════════════════════════════
 //  STATE
@@ -409,7 +468,7 @@ function buildIndex(aoa){
     // sinon : ressource de catégorie, groupée par dossier parent
     if(!parent) continue;
     if(!entriesByPath[parent]){
-      const c=catOf(parent+'/x');
+      const c=catOf(parent);
       const leaf=parent.split('/').pop();
       entriesByPath[parent]={
         isProduct:false, path:parent, refs:[], refStr:'',
@@ -483,7 +542,7 @@ function setCat(c){ACTIVE_CAT=c;renderCatBar();CURRENT_VIEW='search';doSearch();
 function clearSearch(){document.getElementById('q').value='';LAST_QUERY='';document.getElementById('q').focus();CURRENT_VIEW='search';doSearch();}
 
 function entryHaystack(e){
-  return (e.refStr+' '+e.name+' '+e.rawName+' '+e.cat+' '+catFr(e.cat)+' '+e.catRaw+' '+e.docs.map(d=>d.name).join(' ')).toLowerCase();
+  return (e.refStr+' '+e.name+' '+trTitle(e.name)+' '+e.rawName+' '+e.cat+' '+catFr(e.cat)+' '+e.catRaw+' '+e.docs.map(d=>d.name+' '+trTitle(d.name)).join(' ')).toLowerCase();
 }
 function doSearch(){
   const q=document.getElementById('q').value.trim().toLowerCase();
@@ -522,7 +581,7 @@ function doSearch(){
       return '<div class="ri" onclick="openDetail('+idx+')">'+
         '<div class="ri-avatar'+(e.isProduct?'':' res')+'">'+(e.isProduct?'📦':'📁')+'</div>'+
         '<div class="ri-info">'+
-          '<div class="ri-name">'+hl(e.name||e.rawName,q)+'</div>'+
+          '<div class="ri-name" title="'+esc(e.name||e.rawName)+'">'+hl(trTitle(e.name||e.rawName),q)+'</div>'+
           (e.refStr?'<div class="ri-ref">'+hl(e.refStr,q)+'</div>':'')+
           '<div class="ri-tags">'+tags+'</div>'+
         '</div>'+openBtn+'</div>';
@@ -540,7 +599,7 @@ function openDetail(idx){
   html+='<div class="detail-header">'+
     '<div class="detail-avatar">'+(e.isProduct?'📦':'📁')+'</div>'+
     '<div class="detail-title-wrap">'+
-      '<div class="detail-product">'+esc(e.name||e.rawName)+'</div>'+
+      '<div class="detail-product" title="'+esc(e.name||e.rawName)+'">'+esc(trTitle(e.name||e.rawName))+'</div>'+
       '<div class="detail-ref">'+esc(e.refStr?e.refStr+' · ':'')+esc(catFr(e.cat)||'')+(e.rawName&&e.rawName!==e.name?' · '+esc(e.rawName):'')+'</div>'+
     '</div>'+
     (e.folderUrl?'<a class="btn-sp-header" href="'+esc(e.folderUrl)+'" target="_blank" rel="noopener">📂 Ouvrir le dossier Drive</a>':'')+
@@ -566,7 +625,7 @@ function openDetail(idx){
             '<div class="doc-icon">'+t.icon+'</div>'+
             '<div class="doc-body">'+
               '<div class="doc-type" style="color:'+t.color+'">'+esc(t.label)+'</div>'+
-              '<div class="doc-name">'+esc(d.name)+'</div>'+
+              '<div class="doc-name" title="'+esc(d.name)+'">'+esc(trTitle(d.name))+'</div>'+
               (ext?'<div class="doc-ext">.'+esc(ext)+'</div>':'')+
               '<div class="doc-actions">'+
                 '<a class="doc-btn preview" href="'+esc(previewUrl(d.url))+'" target="_blank" rel="noopener">👁 Aperçu</a>'+
