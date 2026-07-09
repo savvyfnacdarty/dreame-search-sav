@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Recherche GEM &amp; TV — Drive constructeur Dreame</title>
 <style>
 /* ── TOKENS ── */
@@ -295,6 +298,7 @@ let CATEGORIES = [];     // catégories nettoyées distinctes
 let ACTIVE_CAT = null;   // filtre catégorie
 let CURRENT_VIEW = 'search';
 let LAST_QUERY = '';
+let LAST_MODIFIED = '';   // date de dernière modif du catalogue (header Last-Modified)
 
 // ══════════════════════════════════════════════════════
 //  UTILITAIRES
@@ -492,8 +496,11 @@ function buildIndex(aoa){
 // ══════════════════════════════════════════════════════
 async function loadFromUrl(url){
   const controller=new AbortController();const tid=setTimeout(()=>controller.abort(),12000);
-  const resp=await fetch(url,{signal:controller.signal});clearTimeout(tid);
+  // Anti-cache : paramètre unique + no-store pour toujours récupérer la version en ligne
+  const bust=url+(url.includes('?')?'&':'?')+'_='+Date.now();
+  const resp=await fetch(bust,{signal:controller.signal,cache:'no-store'});clearTimeout(tid);
   if(!resp.ok) throw new Error('HTTP '+resp.status);
+  LAST_MODIFIED=resp.headers.get('Last-Modified')||'';
   let aoa;
   if(/\.(xlsx|xls|xlsm)(\?|$)/i.test(url)){
     await ensureSheetJS();
@@ -509,7 +516,12 @@ function applyIndex(res,src){
   ENTRIES=res.entries; CATEGORIES=res.cats; ACTIVE_CAT=null;
   const nbProd=ENTRIES.filter(e=>e.isProduct).length;
   const badge=document.getElementById('catalogBadge');
-  badge.className='badge'; badge.textContent='✅ '+nbProd+' produits · '+ENTRIES.length+' dossiers';
+  badge.className='badge'; badge.style.cursor='pointer';
+  let maj='';
+  if(LAST_MODIFIED){ const d=new Date(LAST_MODIFIED); if(!isNaN(d)) maj=' · MàJ '+d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'2-digit'}); }
+  badge.textContent='✅ '+nbProd+' produits'+maj;
+  badge.title='Catalogue synchronisé'+(LAST_MODIFIED?(' — dernière mise à jour : '+new Date(LAST_MODIFIED).toLocaleString('fr-FR')):'')+' · Cliquer pour re-synchroniser';
+  badge.onclick=()=>{ badge.className='badge loading'; badge.textContent='🔄 Synchronisation…'; badge.title=''; autoLoad(); };
   renderCatBar();
   if(CURRENT_VIEW==='search') doSearch();
   return nbProd;

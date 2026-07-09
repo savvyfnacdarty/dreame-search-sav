@@ -120,6 +120,17 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);min-heigh
 .tile-desc{font-size:12.5px;color:var(--text-2);line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;flex:1;}
 .tile-qty{display:inline-block;margin-top:6px;padding:2px 9px;border-radius:10px;background:var(--surface-3);border:1px solid var(--border);font-size:11px;font-weight:700;color:var(--muted);align-self:flex-start;}
 .no-tiles-msg{grid-column:1/-1;padding:56px 24px;text-align:center;color:var(--muted);font-size:13px;}
+.tile-repere{display:inline-block;margin-top:5px;padding:2px 9px;border-radius:10px;background:var(--accent-yellow-glow);border:1px solid var(--fd-yellow);color:#9a6a00;font-size:11px;font-weight:700;align-self:flex-start;font-family:var(--font-mono);}
+[data-theme="dark"] .tile-repere{color:var(--fd-yellow);}
+
+/* ── Panneau vue éclatée ── */
+.diagram-panel{background:var(--surface);border:1.5px solid var(--fd-yellow);border-radius:var(--r-lg);padding:14px 16px;margin:16px 0;box-shadow:var(--shadow-sm);}
+.diagram-head{font-family:var(--font-cond);font-size:15px;font-weight:700;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.dg-count{background:var(--fd-red);color:#fff;font-size:11px;font-weight:700;padding:1px 8px;border-radius:10px;}
+.dg-hint{font-family:var(--font-ui);font-size:12px;font-weight:500;color:var(--muted);}
+.diagram-imgs{display:flex;gap:12px;overflow-x:auto;padding-bottom:4px;}
+.diagram-imgs img{max-height:380px;max-width:100%;object-fit:contain;background:#fff;border:1px solid var(--rule);border-radius:var(--r-md);cursor:zoom-in;transition:transform .15s,border-color .15s;}
+.diagram-imgs img:hover{transform:scale(1.01);border-color:var(--fd-red);}
 
 /* ── Vue tableau ── */
 .full-table-wrap{overflow-x:auto;border-radius:var(--r-md);box-shadow:var(--shadow-sm);border:1px solid var(--border);max-height:70vh;overflow-y:auto;}
@@ -280,6 +291,8 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);min-heigh
     <button class="btn-raw" id="btnShowRaw" onclick="showRawView()">📊 Mode secours — Tableau Excel brut</button>
   </div>
 
+  <div id="diagramPanel" class="diagram-panel" style="display:none;"></div>
+
   <div id="normalView" style="display:none;">
     <div class="toolbar">
       <div class="search-wrap">
@@ -385,6 +398,7 @@ function loadJSZip(){return new Promise((resolve,reject)=>{if(typeof JSZip!=='un
 let allRows=[],filteredRows=[];
 let currentSort='photo',viewMode='tiles';
 let currentWorkbook=null,currentEmbedded={},currentFileName='';
+let currentDiagrams=[];
 let toastTimer=null;
 let fbRawData=[],fbRawHeaders=[],fbRawImgs={},fbRawImgCol=-1;
 let rawSheetData=[],rawSheetImgs={},rawSheetImgCol=-1,rawSheetName='';
@@ -449,25 +463,37 @@ async function extractImages(arrayBuffer){
         const iM=m[0].match(/\bId="([^"]+)"/), tM=m[0].match(/\bTarget="([^"]+)"/);
         if(iM&&tM) drRels[iM[1]]=tM[1].split('/').pop();
       }
-      const rowMap={}, colCount={};
+      const rowMap={}, colCount={}, diagrams=[];
+      const EMU=9525; // EMU par pixel
       const ancRe=/<xdr:(twoCellAnchor|oneCellAnchor|absoluteAnchor)\b[^>]*>([\s\S]*?)<\/xdr:\1>/g;
       let am;
       while((am=ancRe.exec(drXml))!==null){
         const inner=am[2];
-        const rowM=inner.match(/<xdr:from>[\s\S]*?<xdr:row>(\d+)<\/xdr:row>/);
-        const colM=inner.match(/<xdr:from>[\s\S]*?<xdr:col>(\d+)<\/xdr:col>/);
+        const fromM=inner.match(/<xdr:from>[\s\S]*?<xdr:col>(\d+)<\/xdr:col>[\s\S]*?<xdr:row>(\d+)<\/xdr:row>/);
         const blipM=inner.match(/(?:r|relationships):embed="([^"]+)"/);
-        if(!rowM||!blipM) continue;
-        const row=parseInt(rowM[1],10), fname=drRels[blipM[1]];
-        if(fname&&mediaMap[fname]){
+        if(!fromM||!blipM) continue;
+        const fromCol=parseInt(fromM[1],10), row=parseInt(fromM[2],10), fname=drRels[blipM[1]];
+        if(!fname||!mediaMap[fname]) continue;
+        // Taille (a:ext en EMU) et étendue (nb de cellules couvertes)
+        let w=0,h=0;
+        const extM=inner.match(/<a:ext\b[^>]*cx="(\d+)"[^>]*cy="(\d+)"/);
+        if(extM){ w=parseInt(extM[1],10)/EMU; h=parseInt(extM[2],10)/EMU; }
+        let cs=0,rs=0;
+        const toM=inner.match(/<xdr:to>[\s\S]*?<xdr:col>(\d+)<\/xdr:col>[\s\S]*?<xdr:row>(\d+)<\/xdr:row>/);
+        if(toM){ cs=parseInt(toM[1],10)-fromCol; rs=parseInt(toM[2],10)-row; }
+        // Grande image couvrant plusieurs colonnes/lignes = schéma / vue éclatée
+        const isDiagram = cs>=3 || rs>=6 || w>=700 || h>=500;
+        if(isDiagram){
+          diagrams.push({src:mediaMap[fname], w:Math.round(w), h:Math.round(h)});
+        } else {
           rowMap[row]=mediaMap[fname];
-          if(colM){const c=parseInt(colM[1],10); colCount[c]=(colCount[c]||0)+1;}
+          colCount[fromCol]=(colCount[fromCol]||0)+1;
         }
       }
-      // Colonne images = colonne la plus fréquente parmi les ancres
+      // Colonne images = colonne la plus fréquente parmi les vignettes (schémas exclus)
       let imgCol=-1, bestN=0;
       for(const c in colCount){ if(colCount[c]>bestN){bestN=colCount[c]; imgCol=parseInt(c,10);} }
-      if(Object.keys(rowMap).length) out[s.name]={rows:rowMap,col:imgCol};
+      if(Object.keys(rowMap).length||diagrams.length) out[s.name]={rows:rowMap,col:imgCol,diagrams:diagrams};
     }
     return out;
   }catch(e){console.warn('extractImages failed:',e);return {};}
@@ -480,12 +506,13 @@ const KW={
   qty:['数量','件数','qty','quantity','quantité','quantite','qte','nb','nombre','number in','count','pieces','pcs'],
   level:['等级','维修等级','修复等级','备注','level','repair level','repair','niveau','remark','note','attribute'],
   img:['图片','照片','图像','image','photo','picture','img','visuel','illustration'],
+  expl:['爆炸图序号','爆炸图','分解图序号','分解图','exploded view num','exploded view no','exploded view number','exploded view','exploded','repère','repere','callout','no. on drawing','item no on'],
 };
 function normalize(s){return String(s).replace(/[\r\n]+/g,' ').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').trim();}
 function fuzzyDetect(rawData){
   let best={headerRow:-1,colMap:null,score:0};
   for(let r=0;r<Math.min(30,rawData.length);r++){
-    const row=rawData[r]; const cm={ref:-1,desc1:-1,desc2:-1,qty:-1,level:-1,img:-1}; let score=0;
+    const row=rawData[r]; const cm={ref:-1,desc1:-1,desc2:-1,qty:-1,level:-1,img:-1,expl:-1}; let score=0;
     for(let c=0;c<row.length;c++){
       const v=normalize(String(row[c]||'')); if(!v||v.length>120) continue;
       for(const [key,kws] of Object.entries(KW)){
@@ -496,6 +523,7 @@ function fuzzyDetect(rawData){
         else if(key==='qty'&&cm.qty===-1){cm.qty=c;score+=2;break;}
         else if(key==='level'&&cm.level===-1){cm.level=c;score+=1;break;}
         else if(key==='img'&&cm.img===-1){cm.img=c;score+=1;break;}
+        else if(key==='expl'&&cm.expl===-1){cm.expl=c;score+=1;break;}
       }
     }
     if(score>=4&&cm.ref!==-1&&score>best.score) best={headerRow:r,colMap:{...cm},score};
@@ -514,7 +542,7 @@ function sortRows(){
 /* ═══ TUILES ═══ */
 function applyFilter(){
   const q=normalize(document.getElementById('bomSearch').value);
-  filteredRows=q?allRows.filter(r=>normalize(r.ref).includes(q)||normalize(r.desc).includes(q)||normalize(r.desc2||'').includes(q)||(r.extra||[]).some(([,v])=>normalize(v).includes(q))):[...allRows];
+  filteredRows=q?allRows.filter(r=>normalize(r.ref).includes(q)||normalize(r.desc).includes(q)||normalize(r.desc2||'').includes(q)||normalize(r.expl||'').includes(q)||(r.extra||[]).some(([,v])=>normalize(v).includes(q))):[...allRows];
   document.getElementById('statsBadge').textContent=`${filteredRows.length} / ${allRows.length} pièce(s)`;
 }
 function renderTiles(){
@@ -531,6 +559,7 @@ function renderTiles(){
     const refEl=document.createElement('div'); refEl.className='tile-ref'; refEl.textContent=row.ref;
     const descEl=document.createElement('div'); descEl.className='tile-desc'; descEl.textContent=row.desc||'—';
     body.appendChild(refEl); body.appendChild(descEl);
+    if(row.expl){const rp=document.createElement('span'); rp.className='tile-repere'; rp.textContent='⊙ Repère '+row.expl; body.appendChild(rp);}
     if(row.qty){const q=document.createElement('span'); q.className='tile-qty'; q.textContent='Qté : '+row.qty; body.appendChild(q);}
     card.appendChild(body);
     card.addEventListener('click',()=>openModal(i));
@@ -541,6 +570,7 @@ function renderTiles(){
 /* ═══ TABLEAU PARSÉ ═══ */
 function getTableColumns(){
   const cols=[{key:'imgSrc',label:'Photo',type:'img'},{key:'ref',label:'Référence',type:'ref'},{key:'desc',label:'Désignation',type:'text'}];
+  if(allRows.some(r=>r.expl)) cols.splice(2,0,{key:'expl',label:'Repère',type:'text'});
   if(allRows.some(r=>r.desc2)) cols.push({key:'desc2',label:'Désig. ZH/EN',type:'text'});
   if(allRows.some(r=>r.qty)) cols.push({key:'qty',label:'Qté',type:'text'});
   if(allRows.some(r=>r.level)) cols.push({key:'level',label:'Niveau',type:'text'});
@@ -571,6 +601,19 @@ function renderFullTable(){
     tbody.appendChild(tr);
   });
 }
+/* ═══ PANNEAU VUE ÉCLATÉE ═══ */
+function renderDiagrams(){
+  const p=document.getElementById('diagramPanel');
+  if(!p) return;
+  if(!currentDiagrams||!currentDiagrams.length){ p.style.display='none'; p.innerHTML=''; return; }
+  const n=currentDiagrams.length, pl=n>1?'s':'';
+  p.style.display='block';
+  p.innerHTML='<div class="diagram-head">🧩 Vue'+pl+' éclatée'+pl+' <span class="dg-count">'+n+'</span>'+
+    '<span class="dg-hint">— cliquez pour agrandir et lire les repères</span></div>'+
+    '<div class="diagram-imgs">'+currentDiagrams.map((d,i)=>'<img src="'+d.src+'" alt="Vue éclatée '+(i+1)+'" title="Cliquer pour agrandir">').join('')+'</div>';
+  p.querySelectorAll('.diagram-imgs img').forEach(img=>img.addEventListener('click',()=>openLightbox(img.src)));
+}
+
 function switchView(mode){
   viewMode=mode;
   document.getElementById('btnTiles').classList.toggle('active',mode==='tiles');
@@ -666,7 +709,7 @@ function openModal(filteredIdx){
   else{imgEl.style.display='none';imgEl.onclick=null;noImgEl.style.display='flex';}
   document.getElementById('modalRef').textContent=row.ref;
   document.getElementById('modalCopyBtn').onclick=()=>copyToClipboard(row.ref);
-  const items=[['Désignation',row.desc||'—','full'],row.desc2?['Désignation (ZH/EN)',row.desc2,'full']:null,row.qty?['Quantité',row.qty,'']:null,row.level?['Niveau de réparation',row.level,'']:null,...(row.extra||[]).map(([k,v])=>[k,v,''])].filter(Boolean);
+  const items=[['Désignation',row.desc||'—','full'],row.desc2?['Désignation (ZH/EN)',row.desc2,'full']:null,row.expl?['Repère (vue éclatée)',row.expl,'']:null,row.qty?['Quantité',row.qty,'']:null,row.level?['Niveau de réparation',row.level,'']:null,...(row.extra||[]).map(([k,v])=>[k,v,''])].filter(Boolean);
   document.getElementById('modalFields').innerHTML=items.map(([label,value,cls])=>`<div class="modal-field ${cls}"><div class="modal-field-label">${escHtml(label)}</div><div class="modal-field-value">${escHtml(value||'—')}</div></div>`).join('');
   document.getElementById('partModal').classList.add('active');
   document.body.style.overflow='hidden';
@@ -729,9 +772,10 @@ function parseSheet(sheetName){
   try{
     const sheet=currentWorkbook.Sheets[sheetName];
     const rawData=XLSX.utils.sheet_to_json(sheet,{header:1,defval:''});
-    const emb=currentEmbedded[sheetName]||{rows:{},col:-1};
+    const emb=currentEmbedded[sheetName]||{rows:{},col:-1,diagrams:[]};
     const sheetImgs=emb.rows||{}; const imgCol=(emb.col==null?-1:emb.col);
     rawSheetData=rawData; rawSheetImgs=sheetImgs; rawSheetImgCol=imgCol; rawSheetName=sheetName;
+    currentDiagrams=emb.diagrams||[]; renderDiagrams();
     document.getElementById('rawHint').classList.add('active');
     colFilters=[];
     const detection=fuzzyDetect(rawData);
@@ -756,10 +800,11 @@ function parseSheet(sheetName){
       if(desc.match(/[一-鿿]/)&&desc2&&!desc2.match(/[一-鿿]/)) [desc,desc2]=[desc2,desc];
       const qty=colMap.qty!==-1?String(row[colMap.qty]||'').trim():'';
       const level=colMap.level!==-1?String(row[colMap.level]||'').trim():'';
-      const usedCols=new Set([colMap.ref,colMap.desc1,colMap.desc2,colMap.qty,colMap.level,colMap.img].filter(c=>c!==-1));
+      const expl=(colMap.expl!=null&&colMap.expl!==-1)?String(row[colMap.expl]||'').split(/[\r\n]+/)[0].trim():'';
+      const usedCols=new Set([colMap.ref,colMap.desc1,colMap.desc2,colMap.qty,colMap.level,colMap.img,colMap.expl].filter(c=>c!=null&&c!==-1));
       const extra=[];
       rawHeaders.forEach((h,c)=>{if(!usedCols.has(c)&&h&&String(row[c]||'').trim())extra.push([String(h).trim(),String(row[c]).trim()]);});
-      allRows.push({ref,desc,desc2,qty,level,imgSrc:sheetImgs[r]||null,extra});
+      allRows.push({ref,desc,desc2,qty,level,expl,imgSrc:sheetImgs[r]||null,extra});
     }
     currentSort='photo'; document.getElementById('sortSelect').value='photo';
     allRows.sort((a,b)=>(b.imgSrc?1:0)-(a.imgSrc?1:0));
@@ -799,7 +844,8 @@ function hideResults(){
   document.getElementById('rawHint').classList.remove('active');
   document.getElementById('btnShowRaw').classList.remove('active-raw');
   document.getElementById('btnShowRaw').textContent='📊 Mode secours — Tableau Excel brut';
-  allRows=[]; filteredRows=[];
+  const dp=document.getElementById('diagramPanel'); if(dp){dp.style.display='none';dp.innerHTML='';}
+  currentDiagrams=[]; allRows=[]; filteredRows=[];
 }
 function showDetectBanner(ok,title,colMap,rawHeaders,imgCol){
   const banner=document.getElementById('detectBanner');
@@ -807,7 +853,7 @@ function showDetectBanner(ok,title,colMap,rawHeaders,imgCol){
   document.getElementById('detectTitle').textContent=title;
   const chips=document.getElementById('detectChips'); chips.innerHTML='';
   if(ok&&colMap&&rawHeaders){
-    const colNames={ref:'Référence',desc1:'Désignation',desc2:'Désig.2',qty:'Quantité',level:'Niveau',img:'Image'};
+    const colNames={ref:'Référence',expl:'Repère',desc1:'Désignation',desc2:'Désig.2',qty:'Quantité',level:'Niveau',img:'Image'};
     Object.entries(colNames).forEach(([k,label])=>{
       const idx=colMap[k]; if(idx===-1||idx==null) return;
       const chip=document.createElement('span'); chip.className='chip-col';
