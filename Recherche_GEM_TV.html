@@ -61,7 +61,19 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--
 .content-wrap{max-width:760px;width:100%;margin:0 auto;padding:20px 16px 60px;}
 .results-header{font-size:12px;color:var(--text-3);margin-bottom:10px;padding:0 2px;}
 .results-header b{color:var(--text-2);}
-.ri{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:var(--transition);box-shadow:0 1px 3px rgba(0,0,0,.04);}
+.ri-card{margin-bottom:8px;}
+.ri{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:var(--transition);box-shadow:0 1px 3px rgba(0,0,0,.04);}
+.ri.ri-hasbom{border-bottom-left-radius:0;border-bottom-right-radius:0;border-bottom-color:var(--accent-bd);}
+.ri-bom{display:flex;flex-direction:column;gap:6px;padding:8px 12px 10px;background:var(--accent-bg);border:1px solid var(--accent-bd);border-top:none;border-radius:0 0 var(--radius) var(--radius);}
+.ri-bom-item{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.ri-bom-ic{font-size:14px;flex-shrink:0;}
+.ri-bom-name{flex:1;min-width:120px;font-size:12px;font-weight:600;color:#92400E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ri-bom-btn{flex-shrink:0;padding:5px 11px;border-radius:7px;font-size:11px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:4px;transition:var(--transition);}
+.ri-bom-btn.preview{background:var(--blue-bg);color:var(--blue-text);border:1px solid var(--blue-bd);}
+.ri-bom-btn.preview:hover{background:#DBEAFE;}
+.ri-bom-btn.dl{background:var(--accent);color:#1a1a1a;border:1px solid var(--accent);}
+.ri-bom-btn.dl:hover{background:var(--accent-h);}
+.ri-bom-more{font-size:11px;color:#92400E;opacity:.85;padding-top:2px;}
 .ri:hover{border-color:var(--accent);box-shadow:var(--shadow);transform:translateY(-1px);}
 .ri-avatar{width:40px;height:40px;background:var(--accent-bg);border:1px solid var(--accent-bd);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
 .ri-avatar.res{background:var(--blue-bg);border-color:var(--blue-bd);}
@@ -208,8 +220,9 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--
 //  CONFIG — à personnaliser
 // ══════════════════════════════════════════════════════
 // URL du fichier catalogue hébergé sur GitHub Pages (export du Drive).
-// Remplace par ton URL réelle (ex : https://savvyfnacdarty.github.io/gem-tv-search/Recherche_GEM_TV_catalogue.csv)
-const GITHUB_CATALOG_URL = 'Recherche_GEM_TV_catalogue.csv';
+// Remplace par ton URL réelle (ex : https://savvyfnacdarty.github.io/gem-tv-search/Export_GEM_TV_Drive.xlsx)
+// Accepte un .xlsx (feuille "Export" ciblée automatiquement) ou un .csv.
+const GITHUB_CATALOG_URL = 'Export_GEM_TV_Drive.xlsx';
 const SHEETJS_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
 
 // ── Détection des références produit ──
@@ -318,7 +331,7 @@ function previewUrl(url){const id=driveId(url);if(!id)return url;const k=docKind
 function downloadUrl(url){const id=driveId(url);if(!id)return url;return 'https://drive.google.com/uc?export=download&id='+id;}
 function stripCJK(s){return String(s).replace(/[　-鿿＀-￯]/g,'').replace(/\s{2,}/g,' ').trim().replace(/[_\-·&]+$/,'').replace(/^[_\-·&\s]+/,'').trim();}
 // Nettoie un libellé de catégorie : garde les segments (séparés par _) contenant du latin
-function cleanCat(raw){const keep=String(raw).split('_').map(s=>s.trim()).filter(s=>/[A-Za-z]/.test(s));return (keep.join(' ')||stripCJK(raw)||raw).replace(/\s{2,}/g,' ').trim();}
+function cleanCat(raw){const keep=String(raw).split('_').map(s=>s.trim()).filter(s=>/[A-Za-z]/.test(s));return (stripCJK(keep.join(' '))||stripCJK(raw)||raw).replace(/\s{2,}/g,' ').trim();}
 function loadScript(url){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=url;s.onload=res;s.onerror=()=>rej(new Error('CDN '+url));document.head.appendChild(s);});}
 async function ensureSheetJS(){if(typeof XLSX==='undefined')await loadScript(SHEETJS_CDN);}
 
@@ -358,6 +371,21 @@ function guessType(nom){
 // ══════════════════════════════════════════════════════
 //  PARSEUR CSV (RFC 4180 léger)
 // ══════════════════════════════════════════════════════
+// Choisit la bonne feuille d'un classeur xlsx : "Export" en priorité,
+// sinon la 1re feuille contenant un en-tête Chemin/Nom (ignore "Feuille 1" vide, files cachées…)
+function pickCatalogSheet(wb){
+  const byName=wb.SheetNames.find(n=>/^export$/i.test(n));
+  if(byName) return byName;
+  for(const n of wb.SheetNames){
+    const a=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:''});
+    for(let i=0;i<Math.min(a.length,6);i++){
+      const row=(a[i]||[]).map(x=>String(x).toLowerCase());
+      if(row.some(x=>x.includes('chemin')||x==='path')&&row.some(x=>x==='nom'||x==='name')) return n;
+    }
+  }
+  return wb.SheetNames[0];
+}
+
 function parseCSV(text){
   if(text.charCodeAt(0)===0xFEFF)text=text.slice(1); // BOM
   const rows=[];let row=[],cur='',q=false;
@@ -425,32 +453,31 @@ function buildIndex(aoa){
     const raw=seg.length>=2?seg[1]:(seg[0]||'');
     return {raw, clean:cleanCat(raw)};
   }
-  // référence(s) contenue(s) dans un nom de dossier produit
+  // référence(s) contenue(s) dans un nom de dossier produit -> {refs, name} ou null
   function refsOf(nom){
+    // 1) codes entre crochets chinois : 【GE2505&GE2605】 A4000&B4000 , 【P2225】A1
+    const b=nom.match(/^【([^】]+)】\s*(.*)$/);
+    if(b){
+      const refs=b[1].split(/[&+、,，\s]+/).map(s=>s.trim()).filter(Boolean);
+      if(refs.length) return {refs:refs, name:(b[2]||b[1])};
+    }
+    // 2) ancien format : code(s) avant le premier '_'  (TDL2510AB_… , XB2527+…)
     const head=nom.split('_')[0];
     const parts=head.split('+').map(s=>s.trim());
-    if(parts.length&&parts.every(p=>REF_RE.test(p))) return parts;
+    if(parts.length&&parts.every(p=>REF_RE.test(p))) return {refs:parts, name:nom.slice(head.length).replace(/^_+/,'')};
     return null;
   }
-  function commercial(nom,refs){
-    // enlève le segment de tête (les refs) puis nettoie
-    let rest=nom;
-    const head=nom.split('_')[0];
-    if(refs) rest=nom.slice(head.length).replace(/^_+/,'');
-    rest=rest.replace(/_/g,' · ');
-    const clean=stripCJK(rest);
-    return clean||stripCJK(nom)||nom;
-  }
+  function commName(raw){ const c=stripCJK(String(raw).replace(/_/g,' · ')); return c||stripCJK(raw)||String(raw); }
 
   // 1) entrées PRODUIT (dossiers avec référence)
   const entriesByPath={};
   for(const f of folders){
-    const refs=refsOf(f.nom);
-    if(!refs) continue;
+    const ro=refsOf(f.nom);
+    if(!ro) continue;
     const c=catOf(f.full);
     entriesByPath[f.full]={
-      isProduct:true, path:f.full, refs, refStr:refs.join(' / '),
-      name:commercial(f.nom,refs), rawName:f.nom,
+      isProduct:true, path:f.full, refs:ro.refs, refStr:ro.refs.join(' / '),
+      name:commName(ro.name)||f.nom, rawName:f.nom,
       cat:c.clean, catRaw:c.raw, folderUrl:f.lien, docs:[]
     };
   }
@@ -505,7 +532,7 @@ async function loadFromUrl(url){
   if(/\.(xlsx|xls|xlsm)(\?|$)/i.test(url)){
     await ensureSheetJS();
     const wb=XLSX.read(await resp.arrayBuffer(),{type:'array'});
-    aoa=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:''});
+    aoa=XLSX.utils.sheet_to_json(wb.Sheets[pickCatalogSheet(wb)],{header:1,defval:''});
   }else{
     aoa=parseCSV(await resp.text());
   }
@@ -590,13 +617,38 @@ function doSearch(){
         nb>0?'<span class="tag docs">'+nb+' doc'+(nb>1?'s':'')+'</span>':''
       ].filter(Boolean).join('');
       const openBtn=e.folderUrl?'<a class="ri-action" href="'+esc(e.folderUrl)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">📂 Drive</a>':'';
-      return '<div class="ri" onclick="openDetail('+idx+')">'+
-        '<div class="ri-avatar'+(e.isProduct?'':' res')+'">'+(e.isProduct?'📦':'📁')+'</div>'+
-        '<div class="ri-info">'+
-          '<div class="ri-name" title="'+esc(e.name||e.rawName)+'">'+hl(trTitle(e.name||e.rawName),q)+'</div>'+
-          (e.refStr?'<div class="ri-ref">'+hl(e.refStr,q)+'</div>':'')+
-          '<div class="ri-tags">'+tags+'</div>'+
-        '</div>'+openBtn+'</div>';
+      // Documents à afficher sous le résultat :
+      //  - si recherche texte : les fichiers dont le NOM correspond (toutes les BOM en plus)
+      //  - sinon : uniquement la/les BOM du dossier
+      const toks=q?q.split(/\s+/).filter(Boolean):[];
+      const boms=e.docs.filter(d=>d.type==='bom');
+      let show;
+      if(toks.length){
+        const matched=e.docs.filter(d=>{const hh=(d.name+' '+trTitle(d.name)).toLowerCase();return toks.every(t=>hh.includes(t));});
+        const set=new Set(matched);
+        show=matched.concat(boms.filter(b=>!set.has(b)));
+      } else { show=boms; }
+      const MAXD=6, extra=show.length-MAXD, shown=show.slice(0,MAXD);
+      const docHtml=shown.map(d=>{
+        const t=(DOC_TYPES[d.type]||DOC_TYPES.other);
+        return '<div class="ri-bom-item">'+
+          '<span class="ri-bom-ic">'+t.icon+'</span>'+
+          '<span class="ri-bom-name" title="'+esc(d.name)+'">'+hl(trTitle(d.name),q)+'</span>'+
+          '<a class="ri-bom-btn preview" href="'+esc(previewUrl(d.url))+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">👁 Aperçu</a>'+
+          '<a class="ri-bom-btn dl" href="'+esc(downloadUrl(d.url))+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">⬇ Télécharger</a>'+
+        '</div>';
+      }).join('')+(extra>0?'<div class="ri-bom-more">+ '+extra+' autre'+(extra>1?'s':'')+' document'+(extra>1?'s':'')+' — cliquer pour ouvrir le dossier</div>':'');
+      return '<div class="ri-card">'+
+        '<div class="ri'+(show.length?' ri-hasbom':'')+'" onclick="openDetail('+idx+')">'+
+          '<div class="ri-avatar'+(e.isProduct?'':' res')+'">'+(e.isProduct?'📦':'📁')+'</div>'+
+          '<div class="ri-info">'+
+            '<div class="ri-name" title="'+esc(e.name||e.rawName)+'">'+hl(trTitle(e.name||e.rawName),q)+'</div>'+
+            (e.refStr?'<div class="ri-ref">'+hl(e.refStr,q)+'</div>':'')+
+            '<div class="ri-tags">'+tags+'</div>'+
+          '</div>'+openBtn+
+        '</div>'+
+        (show.length?'<div class="ri-bom">'+docHtml+'</div>':'')+
+      '</div>';
     }).join('');
 }
 
@@ -673,7 +725,7 @@ async function handleCatalogFile(file){
     if(/\.(xlsx|xls|xlsm)$/i.test(file.name)){
       await ensureSheetJS();
       const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});
-      aoa=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:''});
+      aoa=XLSX.utils.sheet_to_json(wb.Sheets[pickCatalogSheet(wb)],{header:1,defval:''});
     }else{
       aoa=parseCSV(await file.text());
     }
