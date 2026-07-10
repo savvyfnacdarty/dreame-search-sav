@@ -23,6 +23,32 @@
 .sync-loading{color:var(--muted);background:rgba(120,120,120,.10);border-color:rgba(120,120,120,.25)}
 .sync-ok{color:#1f9d55;background:rgba(72,187,120,.12);border-color:rgba(72,187,120,.35)}
 .sync-fallback{color:#c05621;background:rgba(221,107,32,.12);border-color:rgba(221,107,32,.35)}
+.calib-status{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:14px;padding-top:12px;border-top:1px dashed rgba(128,128,128,.3)}
+.calib-status-label{font-size:.8rem;font-weight:700;color:var(--muted)}
+.st-btn{cursor:pointer;border:1px solid rgba(128,128,128,.35);background:transparent;color:inherit;font-size:.8rem;font-weight:600;padding:6px 12px;border-radius:8px;transition:.15s}
+.st-btn:hover{transform:translateY(-1px)}
+.st-done-btn.sel{background:#48bb78;border-color:#48bb78;color:#fff}
+.st-na-btn.sel{background:#a0aec0;border-color:#a0aec0;color:#fff}
+.st-blocked-btn.sel{background:#dd6b20;border-color:#dd6b20;color:#fff}
+.calib-status-badge{font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:12px;margin-left:auto;white-space:nowrap}
+.calib-status-badge:empty{display:none}
+.calib-status-badge.b-done{background:rgba(72,187,120,.18);color:#1f9d55}
+.calib-status-badge.b-na{background:rgba(160,174,192,.25);color:#5a6472}
+.calib-status-badge.b-blocked{background:rgba(221,107,32,.18);color:#c05621}
+.calib-item.status-done>.calib-btn{border-left:4px solid #48bb78}
+.calib-item.status-na>.calib-btn{border-left:4px solid #a0aec0}
+.calib-item.status-blocked>.calib-btn{border-left:4px solid #dd6b20}
+.card-actions button.action-btn{font:inherit;cursor:pointer;border:none}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:1000;padding:16px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--card,#fff);color:inherit;border-radius:14px;padding:22px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.modal h3{margin:0 0 4px}
+.modal-sub{margin:0 0 16px;color:var(--muted);font-weight:600;font-size:.9rem}
+.modal label{display:block;font-size:.82rem;font-weight:700;margin-bottom:12px;color:var(--muted)}
+.modal label input{display:block;width:100%;margin-top:5px;padding:9px 11px;border:1px solid rgba(128,128,128,.4);border-radius:8px;font-size:.95rem;box-sizing:border-box;background:transparent;color:inherit}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:6px}
+.btn-ghost{cursor:pointer;background:transparent;border:1px solid rgba(128,128,128,.4);padding:9px 16px;border-radius:8px;font-weight:600;color:inherit}
+.btn-primary{cursor:pointer;background:var(--fd-red,#c9202a);border:none;color:#fff;padding:9px 18px;border-radius:8px;font-weight:700}
 .results{max-width:900px;margin:20px auto 40px;padding:0 16px}
 .no-results{text-align:center;padding:60px 20px;color:var(--muted)}
 .no-results .icon{font-size:3rem;margin-bottom:12px}
@@ -185,6 +211,8 @@
 <div id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script>
 /* ── Dark mode (repris de la page d'accueil — même clé localStorage, thème partagé entre les pages) ── */
 const LS_THEME = 'fd_sav_theme';
@@ -380,19 +408,28 @@ function renderProcedure(key, robot){
   return html;
 }
 
+function _statusBar(){
+  return `<div class="calib-status">
+      <span class="calib-status-label">Statut :</span>
+      <button type="button" class="st-btn st-done-btn" onclick="setCalibStatus(this,'done')">✅ Effectué</button>
+      <button type="button" class="st-btn st-na-btn" onclick="setCalibStatus(this,'na')">➖ Non concerné</button>
+      <button type="button" class="st-btn st-blocked-btn" onclick="setCalibStatus(this,'blocked')">⚠️ Non réalisable</button>
+    </div>`;
+}
 function makeCalibItem(id, icon, label, isRequired, note, robot){
   const tag = isRequired ? '<span class="tag tag-req">✅ Requis</span>' : '';
   const noteHtml = note ? `<span class="calib-note">${note}</span>` : '';
   const proc = renderProcedure(id, robot);
   const canExpand = isRequired;
-  return `<div class="calib-item ${!isRequired?'not-required':''}">
+  return `<div class="calib-item ${!isRequired?'not-required':''} ${isRequired?'trackable':''}" ${isRequired?`data-calib="${escHtml(label)}" data-status=""`:''}>
     <button class="calib-btn ${isRequired?'required':''}" onclick="${canExpand?'toggleCalib(this)':''}">
       <span class="calib-icon">${icon}</span>
       <span class="calib-name">${label}${tag}</span>
       ${noteHtml}
+      ${isRequired?'<span class="calib-status-badge"></span>':''}
       ${canExpand?'<span class="calib-arrow">▶</span>':''}
     </button>
-    ${canExpand?`<div class="calib-content">${proc}</div>`:''}
+    ${canExpand?`<div class="calib-content">${proc}${_statusBar()}</div>`:''}
   </div>`;
 }
 
@@ -433,14 +470,15 @@ function makeLdsItem(robot){
   if(robot.lds_y) vals.push(`Y: ${robot.lds_y}`);
   const noteHtml = vals.length ? `<span class="calib-note">${vals.join(' · ')}</span>` : '';
   const proc = renderProcedure('lds', robot);
-  return `<div class="calib-item">
+  return `<div class="calib-item trackable" data-calib="Calibration LDS" data-status="">
     <button class="calib-btn lds-values" onclick="toggleCalib(this)">
       <span class="calib-icon">📡</span>
       <span class="calib-name">Calibration LDS${tag}</span>
       ${noteHtml}
+      <span class="calib-status-badge"></span>
       <span class="calib-arrow">▶</span>
     </button>
-    <div class="calib-content">${proc}</div>
+    <div class="calib-content">${proc}${_statusBar()}</div>
   </div>`;
 }
 
@@ -471,10 +509,11 @@ function renderRobot(robot, idx){
   let actions = '';
   if(links.sharepoint) actions += `<a class="action-btn" href="${links.sharepoint}" target="_blank" rel="noopener">📂 SharePoint</a>`;
   if(links.bom) actions += `<a class="action-btn" href="${links.bom}" target="_blank" rel="noopener">📋 Charger BOM</a>`;
-  const actionsRow = actions ? `<div class="card-actions">${actions}</div>` : '';
+  actions += `<button type="button" class="action-btn report-btn" onclick="openReport('${id}')">📄 Générer un rapport PDF</button>`;
+  const actionsRow = `<div class="card-actions">${actions}</div>`;
 
   // Fiche repliée par défaut : clic sur l'en-tête pour ouvrir/fermer l'ensemble
-  return `<div class="robot-card" id="${id}">
+  return `<div class="robot-card" id="${id}" data-model="${escHtml(robot.model)}" data-code="${escHtml(robot.code)}">
     <div class="robot-header" onclick="toggleCard(this)">
       <span class="name">🤖 ${robot.model}</span>
       <span class="code">${robot.code}</span>
@@ -636,11 +675,132 @@ async function _syncFromExcel(){
 }
 _syncFromExcel();
 
+
+// ================== Statuts par calibrage + rapport PDF ==================
+let _reportCardId=null;
+function setCalibStatus(btn,status){
+  const item=btn.closest('.calib-item');
+  if(!item) return;
+  item.dataset.status=status;
+  item.classList.remove('status-done','status-na','status-blocked');
+  item.classList.add('status-'+status);
+  const badge=item.querySelector('.calib-status-badge');
+  const map={done:['✅ Effectué','b-done'],na:['➖ Non concerné','b-na'],blocked:['⚠️ Non réalisable','b-blocked']};
+  if(badge && map[status]){ badge.textContent=map[status][0]; badge.className='calib-status-badge '+map[status][1]; }
+  item.querySelectorAll('.st-btn').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+  const content=item.querySelector('.calib-content');
+  const arrow=item.querySelector('.calib-arrow');
+  if(content) content.classList.remove('open');
+  if(arrow) arrow.classList.remove('open');
+  openNextCalib(item);
+}
+function openNextCalib(item){
+  const card=item.closest('.robot-card');
+  if(!card) return;
+  const items=Array.prototype.slice.call(card.querySelectorAll('.calib-item.trackable'));
+  const idx=items.indexOf(item);
+  for(let i=idx+1;i<items.length;i++){
+    if(!items[i].dataset.status){
+      const c=items[i].querySelector('.calib-content');
+      const a=items[i].querySelector('.calib-arrow');
+      if(c) c.classList.add('open');
+      if(a) a.classList.add('open');
+      items[i].scrollIntoView({behavior:'smooth',block:'center'});
+      return;
+    }
+  }
+  if(typeof showToast==='function') showToast('✓ Tous les calibrages ont été renseignés');
+}
+function openReport(cardId){
+  _reportCardId=cardId;
+  const card=document.getElementById(cardId);
+  const model=card?card.dataset.model:'';
+  const code=card?card.dataset.code:'';
+  const lbl=document.getElementById('reportRobotLabel');
+  if(lbl) lbl.textContent='🤖 '+model+' · '+code;
+  document.getElementById('reportModal').classList.add('open');
+}
+function closeReport(){ const m=document.getElementById('reportModal'); if(m) m.classList.remove('open'); }
+function _statusLabel(s){ return s==='done'?'Effectué':s==='na'?'Non concerné':s==='blocked'?'Non réalisable':'Non renseigné'; }
+function generateReportPDF(){
+  const card=document.getElementById(_reportCardId);
+  if(!card){ closeReport(); return; }
+  if(!window.jspdf || !window.jspdf.jsPDF){ alert("Le module PDF n'a pas pu être chargé (vérifiez la connexion internet)."); return; }
+  const model=card.dataset.model||'', code=card.dataset.code||'';
+  const sn=(document.getElementById('rpSN').value||'').trim();
+  const dossier=(document.getElementById('rpDossier').value||'').trim();
+  const tech=(document.getElementById('rpTech').value||'').trim();
+  const rows=Array.prototype.slice.call(card.querySelectorAll('.calib-item.trackable')).map(function(it){
+    return [ it.dataset.calib||'', _statusLabel(it.dataset.status||'') ];
+  });
+  const jsPDF=window.jspdf.jsPDF;
+  const doc=new jsPDF({unit:'mm',format:'a4'});
+  const now=new Date();
+  const dstr=now.toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  doc.setFontSize(16); doc.setTextColor(20); doc.text('Rapport de calibration',14,18);
+  doc.setFontSize(10); doc.setTextColor(120); doc.text('Guide Calibration Dreame - Fnac Darty',14,24);
+  doc.setDrawColor(200); doc.line(14,27,196,27);
+  doc.setFontSize(11); doc.setTextColor(30);
+  let y=35;
+  const info=[
+    ['Produit', model+'  ('+code+')'],
+    ['N° de série (S/N)', sn||'—'],
+    ['N° de dossier', dossier||'—'],
+    ['N° Technicien(ne)', tech||'—'],
+    ['Date du rapport', dstr]
+  ];
+  info.forEach(function(kv){ doc.setFont(undefined,'bold'); doc.text(kv[0]+' :',14,y); doc.setFont(undefined,'normal'); doc.text(String(kv[1]),62,y); y+=7; });
+  doc.autoTable({
+    startY:y+3,
+    head:[['Calibrage','Statut']],
+    body: rows.length?rows:[['Aucun calibrage requis pour ce modèle','—']],
+    styles:{fontSize:10,cellPadding:2.6},
+    headStyles:{fillColor:[201,32,42],textColor:255},
+    columnStyles:{1:{cellWidth:48,halign:'center'}},
+    didParseCell:function(d){
+      if(d.section==='body' && d.column.index===1){
+        const t=d.cell.raw;
+        if(t==='Effectué') d.cell.styles.textColor=[31,157,85];
+        else if(t==='Non réalisable') d.cell.styles.textColor=[192,86,33];
+        else if(t==='Non concerné') d.cell.styles.textColor=[110,110,110];
+        else d.cell.styles.textColor=[150,150,150];
+        d.cell.styles.fontStyle='bold';
+      }
+    }
+  });
+  let fy=(doc.lastAutoTable?doc.lastAutoTable.finalY:y)+16;
+  if(fy>270) fy=270;
+  doc.setFontSize(9); doc.setTextColor(80);
+  doc.text('Signature technicien(ne) :',14,fy);
+  doc.setDrawColor(160); doc.line(62,fy,130,fy);
+  doc.setFontSize(8); doc.setTextColor(150);
+  doc.text('Document généré automatiquement le '+dstr,14,288);
+  const safe=function(s){ return String(s||'').replace(/[^0-9A-Za-z\-]+/g,'_').replace(/^_+|_+$/g,''); };
+  const fname='Rapport_calibration_'+(safe(model)||'produit')+(sn?('_'+safe(sn)):'')+'.pdf';
+  doc.save(fname);
+  closeReport();
+  if(typeof showToast==='function') showToast('📄 Rapport PDF généré');
+}
+
 document.getElementById('searchInput').addEventListener('keydown', e => {
   if(e.key==='Enter') doSearch();
   if(e.key==='Escape') clearSearch();
 });
 </script>
+<div id="reportModal" class="modal-overlay" onclick="if(event.target===this)closeReport()">
+  <div class="modal">
+    <h3>📄 Rapport de calibration</h3>
+    <p id="reportRobotLabel" class="modal-sub"></p>
+    <label>N° de série produit (S/N)<input id="rpSN" type="text" autocomplete="off" placeholder="Ex: 1A2B3C4D5E"></label>
+    <label>N° de dossier<input id="rpDossier" type="text" autocomplete="off" placeholder="Ex: DOS-123456"></label>
+    <label>N° Technicien(ne)<input id="rpTech" type="text" autocomplete="off" placeholder="Ex: T-042"></label>
+    <div class="modal-actions">
+      <button type="button" class="btn-ghost" onclick="closeReport()">Annuler</button>
+      <button type="button" class="btn-primary" onclick="generateReportPDF()">Générer le PDF</button>
+    </div>
+  </div>
+</div>
 <script src="https://player.vimeo.com/api/player.js"></script>
 </body>
 </html>
